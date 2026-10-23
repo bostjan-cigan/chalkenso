@@ -1,0 +1,230 @@
+/* Feedback as one list (groups, courses, Home): closed cards, actions as quiet text buttons. */
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.filtersEnd {
+  margin-left: auto;
+  min-width: 220px;
+}
+
+.list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.item {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  background: var(--card-bg);
+}
+
+.itemDone {
+  background: rgba(var(--foreground-rgb), 0.025);
+}
+
+.itemDone .itemBody,
+.itemDone .itemPassage {
+  color: rgba(var(--foreground-rgb), 0.6);
+}
+
+.itemHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  min-width: 0;
+}
+
+.itemHeadEnd {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: auto;
+}
+
+.itemWho {
+  color: rgb(var(--foreground-rgb));
+}
+
+.itemMeta {
+  color: rgba(var(--foreground-rgb), 0.6);
+}
+
+.itemLesson {
+  color: rgb(var(--accent-color));
+  font-weight: 500;
+}
+
+.itemLesson:hover {
+  text-decoration: underline;
+}
+
+.itemPassage {
+  margin: 0;
+  padding-left: 0.7rem;
+  border-left: 3px solid rgba(var(--accent-color), 0.55);
+  font-style: italic;
+  line-height: 1.5;
+  color: rgba(var(--foreground-rgb), 0.72);
+  overflow-wrap: anywhere;
+}
+
+.itemBody {
+  margin: 0;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: rgb(var(--foreground-rgb));
+}
+
+/* Answered by a change: "Done · the lesson was changed 19 Oct". */
+.itemChanged {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 0.86rem;
+  color: rgba(var(--foreground-rgb), 0.7);
+}
+
+.itemChanged > svg {
+  color: #639922;
+}
+
+.itemReply {
+  padding: 0.55rem 0.75rem;
+  border-radius: 9px;
+  border-left: 3px solid rgb(var(--accent-color));
+  background: rgba(var(--accent-color), 0.07);
+}
+
+.itemReplyLabel {
+  margin: 0 0 0.2rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: rgb(var(--accent-color));
+}
+
+.itemReplyText {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.itemComposer {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.itemComposerLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(var(--foreground-rgb), 0.7);
+}
+
+.itemTextarea {
+  width: 100%;
+  min-height: 72px;
+  padding: 0.55rem 0.65rem;
+  border-radius: 9px;
+  border: 1px solid rgba(var(--foreground-rgb), 0.2);
+  background: rgb(var(--background-rgb));
+  color: rgb(var(--foreground-rgb));
+  font: inherit;
+  font-size: 0.88rem;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.itemActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* A card's actions, as buttons everywhere: tinted (Reply, Improvement · To do), Improve filled. */
+.itemAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: max(34px, var(--touch-target, 0px));
+  padding: 0 0.75rem;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: rgba(var(--action-rgb), 0.12);
+  color: rgb(var(--action-rgb));
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.itemAction:hover {
+  background: rgba(var(--action-rgb), 0.2);
+}
+
+.itemAction:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Improve: the one filled action on a card (the main way forward for feedback). */
+.itemActionPrimary {
+  background: rgb(var(--accent-color));
+  color: var(--on-accent);
+}
+
+.itemActionPrimary:hover {
+  background: rgba(var(--accent-color), 0.88);
+}
+
+.itemError {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--red-pen);
+}
+
+.empty {
+  margin: 0;
+  padding: 0.85rem;
+  border-radius: 12px;
+  background: rgba(var(--foreground-rgb), 0.04);
+  color: rgba(var(--foreground-rgb), 0.66);
+  font-size: 0.9rem;
+}
+
+.note {
+  margin: 0 0 0.75rem;
+  font-size: 0.84rem;
+  color: rgba(var(--foreground-rgb), 0.66);
+}
+
+.note a {
+  color: rgb(var(--accent-color));
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .filtersEnd {
+    margin-left: 0;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .itemHeadEnd {
+    margin-left: 0;
+  }
+}

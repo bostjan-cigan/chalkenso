@@ -1,0 +1,1265 @@
+/* A lesson's Improve mode: a toolbar, the lesson whole, and its to-do in a column beside it. */
+
+.view {
+  display: grid;
+  gap: 0;
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  background: var(--card-bg);
+  /* Clipped to its corners, but not a scroller: the column sticks to the window as the lesson scrolls. */
+  overflow: clip;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.9rem;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.level {
+  font-size: 0.8rem;
+  color: rgba(var(--foreground-rgb), 0.62);
+}
+
+.spacer {
+  flex: 1;
+}
+
+/* The toolbar's lesson name, quiet beside the mode switch. */
+.lessonName {
+  max-width: 20rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+/* The lesson, and the column beside it (like an inspector): the lesson takes the room. */
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(19rem, 23rem);
+  min-height: 70vh;
+}
+
+.lesson {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: 0.9rem;
+  min-width: 0;
+  padding: 1.1rem 1.4rem 1.4rem;
+}
+
+/* Held beside the lesson while it scrolls: its head at the top, the step's button at the foot. */
+.column {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  /* Measured by the view as the page scrolls; the window less the toolbar until then. */
+  height: var(--column-height, calc(100dvh - 5rem));
+  min-width: 0;
+  border-left: 1px solid var(--card-border);
+  background: rgba(var(--foreground-rgb), 0.025);
+}
+
+.columnHead {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 3.25rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.columnSegments {
+  flex: 1;
+  display: flex;
+}
+
+.columnSegments > button {
+  flex: 1;
+}
+
+.columnBack,
+.toLesson {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  min-width: 0;
+  min-height: 44px;
+  margin-right: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: rgb(var(--accent-color));
+  font: inherit;
+  font-size: 0.92rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+/* "‹ Lesson" is for narrow screens, where the column covers the lesson. */
+.toLesson {
+  display: none;
+}
+
+.columnBack:focus-visible,
+.toLesson:focus-visible {
+  outline: 2px solid rgb(var(--accent-color));
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.columnBody {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: 1rem;
+  min-height: 0;
+  padding: 0.85rem 0.85rem 1.1rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* The step's one primary button, and a quiet way around it. */
+.columnFoot {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.75rem 0.85rem;
+  border-top: 1px solid var(--card-border);
+  background: var(--card-bg);
+}
+
+/* Nothing to show (a slot kept in place but hidden): no empty foot. */
+.columnFoot:not(:has(> :not([hidden]))) {
+  display: none;
+}
+
+.columnFoot > button {
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+}
+
+.footHint {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  text-align: center;
+  color: rgba(var(--foreground-rgb), 0.62);
+}
+
+.footHint button {
+  font-size: inherit;
+}
+
+.footRow {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.footRow > button {
+  flex: 1;
+  justify-content: center;
+  min-height: 44px;
+}
+
+/* On a phone, the lesson ends with a bar naming the column's step. */
+.columnBar {
+  display: none;
+}
+
+.group {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.groupTitle {
+  margin: 0 0.15rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: rgba(var(--foreground-rgb), 0.62);
+}
+
+.paneHead {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.asked {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.cards,
+.changeList,
+.navList {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A piece of feedback: its tick, then what it quotes, what was said and who said it. */
+.card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  background: var(--card-bg);
+}
+
+.card[data-selected] {
+  border-color: rgba(var(--accent-color), 0.7);
+  box-shadow: 0 0 0 1px rgba(var(--accent-color), 0.35);
+}
+
+.cardBody {
+  flex: 1;
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.cardBody:focus-visible {
+  outline: 2px solid rgb(var(--accent-color));
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.cardPassage {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.78rem;
+  font-style: italic;
+  color: rgba(var(--foreground-rgb), 0.62);
+}
+
+.cardText {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/*
+ * The tick: a round box, filled when on. Its press area grows to the touch size on touch screens
+ * without moving anything around it.
+ */
+.tick {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-top: 0.05rem;
+  padding: 0;
+  border: 1.5px solid rgba(var(--foreground-rgb), 0.38);
+  border-radius: 50%;
+  background: transparent;
+  /* The check reads on the accent like a primary button's words, in light and dark. */
+  color: var(--on-accent);
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.tick::after {
+  content: '';
+  position: absolute;
+  inset: calc((22px - max(30px, var(--touch-target, 0px))) / 2);
+}
+
+.tick[aria-pressed='true'],
+.tick[data-on] {
+  border-color: rgb(var(--accent-color));
+  background: rgb(var(--accent-color));
+}
+
+button.tick:hover:not(:disabled) {
+  border-color: rgb(var(--accent-color));
+}
+
+.tick:focus-visible {
+  outline: 2px solid rgb(var(--accent-color));
+  outline-offset: 2px;
+}
+
+.tick:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.tickSpace {
+  flex: none;
+  width: 22px;
+}
+
+/* "Fix with AI ✓" in a piece of feedback's detail: the row is the button. */
+.tickRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 44px;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  background: var(--card-bg);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.tickRow:focus-visible {
+  outline: 2px solid rgb(var(--accent-color));
+  outline-offset: 2px;
+}
+
+/* A change: its tick (keep it), its number, kind and section, and › to open it side by side. */
+.changeRow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.25rem 0.4rem 0.25rem 0.7rem;
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  background: var(--card-bg);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.changeRow .tick {
+  margin-top: 0;
+}
+
+/* The change being read in the lesson. */
+.changeRow[data-current] {
+  border-color: rgba(var(--accent-color), 0.7);
+  background: color-mix(in srgb, rgb(var(--accent-color)) 6%, var(--card-bg));
+}
+
+.changeOpen {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  min-height: max(40px, var(--touch-target, 0px));
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.changeOpen:focus-visible {
+  outline: 2px solid rgb(var(--accent-color));
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.changeText {
+  flex: 1;
+  display: grid;
+  min-width: 0;
+}
+
+.changeLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9rem;
+}
+
+.changeRow[data-skipped] .changeLabel {
+  color: rgba(var(--foreground-rgb), 0.55);
+}
+
+.chevron {
+  flex: none;
+  color: rgba(var(--foreground-rgb), 0.4);
+}
+
+/* Other work on the lesson, and finished improvements: a row that opens it. */
+.navRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.6rem 0.5rem 0.6rem 0.75rem;
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  background: var(--card-bg);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.navRow:focus-visible {
+  outline: 2px solid rgb(var(--accent-color));
+  outline-offset: 2px;
+}
+
+.navText {
+  flex: 1;
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.rowTitle {
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.rowState {
+  margin: 0;
+  font-size: 0.8rem;
+  color: rgba(var(--foreground-rgb), 0.62);
+}
+
+/* Something else to change: quiet, under the feedback. */
+.addButton {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 0.35rem;
+  min-height: 44px;
+  padding: 0 0.15rem;
+  border: 0;
+  background: none;
+  color: rgb(var(--accent-color));
+  font: inherit;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+/* Where an improvement stands, at a glance: blue for your next step, grey while AI works,
+   amber when it waits on you, green when it's saved or done. */
+.statePill {
+  justify-self: start;
+  max-width: 100%;
+  margin-top: 0.15rem;
+  padding: 0.12rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(var(--foreground-rgb), 0.08);
+  color: rgba(var(--foreground-rgb), 0.72);
+  font-size: 0.74rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+/* AI is at it: a dot that breathes before the words. */
+.statePill[data-tone='working']::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 0.35rem;
+  border-radius: 50%;
+  background: rgb(var(--accent-color));
+  vertical-align: 0.08em;
+  animation: breathe 1.4s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  50% {
+    opacity: 0.25;
+    transform: scale(0.7);
+  }
+}
+
+.statePill[data-tone='next'] {
+  background: rgba(var(--accent-color), 0.12);
+  color: rgb(var(--accent-color));
+}
+
+.statePill[data-tone='you'] {
+  background: rgba(240, 180, 76, 0.16);
+  color: var(--pill-you, #f0b44c);
+}
+
+.statePill[data-tone='done'] {
+  background: rgba(95, 207, 124, 0.15);
+  color: var(--pill-done, #5fcf7c);
+}
+
+/* Darker words on the light theme (and a light system theme). */
+:global(:root[data-theme='light']) .statePill {
+  --pill-you: #8a5300;
+  --pill-done: #1d7333;
+}
+
+@media (prefers-color-scheme: light) {
+  :global(:root[data-theme='system']) .statePill,
+  :global(:root:not([data-theme])) .statePill {
+    --pill-you: #8a5300;
+    --pill-done: #1d7333;
+  }
+}
+
+.empty,
+.quiet {
+  margin: 0;
+  font-size: 0.86rem;
+  color: rgba(var(--foreground-rgb), 0.62);
+}
+
+.empty {
+  padding: 0.25rem 0.15rem;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 0.86rem;
+  color: rgba(var(--foreground-rgb), 0.62);
+}
+
+.itemTitle {
+  margin: 0;
+  font-size: 1.1rem;
+  line-height: 1.3;
+}
+
+.label {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: rgba(var(--foreground-rgb), 0.62);
+}
+
+.quote {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0;
+  padding: 0.1rem 0 0.1rem 0.8rem;
+  border-left: 3px solid var(--line-strong);
+  line-height: 1.5;
+}
+
+.passage {
+  font-style: italic;
+  color: rgba(var(--foreground-rgb), 0.7);
+}
+
+.who {
+  font-style: normal;
+  font-size: 0.8rem;
+  color: rgba(var(--foreground-rgb), 0.6);
+}
+
+.plan {
+  margin: 0;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.planEdit {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.planBox,
+.replyBox {
+  width: 100%;
+  min-height: 7rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 9px;
+  border: 1px solid var(--line-strong);
+  background: rgb(var(--background-rgb));
+  color: inherit;
+  font: inherit;
+  line-height: 1.55;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.replyBox {
+  min-height: 4.5rem;
+}
+
+.reply {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.others {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.92rem;
+}
+
+.others a {
+  color: rgb(var(--accent-color));
+}
+
+/* The lesson, as learners read it: a reading width, the rest to the margins. */
+.part {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+  max-width: 54rem;
+  min-width: 0;
+  margin: 0 auto;
+  gap: 0.6rem;
+  padding: 0.9rem 1rem 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--card-border);
+  background: rgb(var(--background-rgb));
+}
+
+/* While AI rewrites the part: its edge takes the accent and a light passes over it. */
+.part[data-working='true'] {
+  position: relative;
+  border-color: rgba(var(--accent-color), 0.45);
+}
+
+.part[data-working='true']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent 30%, rgba(var(--accent-color), 0.09) 50%, transparent 70%);
+  background-size: 300% 100%;
+  animation: partSweep 2.6s linear infinite;
+}
+
+@keyframes partSweep {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .statePill[data-tone='working']::before,
+  .part[data-working='true']::after {
+    animation: none;
+  }
+
+  .part[data-working='true']::after {
+    background: rgba(var(--accent-color), 0.04);
+  }
+
+  .tick,
+  .changeRow {
+    transition: none;
+  }
+}
+
+.partHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.partBody {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+}
+
+/* The lesson's own type, without the editor's height. */
+.partBody .proseBlock {
+  min-height: 0;
+}
+
+/* Code blocks scroll inside the part instead of widening the page. */
+.partBody pre {
+  overflow-x: auto;
+}
+
+.summary {
+  margin: 0;
+  font-size: 0.86rem;
+  color: rgba(var(--foreground-rgb), 0.72);
+}
+
+.applied {
+  padding: 0.35rem 0.6rem;
+  border-radius: 8px;
+  background: rgba(234, 179, 8, 0.14);
+}
+
+.actions,
+.actionsEnd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.actionsEnd {
+  justify-content: flex-end;
+}
+
+.actions button,
+.actions a {
+  min-height: 44px;
+}
+
+/* AI at work takes the column's width. */
+.working {
+  min-width: 0;
+}
+
+.notice {
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: rgba(var(--foreground-rgb), 0.82);
+}
+
+.planShown {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.scope {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.scopeOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.scopeOption,
+.scopeOn {
+  min-height: 44px;
+  padding: 0 0.85rem;
+  border-radius: 10px;
+  border: 1px solid var(--line-strong);
+  background: var(--card-bg);
+  color: inherit;
+  font: inherit;
+  font-size: 0.86rem;
+  cursor: pointer;
+}
+
+.scopeOn {
+  border: 2px solid rgb(var(--accent-color));
+  background: rgba(var(--accent-color), 0.08);
+  font-weight: 600;
+}
+
+.scopeOption:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.error {
+  margin: 0;
+  font-size: 0.86rem;
+  color: var(--red-pen);
+}
+
+.feedbackDetail,
+.newForm {
+  display: grid;
+  gap: 0.75rem;
+}
+
+/* A passage edited in Improve (TextEditor): Visual | Markdown over the editor, like Edit mode. */
+.textEditor {
+  display: grid;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.textEditorBar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.textEditorVisual {
+  min-width: 0;
+}
+
+.textEditorVisual :global(.ProseMirror) {
+  min-height: 6rem;
+  padding: 0.75rem 1rem;
+}
+
+.textEditorMarkdown {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.84rem;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+.textEditorMarkdown:focus-visible {
+  outline: 2px solid rgb(var(--accent-color));
+  outline-offset: -2px;
+}
+
+/* The plan as a person reads it (rendered Markdown), and Edit plan under it. */
+.planText {
+  font-size: 0.92rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.planText code {
+  padding: 0.05rem 0.3rem;
+  border-radius: 5px;
+  background: var(--surface-2);
+  font-size: 0.86em;
+}
+
+.planText ul,
+.planText ol {
+  padding-left: 1.25rem;
+}
+
+.planText > :first-child {
+  margin-top: 0;
+}
+
+.planText > :last-child {
+  margin-bottom: 0;
+}
+
+.planEditButton {
+  justify-self: start;
+}
+
+/* Ask for changes: one line under the plan, its send button inside, like a message field. */
+.askRow {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: max(38px, var(--touch-target, 0px));
+  padding: 0.2rem 0.25rem 0.2rem 0.75rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: rgb(var(--background-rgb));
+}
+
+.askRow:focus-within {
+  border-color: rgb(var(--accent-color));
+  box-shadow: 0 0 0 3px rgba(var(--accent-color), 0.18);
+}
+
+.askInput {
+  flex: 1;
+  min-width: 0;
+  padding: 0.35rem 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 0.88rem;
+}
+
+.askInput:focus {
+  outline: none;
+}
+
+.askSend {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(var(--accent-color));
+  color: var(--on-accent);
+  cursor: pointer;
+}
+
+.askSend::after {
+  content: '';
+  position: absolute;
+  inset: calc((30px - max(30px, var(--touch-target, 0px))) / 2);
+}
+
+.askSend:disabled {
+  background: rgba(var(--foreground-rgb), 0.15);
+  color: rgba(var(--foreground-rgb), 0.45);
+  cursor: default;
+}
+
+.askSend:focus-visible {
+  outline: 2px solid rgb(var(--accent-color));
+  outline-offset: 2px;
+}
+
+/* The notes for AI, in their sheet. */
+.notesSheet {
+  display: grid;
+  gap: 0.6rem;
+}
+
+/* Done here, with the main course's lesson still to change: one calm line in green, and where it goes on. */
+.appliedNote {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  background: rgba(99, 153, 34, 0.12);
+  color: #3b6d11;
+}
+
+.appliedNote > svg {
+  flex: none;
+  margin-top: 0.1rem;
+}
+
+.appliedNote p {
+  margin: 0.15rem 0 0;
+  font-size: 0.88rem;
+  color: rgba(var(--foreground-rgb), 0.72);
+}
+
+.noteBody {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.noteActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.noteLink {
+  text-decoration: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .appliedNote {
+    color: #97c459;
+  }
+}
+
+/* The sections an improvement is about, while there's nothing to review: a thin accent rule. */
+.focus {
+  padding-left: 0.85rem;
+  box-shadow: inset 2px 0 0 rgba(var(--accent-color), 0.55);
+}
+
+/* The lesson while reviewing: room in the margin for each change's number. */
+.partBody[data-layout='tracked'] {
+  padding-right: 2.75rem;
+}
+
+/*
+ * A change, tracked in the text (track changes): a thin bar in its kind's colour, new words and
+ * paragraphs green, removed ones struck through in red, its number in the margin. The one being
+ * read is tinted; any of them opens side by side.
+ */
+.tracked {
+  --change-tint: var(--accent-color);
+  position: relative;
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.15rem 0 0.15rem 0.85rem;
+  box-shadow: inset 2px 0 0 rgba(var(--change-tint), 0.7);
+  border-radius: 0;
+  cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tracked[data-kind='add'] {
+  --change-tint: 99, 153, 34;
+}
+
+.tracked[data-kind='remove'] {
+  --change-tint: 226, 75, 74;
+}
+
+.tracked:hover {
+  background: rgba(var(--foreground-rgb), 0.025);
+}
+
+.tracked:focus-visible {
+  outline: 2px solid rgb(var(--accent-color));
+  outline-offset: 4px;
+}
+
+.tracked[data-current] {
+  background: rgba(var(--accent-color), 0.06);
+  box-shadow: inset 4px 0 0 rgba(var(--change-tint), 0.9);
+}
+
+.tracked[data-decision='skip'],
+.tracked[data-decision='none'] {
+  --change-tint: var(--foreground-rgb);
+  box-shadow: inset 2px 0 0 rgba(var(--foreground-rgb), 0.2);
+}
+
+.trackedAdd {
+  padding: 0.2rem 0.6rem;
+  background: rgba(99, 153, 34, 0.12);
+}
+
+.trackedRemove {
+  color: rgba(var(--foreground-rgb), 0.7);
+  text-decoration: line-through;
+  text-decoration-color: rgba(226, 75, 74, 0.75);
+  background: rgba(226, 75, 74, 0.06);
+}
+
+/* Callouts and quotes inside take the change's colour instead of their own grey. */
+.trackedAdd :global(.callout),
+.trackedAdd blockquote,
+.trackedRemove :global(.callout),
+.trackedRemove blockquote {
+  background: color-mix(in srgb, var(--card-bg) 55%, transparent);
+}
+
+.trackedSkipped {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  font-size: 0.84rem;
+  color: rgba(var(--foreground-rgb), 0.5);
+}
+
+/* Its number, in the margin: filled while kept, hollow once skipped, grey when there's nothing to decide. */
+.pin {
+  position: absolute;
+  top: 0.1rem;
+  right: -2.6rem;
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: rgb(var(--change-tint));
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  transition: transform 0.2s ease;
+}
+
+.tracked[data-current] .pin {
+  transform: scale(1.12);
+  box-shadow: 0 0 0 3px rgba(var(--accent-color), 0.18);
+}
+
+.tracked[data-decision='skip'] .pin {
+  background: var(--card-bg);
+  color: rgba(var(--foreground-rgb), 0.6);
+  box-shadow: inset 0 0 0 1.5px rgba(var(--foreground-rgb), 0.35);
+}
+
+.tracked[data-decision='none'] .pin {
+  background: rgba(var(--foreground-rgb), 0.25);
+}
+
+.tracked[data-flash] {
+  animation: flash 1.4s ease-out;
+}
+
+@keyframes flash {
+  from {
+    box-shadow: 0 0 0 3px rgba(var(--accent-color), 0.6);
+  }
+  to {
+    box-shadow: 0 0 0 3px rgba(var(--accent-color), 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tracked,
+  .pin {
+    transition: none;
+  }
+
+  .tracked[data-flash] {
+    animation: none;
+    outline: 2px solid rgba(var(--accent-color), 0.6);
+  }
+}
+
+/* On the main course's lesson: what a group's copy did that didn't fit here, to do by hand. One calm line. */
+.didntFitNote {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  background: var(--surface-2);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: rgba(var(--foreground-rgb), 0.8);
+}
+
+/* A plan written before more feedback was ticked: said once, in the colour of what waits on you. */
+.staleNote {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--pill-you, #f0b44c);
+}
+
+:global(:root[data-theme='light']) .staleNote {
+  --pill-you: #8a5300;
+}
+
+@media (prefers-color-scheme: light) {
+  :global(:root[data-theme='system']) .staleNote,
+  :global(:root:not([data-theme])) .staleNote {
+    --pill-you: #8a5300;
+  }
+}
+
+/* The feedback a finished improvement used. */
+.feedbackList {
+  display: grid;
+  gap: 0.75rem;
+}
+
+/* Feedback ticked after the changes were drafted: one calm line above them. */
+.laterNote {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  background: var(--surface-2);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: rgba(var(--foreground-rgb), 0.8);
+}
+
+/* Narrow: the lesson or the column, pushed in with a way back (like Mail on iPhone). */
+@media (max-width: 899px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .columns[data-pane='column'] .lesson,
+  .columns:not([data-pane='column']) .column {
+    display: none;
+  }
+
+  .lesson {
+    padding: 0.75rem 0.75rem 0;
+  }
+
+  .column {
+    position: static;
+    height: auto;
+    min-height: 70vh;
+    border-left: 0;
+  }
+
+  .columnBody {
+    overflow: visible;
+  }
+
+  .columnFoot {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+  }
+
+  .toLesson {
+    display: inline-flex;
+    flex: none;
+  }
+
+  .columnHead {
+    flex-wrap: wrap;
+  }
+
+  .columnBar {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    min-height: 52px;
+    margin: 0 -0.75rem;
+    padding: 0.5rem 1rem;
+    border: 0;
+    border-top: 1px solid var(--card-border);
+    background: color-mix(in srgb, var(--card-bg) 92%, transparent);
+    -webkit-backdrop-filter: saturate(1.4) blur(10px);
+    backdrop-filter: saturate(1.4) blur(10px);
+    color: rgb(var(--accent-color));
+    font: inherit;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+  }
+}
+
+/* Narrow: no margin to spare, so the number sits at the change's top right. */
+@media (max-width: 560px) {
+  .partBody[data-layout='tracked'] {
+    padding-right: 0;
+  }
+
+  .pin {
+    right: 0;
+    top: -0.35rem;
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .part {
+    padding: 0.75rem;
+  }
+}

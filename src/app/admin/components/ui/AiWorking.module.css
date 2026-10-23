@@ -1,0 +1,145 @@
+/* AI at work (AiWorking.tsx): a tinted block with Claude's asterisk, the line it is on (shimmering),
+ * the clock, its actions, and a bar along the bottom edge. Built on the theme tokens in
+ * src/app/globals.css. */
+
+.box {
+  --glyph-width: 1.5rem;
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+  padding: 0.65rem 0.9rem 0;
+  border-radius: 12px;
+  border: 1px solid rgba(var(--accent-color), 0.32);
+  background: rgba(var(--accent-color), 0.07);
+  overflow: hidden;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.6rem;
+  min-height: 34px;
+}
+
+.glyph {
+  flex: none;
+  width: var(--glyph-width);
+  font-size: 1.2rem;
+  line-height: 1;
+  text-align: center;
+  color: rgb(var(--accent-color));
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+}
+
+/* The words and the clock after them, as one line that wraps like text. */
+.line {
+  flex: 1 1 12rem;
+  min-width: 0;
+  line-height: 1.35;
+}
+
+.label {
+  margin-right: 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* A light passes along the words, left to right, while it works. */
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgb(var(--foreground-rgb)) 0%,
+    rgb(var(--foreground-rgb)) 38%,
+    rgb(var(--accent-color)) 50%,
+    rgb(var(--foreground-rgb)) 62%,
+    rgb(var(--foreground-rgb)) 100%
+  );
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 2.4s linear infinite;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+.time {
+  white-space: nowrap;
+  font-size: 0.86rem;
+  font-variant-numeric: tabular-nums;
+  color: rgba(var(--foreground-rgb), 0.6);
+}
+
+.actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.detail {
+  margin: 0;
+  padding-left: calc(var(--glyph-width) + 0.6rem);
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: rgba(var(--foreground-rgb), 0.66);
+}
+
+.bar {
+  position: relative;
+  height: 3px;
+  margin: 0.2rem -0.9rem 0;
+  background: rgba(var(--accent-color), 0.14);
+  overflow: hidden;
+}
+
+.fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: rgb(var(--accent-color));
+  transition: width 0.6s ease;
+}
+
+/* How far isn't known: a light runs along the bar. */
+.sweep {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -35%;
+  width: 35%;
+  background: linear-gradient(90deg, transparent, rgb(var(--accent-color)), transparent);
+  animation: sweep 1.6s ease-in-out infinite;
+}
+
+@keyframes sweep {
+  to {
+    left: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer {
+    animation: none;
+    background: none;
+    color: inherit;
+  }
+
+  .sweep {
+    left: 0;
+    width: 100%;
+    opacity: 0.35;
+    animation: none;
+  }
+
+  .fill {
+    transition: none;
+  }
+}

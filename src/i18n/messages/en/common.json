@@ -1,0 +1,34 @@
+{
+  "language": {
+    "label": "Language"
+  },
+  "theme": {
+    "toggle": "Toggle theme",
+    "toDark": "Switch to dark mode",
+    "toLight": "Switch to light mode"
+  },
+  "select": {
+    "placeholder": "Select…",
+    "search": "Search…",
+    "searchLabel": "Search {label}",
+    "noMatches": "No matches"
+  },
+  "notFound": {
+    "metaTitle": "Page not found",
+    "text": "This page isn’t part of the curriculum.",
+    "back": "Back to {product} →"
+  },
+  "handle": {
+    "problems": {
+      "length": "A handle is {min} to {max} characters.",
+      "format": "Use lowercase letters, digits and single hyphens, starting and ending with a letter or digit.",
+      "reserved": "That handle is reserved. Try another.",
+      "taken": "That handle is taken. Try another."
+    },
+    "availability": {
+      "yours": "@{handle} is yours.",
+      "free": "@{handle} is free.",
+      "taken": "@{handle} is taken. Try another."
+    }
+  }
+}

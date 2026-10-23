@@ -1,0 +1,349 @@
+{
+  "meta": {
+    "title": "{product} · AI-assisted curriculum design"
+  },
+  "nav": {
+    "label": "Admin navigation",
+    "places": {
+      "overview": "Home",
+      "groups": "Groups",
+      "courses": "Courses",
+      "insights": "Insights",
+      "team": "Team",
+      "settings": "Settings"
+    },
+    "platform": {
+      "label": "Platform admin navigation",
+      "headings": {
+        "platform": "Platform"
+      },
+      "items": {
+        "home": "Home",
+        "people": "People",
+        "organizations": "Organisations",
+        "booking": "Booking",
+        "growth": "Growth",
+        "log": "Admin log",
+        "storage": "Storage"
+      }
+    },
+    "settings": {
+      "label": "Settings",
+      "tabs": {
+        "general": "General",
+        "ai": "AI",
+        "tokens": "Tokens",
+        "export": "Export",
+        "website": "External website",
+        "claude": "Use with Claude",
+        "plan": "Plan",
+        "partners": "Partners"
+      }
+    },
+    "course": {
+      "label": "Course",
+      "tabs": {
+        "lessons": "Lessons",
+        "groups": "Groups",
+        "feedback": "Feedback",
+        "insights": "Insights",
+        "learnerFeedback": "Learner feedback",
+        "settings": "Settings"
+      }
+    }
+  },
+  "roles": {
+    "platformAdmin": "Platform admin",
+    "local": {
+      "OWNER": "Manager",
+      "ADMIN": "Admin",
+      "MEMBER": "Instructor"
+    },
+    "cloud": {
+      "OWNER": "Owner",
+      "ADMIN": "Admin",
+      "MEMBER": "Member"
+    }
+  },
+  "frame": {
+    "home": "Home",
+    "platformAdmin": "Platform admin",
+    "acrossOrganizations": "Across all organisations",
+    "account": "Account",
+    "accountLink": "Account and security ({name})",
+    "signOut": "Sign out",
+    "platformStrip": "<strong>Platform admin.</strong> You’re outside every organisation: what you change here applies across the platform. To see an organisation from the inside, use <em>Log in as</em> on one of its people.",
+    "loading": "Loading",
+    "needYou": "{count} need you"
+  },
+  "sidebar": {
+    "collapse": "Collapse sidebar",
+    "expand": "Expand sidebar"
+  },
+  "organizations": {
+    "switch": "{name}: switch organisation or open its settings",
+    "menu": "Organisations",
+    "yours": "Your organisations",
+    "settings": "Organisation settings",
+    "inviteLink": "Invite link",
+    "inviteLinkInvalid": "Paste the whole invite link you were sent.",
+    "openInvite": "Open the invite",
+    "join": "Join another organisation",
+    "create": "Create organisation",
+    "leave": "Leave {name}",
+    "leaveTitle": "Leave {name}?",
+    "leaveDescription": "You lose access to its courses, groups, feedback and improvements, and your sync tokens and Claude connections for it stop. An owner or admin can invite you again.",
+    "leaveConfirm": "Leave organisation",
+    "errors": {
+      "oneOrganization": "This installation runs one organisation.",
+      "impersonating": "You are logged in as someone else. Return to your own account first.",
+      "switchFirst": "Switch to that organisation first.",
+      "notMember": "You are not in this organisation.",
+      "onlyOwner": "You are its only owner. Make someone else owner, or delete the organisation."
+    }
+  },
+  "session": {
+    "idleTitle": "Are you still there?",
+    "maxTitle": "Sign in again soon",
+    "idleText": "For your security, you’ll be signed out at {time}.",
+    "maxText": "Your session ends at {time}. Save your work, then sign in again.",
+    "signOut": "Sign out",
+    "stay": "Stay signed in",
+    "working": "Working…",
+    "signInNow": "Sign in now",
+    "ok": "OK"
+  },
+  "dialog": {
+    "cancel": "Cancel",
+    "working": "Working…"
+  },
+  "ui": {
+    "moreActions": "More actions",
+    "close": "Close",
+    "done": "Done",
+    "loading": "Loading",
+    "previewEmpty": "Preview updates as you type.",
+    "failed": "Something went wrong. Try again."
+  },
+  "invite": {
+    "sendIt": "Send it",
+    "justLink": "Just the link: I’ll send it",
+    "email": "Email it to them",
+    "theirEmail": "Their email"
+  },
+  "feedback": {
+    "stage": {
+      "new": "New",
+      "replied": "Replied",
+      "task": "Being changed",
+      "done": "Done"
+    },
+    "taskStatus": {
+      "TODO": "To do",
+      "IN_PROGRESS": "In progress",
+      "DONE": "Done",
+      "IGNORED": "Ignored"
+    },
+    "failed": "That didn’t work. Try again.",
+    "linkToLearner": "Link to a learner…",
+    "delete": "Delete…",
+    "note": "Note",
+    "lesson": "Lesson {position}: {title}",
+    "actions": "Feedback actions",
+    "replyShownLearner": "Your reply · shown to this learner",
+    "replyShownName": "Your reply · shown to {name}",
+    "editYourReply": "Edit your reply",
+    "replyToLearner": "Reply to this learner",
+    "replyToName": "Reply to {name}",
+    "notePlaceholder": "Write a reply…",
+    "learnerPlaceholder": "They see it next to this passage, in their lesson.",
+    "sending": "Sending…",
+    "updateReply": "Update reply",
+    "sendReply": "Send reply",
+    "cancel": "Cancel",
+    "editReply": "Edit reply",
+    "reply": "Reply",
+    "changedOn": "Done · the lesson was changed {date}",
+    "seeWhatChanged": "See what changed",
+    "reopen": "Reopen",
+    "deleteTitle": "Delete this feedback?",
+    "deleteText": "It's deleted for good, and stops counting on Insights. This can't be undone.",
+    "deleteConfirm": "Delete",
+    "list": {
+      "show": "Show",
+      "open": "New",
+      "change": "Improvements",
+      "done": "Done",
+      "oneLesson": "Feedback on one lesson. <link>Show all</link>",
+      "newest": "The newest {shown} of {total}.",
+      "nothingDone": "Nothing done yet.",
+      "copyOf": "{group}’s copy",
+      "copyOfUnnamed": "a group’s copy"
+    },
+    "markDone": "Mark done (no change needed)",
+    "use": "Use",
+    "used": "In the lesson’s improvement · {status}",
+    "replyMarksDone": "Sending marks it done. To change the lesson for it, use it instead."
+  },
+  "needsYou": {
+    "groupFeedback": "{count, plural, one {# new piece} other {# new pieces}} of feedback in {group}",
+    "courseFeedback": "{count} new on {course}’s own lessons",
+    "suggested": "{count, plural, one {# change} other {# changes}} suggested by groups for {course}",
+    "drafts": "{count, plural, one {# draft} other {# drafts}} to review",
+    "groupImprovements": "{count, plural, one {# improvement is yours} other {# improvements are yours}} in {group}",
+    "courseImprovements": "{count, plural, one {# improvement is yours} other {# improvements are yours}} on {course}’s own lessons",
+    "groupUnpublished": "{count, plural, one {# lesson has changes} other {# lessons have changes}} learners don’t see yet in {group}",
+    "courseUnpublished": "{count, plural, one {# lesson has changes} other {# lessons have changes}} learners don’t see yet on {course}’s own lessons"
+  },
+  "home": {
+    "title": "Home",
+    "welcome": "Welcome. Let’s design your first course.",
+    "description": "What needs you, your groups and your courses. Learners’ feedback shapes each group’s lessons; you approve every change.",
+    "newCourse": "New course",
+    "newGroup": "New group",
+    "nowIn": "You are now in {organization}.",
+    "joined": "You joined {organization}.",
+    "joinedFull": "Your groups and courses are in the sidebar.",
+    "joinedGuest": "You’re a guest instructor: open your group below and mark what happens in class.",
+    "joinedLimited": "You work on the courses and groups an owner or admin chose for you.",
+    "needsYou": "Needs you",
+    "nothingWaits": "Nothing waits on you right now. New feedback and drafts to review show here.",
+    "yourGroups": "Your groups",
+    "readLessons": "Read the lessons",
+    "noAccess": "You don't have any courses or groups here yet. Ask an owner or admin to give you access.",
+    "groupsYouTeach": "Groups you teach",
+    "runningNow": "Running now",
+    "allGroups": "All groups →",
+    "learners": "{count, plural, one {# learner} other {# learners}}",
+    "openFeedback": "{count} open feedback",
+    "noneRunning": "No group is running now.",
+    "courses": "Courses",
+    "allCourses": "All courses →",
+    "groups": "{count, plural, one {# group} other {# groups}}",
+    "ai": {
+      "keyInvalid": "Anthropic refused your organisation’s API key. An owner or admin can replace it in Settings → AI.",
+      "cap": "This month’s included AI is used up. An owner or admin can top up in Settings → AI.",
+      "paused": "AI is off while your organisation is paused; it’s back when an owner or admin resumes the plan.",
+      "plan": "On your plan, AI works in your own Claude: open any AI request there (“Use with Claude”).",
+      "mock": "AI is in sample mode (AI_MOCK=1): drafts are canned examples. Add an Anthropic API key and remove AI_MOCK to use Claude.",
+      "offUntilKey": "AI in the app is off until an owner or admin adds an Anthropic API key in Settings → AI.",
+      "offInstallation": "AI drafting is off on this installation. Set ANTHROPIC_API_KEY (or AI_MOCK=1 to try it with sample output) to turn it on.",
+      "connector": "Meanwhile, every AI request can be opened in your own Claude (“Use with Claude”)."
+    }
+  },
+  "impersonation": {
+    "refused": "You’re logged in as this user: their sign-in details and keys are theirs to change."
+  },
+  "gettingStarted": {
+    "title": "Getting started",
+    "note": "A few steps, then you’re teaching.",
+    "nearly": "Nearly there!",
+    "allDone": "All set. Class is in session!",
+    "progress": "{done} of {total} done",
+    "open": "Getting started: {done} of {total} steps",
+    "hint": "Finish setting up here",
+    "close": "Close",
+    "markDone": "Mark as done",
+    "markNotDone": "Mark as not done",
+    "doneByItself": "Done",
+    "footer": "Ticks itself as you go.",
+    "hide": "Hide getting started",
+    "hidden": "Getting started is hidden.",
+    "show": "Show it",
+    "notNow": "Not now",
+    "booked": "Booked for {when}",
+    "steps": {
+      "account": {
+        "title": "Create your account"
+      },
+      "how": {
+        "title": "Two minutes on how it works",
+        "hint": "The loop every group goes through, and where AI helps."
+      },
+      "profile": {
+        "title": "Complete your profile",
+        "hint": "Your name and a photo, so learners know who wrote what."
+      },
+      "course": {
+        "title": "Create your first course",
+        "hint": "Its title and a line on who it’s for."
+      },
+      "lesson": {
+        "title": "Write a lesson",
+        "hint": "With its objectives and concepts."
+      },
+      "group": {
+        "title": "Start a group",
+        "hint": "And share its learner links."
+      },
+      "invite": {
+        "title": "Invite a colleague",
+        "hint": "To design the course with you."
+      }
+    }
+  },
+  "howItWorks": {
+    "title": "How Chalkenso works",
+    "description": "The loop every group goes through, where AI helps on your plan, and who decides.",
+    "markDone": "Mark as done",
+    "profileOpen": "Open",
+    "loop": {
+      "title": "One loop, every group",
+      "teach": {
+        "title": "Teach",
+        "text": "Learners open their link; you note in class on the passage."
+      },
+      "feedback": {
+        "title": "Feedback",
+        "text": "Each lesson collects where people got stuck."
+      },
+      "improve": {
+        "title": "Improve",
+        "text": "Fix a lesson from its feedback, with AI’s help."
+      },
+      "publish": {
+        "title": "Publish",
+        "text": "The next group reads the better version."
+      }
+    },
+    "decide": {
+      "title": "You decide",
+      "text": "Every draft waits in the lesson’s Improve view, whoever made it. Tick the changes to keep, then save and publish. Nothing reaches learners before that."
+    },
+    "membersNote": "Your organisation’s owners and admins set up AI, the team and the plan.",
+    "action": {
+      "connect": "Connect your Claude",
+      "lesson": "Try it on a lesson"
+    },
+    "local": {
+      "ai": {
+        "title": "Where AI helps"
+      },
+      "ways": {
+        "app": {
+          "title": "AI in the app",
+          "text": "Revise lessons and draft plans with your organisation’s Anthropic key, set in Settings → AI."
+        },
+        "vault": {
+          "title": "Claude Code in Obsidian",
+          "text": "The Chalkenso plugin syncs lessons with your vault, and Claude Code works on them there."
+        }
+      },
+      "tags": {
+        "key": "Your key",
+        "optional": "Optional"
+      },
+      "running": {
+        "title": "Running it"
+      },
+      "rows": {
+        "team": "Invite your instructors",
+        "key": "Your organisation’s Anthropic key"
+      },
+      "where": {
+        "team": "Team",
+        "ai": "Settings → AI"
+      }
+    }
+  }
+}

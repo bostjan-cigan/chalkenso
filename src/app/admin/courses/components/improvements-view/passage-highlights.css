@@ -1,0 +1,20 @@
+/*
+ * The passages feedback quoted, painted over the lesson's text in Improve (CSS Custom Highlight
+ * API, `LessonPart`): amber when ticked (fixed with AI), a dotted line while still to decide, blue
+ * when open in the column. Global, as highlight names aren't scoped to a module.
+ */
+::highlight(improve-used) {
+  background-color: rgba(240, 180, 76, 0.3);
+}
+
+::highlight(improve-open) {
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: rgba(var(--foreground-rgb), 0.55);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+
+::highlight(improve-selected) {
+  background-color: rgba(var(--accent-color), 0.24);
+}

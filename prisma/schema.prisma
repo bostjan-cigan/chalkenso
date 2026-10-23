@@ -1,0 +1,2175 @@
+generator client {
+  provider        = "prisma-client-js"
+  /// One query per read, nested relations included, instead of one per level (~90ms each here).
+  previewFeatures = ["relationJoins"]
+}
+
+/// `url` is the POOLED endpoint the app queries through (PgBouncer, so no prepared statements);
+/// `directUrl` is the NON-pooled one, because migrations need advisory locks and DDL that a
+/// transaction-mode pooler cannot carry. Locally both point at the same docker Postgres.
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+  schemas   = ["public", "courses"]
+}
+
+/**
+ * SUPERADMIN can do everything. USER: what their organisation membership allows (owners, admins and
+ * FULL members everything; LIMITED members their `UserGrant`s there) plus their own profile and tokens.
+ */
+enum UserRole {
+  SUPERADMIN
+  USER
+
+  @@schema("public")
+}
+
+enum LessonStatus {
+  DRAFT
+  PUBLISHED
+
+  @@schema("courses")
+}
+
+/// Where a course's "Join" button leads: the site's own default (LINKEDIN, from when the only site
+/// was a personal one), a partner's website, or the course's own link (`enrolUrl`).
+enum CourseJoinTarget {
+  LINKEDIN
+  PARTNER
+  LINK
+
+  @@schema("courses")
+}
+
+enum CurriculumVersionStatus {
+  DRAFT
+  PUBLISHED
+
+  @@schema("courses")
+}
+
+/**
+ * Verbs a user grant can carry. READ/WRITE cover the protected entity itself; DELETE is split out
+ * so destructive calls need an explicit opt-in; TASKS gates the feedback-task endpoints and is
+ * combined with READ (list) or WRITE (update) there.
+ */
+enum Permission {
+  READ
+  WRITE
+  DELETE
+  TASKS
+  /// Guest instructor, on a `group` grant only: read that group's lessons and write instructor notes
+  /// on them. Doesn't imply READ, so nothing else (roster, links, feedback board, tasks) opens.
+  NOTES
+
+  @@schema("public")
+}
+
+enum CurriculumCommentStatus {
+  OPEN
+  RESOLVED
+
+  @@schema("courses")
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+  IGNORED
+
+  @@schema("public")
+}
+
+/// Where an improvement is worked on, for organisations that also use the Obsidian vault: in the
+/// app (its plan, drafts and changes here; the vault leaves it alone) or in the vault (pulled into
+/// its checklist for the local agent). Empty until either starts on it.
+enum TaskWorkplace {
+  APP
+  VAULT
+
+  @@schema("public")
+}
+
+model User {
+  id                   String                  @id @default(cuid())
+  /// The sign-in name: an email for accounts made since invites, a username for older ones (Better Auth's `username`).
+  identifier           String                  @unique
+  role                 UserRole                @default(USER)
+  /**
+   * Contact email; optional today, the intended login/invite identifier for future users.
+   */
+  email                String?                 @unique
+  /// The person's handle (src/lib/handles.ts): one namespace with organisations' slugs.
+  /// Optional for accounts made before handles; they set one in Profile.
+  handle               String?                 @unique
+  firstName            String?                 @map("first_name")
+  lastName             String?                 @map("last_name")
+  isActive             Boolean                 @default(true) @map("is_active")
+  lastLoginAt          DateTime?               @map("last_login_at")
+  /// Part of every remembered-browser cookie's signature: "Sign out of all devices" (or a reset) moves it on, so every browser counts as new again (src/lib/sign-in-lockout.ts).
+  knownBrowsersVersion Int                     @default(0) @map("known_browsers_version")
+  /// Better Auth's own fields (src/lib/auth.ts): the display name it keeps, whether the email is
+  /// confirmed, the username as typed, and a platform admin's ban (kept in step with `isActive`).
+  name                 String                  @default("")
+  emailVerified        Boolean                 @default(false) @map("email_verified")
+  displayUsername      String?                 @map("display_username")
+  banned               Boolean?                @default(false)
+  banReason            String?                 @map("ban_reason")
+  banExpires           DateTime?               @map("ban_expires")
+  totpEnabled          Boolean                 @default(false) @map("totp_enabled")
+  /// The language the person picked in the language menu while signed in (src/i18n/config.ts LOCALES): the
+  /// app follows it on a browser without its own pick, and emails to them use it. Null: never picked.
+  locale               String?
+  /**
+   * R2 (Cloudflare) object key for the admin's profile image; null uses the default icon.
+   */
+  profileImageKey      String?                 @map("profile_image_key")
+  /**
+   * AES-GCM encrypted TOTP secret (base32) when 2FA is enabled.
+   */
+  totpSecretEnc        String?                 @map("totp_secret_enc") @db.Text
+  /**
+   * Pending secret during setup (until first successful verification).
+   */
+  totpPendingSecretEnc String?                 @map("totp_pending_secret_enc") @db.Text
+  sessions             UserSession[]           @relation("UserSessions")
+  /// Sessions a platform admin opened as another user ("log in as")
+  impersonations       UserSession[]           @relation("SessionImpersonator")
+  authSessions         AuthSession[]
+  authAccounts         AuthAccount[]
+  twoFactors           AuthTwoFactor[]
+  apiTokens            ApiToken[]
+  grants               UserGrant[]             @relation("UserGrants")
+  grantsCreated        UserGrant[]             @relation("UserGrantCreatedBy")
+  invitesCreated       UserInvite[]            @relation("UserInviteCreatedBy")
+  claimedInvite        UserInvite?             @relation("UserInviteClaimedBy")
+  createdTasks         Task[]                  @relation("TaskCreatedBy")
+  assignedTasks        Task[]                  @relation("TaskAssignee")
+  taskComments         TaskComment[]
+  memberships          OrganizationMember[]
+  curriculumNotes      CurriculumComment[]     @relation("CommentAuthor")
+  instructorLinks      AccessLink[]            @relation("InstructorLinks")
+  groupsTaught         CourseGroupInstructor[] @relation("GroupInstructor")
+  connectorConnections ConnectorConnection[]
+  oauthCodes           OAuthCode[]
+  proposalsCreated     AiProposal[]            @relation("AiProposalCreatedBy")
+  proposalsAssigned    AiProposal[]            @relation("AiProposalAssignee")
+  createdAt            DateTime                @default(now()) @map("created_at")
+  updatedAt            DateTime                @updatedAt @map("updated_at")
+
+  @@map("users")
+  @@schema("public")
+}
+
+/**
+ * Personal API token for programmatic access (the Obsidian Site Sync plugin). A token is a pure
+ * credential: it acts as its owner with exactly the owner's permissions (`User.role` + `UserGrant`s,
+ * evaluated per request) and stops working if the owner is deactivated or removed. Tokens are minted
+ * once (raw value shown only at creation), stored hashed, and killed by revoking (no expiry).
+ */
+model ApiToken {
+  id             String       @id @default(cuid())
+  /**
+   * Owner-facing label describing the token's purpose (e.g. "Obsidian sync — Foundations v3").
+   */
+  name           String
+  /**
+   * HMAC-SHA256 of the raw token; the plaintext value is never stored.
+   */
+  tokenHash      String       @unique @map("token_hash")
+  /**
+   * Non-secret leading fragment of the raw token, kept only to disambiguate rows in the admin list.
+   */
+  tokenPrefix    String       @map("token_prefix")
+  /**
+   * What the token may do: `sync` (the Obsidian plugin: read and write curricula as its owner),
+   * `content:read` and `feedback:write` (a website serving the organisation's courses).
+   */
+  scopes         String[]     @default(["sync"])
+  lastUsedAt     DateTime?    @map("last_used_at")
+  revokedAt      DateTime?    @map("revoked_at")
+  /**
+   * User who minted and manages the token; the token acts within their account and dies with it.
+   */
+  ownerId        String       @map("owner_id")
+  owner          User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  /**
+   * The organisation whose courses the token syncs.
+   */
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  @@index([ownerId])
+  @@index([revokedAt])
+  @@index([organizationId])
+  @@map("api_tokens")
+  @@schema("public")
+}
+
+/**
+ * Table-agnostic access grant of a `User`: the user may use `permissions` on the entity
+ * `entityType` + `entityId`. Deliberately not a foreign key to the entity — it is resolved per
+ * `entityType` at read time (see `src/lib/permissions.ts`) — so any table can be protected without
+ * schema changes. Known types: `all` (entityId `*`, everything), `content` (entityId `content`),
+ * `course` (a course and all of its curriculum versions, including future ones),
+ * `curriculum_version` and `admin_section` (one CRM area, keyed by `ADMIN_SECTIONS` in
+ * `src/lib/grant-scopes.ts`). Super admins need no grants.
+ */
+model UserGrant {
+  id             String        @id @default(cuid())
+  userId         String        @map("user_id")
+  user           User          @relation("UserGrants", fields: [userId], references: [id], onDelete: Cascade)
+  entityType     String        @map("entity_type")
+  entityId       String        @map("entity_id")
+  permissions    Permission[]
+  /**
+   * The organisation the grant applies in. Grants count only for a LIMITED member there
+   * (`OrganizationMember.access`); owners, admins and FULL members ignore them. Rows without an
+   * organisation are from before organisations and give nothing.
+   */
+  organizationId String?       @map("organization_id")
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  /**
+   * The owner or admin who set it; null once they are removed.
+   */
+  createdById    String?       @map("created_by_id")
+  createdBy      User?         @relation("UserGrantCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  @@unique([userId, organizationId, entityType, entityId])
+  @@index([entityType, entityId])
+  @@index([organizationId, userId])
+  @@map("user_grants")
+  @@schema("public")
+}
+
+/**
+ * One-time, expiring invite link: the only way a new user joins. A super admin mints it (optionally
+ * presetting role and grants) and hands the link over; the invitee sets their own email, name and
+ * password on `/invite/<token>`. No email is sent. The raw token is shown once; only its HMAC is
+ * stored.
+ */
+model UserInvite {
+  id             String        @id @default(cuid())
+  /**
+   * The organisation the invitee joins, and as what.
+   */
+  organizationId String?       @map("organization_id")
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  orgRole        OrgRole       @default(MEMBER) @map("org_role")
+  tokenHash      String        @unique @map("token_hash")
+  /**
+   * Super admin's note on who the invite is for (e.g. "Instructor – Spring 2026").
+   */
+  label          String
+  role           UserRole      @default(USER)
+  /**
+   * With `access` LIMITED: grants copied to the new member on claim,
+   * `[{ entityType, entityId, permissions }]` (see src/lib/member-access.ts).
+   */
+  grants         Json          @default("[]")
+  access         MemberAccess  @default(FULL)
+  /**
+   * An invite from a group's page: on claim they become one of its instructors (src/lib/group-instructors.ts).
+   * No FK: a deleted group is skipped on claim.
+   */
+  teachesGroupId String?       @map("teaches_group_id")
+  /// Where the invite was emailed (null: a link copied by hand), and when.
+  email          String?
+  emailedAt      DateTime?     @map("emailed_at")
+  expiresAt      DateTime      @map("expires_at")
+  revokedAt      DateTime?     @map("revoked_at")
+  claimedAt      DateTime?     @map("claimed_at")
+  claimedUserId  String?       @unique @map("claimed_user_id")
+  claimedUser    User?         @relation("UserInviteClaimedBy", fields: [claimedUserId], references: [id], onDelete: SetNull)
+  createdById    String?       @map("created_by_id")
+  createdBy      User?         @relation("UserInviteCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt      DateTime      @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@index([organizationId])
+  @@index([teachesGroupId])
+  @@map("user_invites")
+  @@schema("public")
+}
+
+model UserSession {
+  id               String        @id @default(cuid())
+  userId           String        @map("user_id")
+  user             User          @relation("UserSessions", fields: [userId], references: [id], onDelete: Cascade)
+  /// Before Better Auth: the token's hash. Rows since then share their id with `AuthSession` (this table is their history).
+  sessionTokenHash String?       @unique @map("session_token_hash")
+  /// Set when a platform admin is using this session to see the app as `user` ("log in as").
+  impersonatorId   String?       @map("impersonator_id")
+  impersonator     User?         @relation("SessionImpersonator", fields: [impersonatorId], references: [id], onDelete: Cascade)
+  /**
+   * The organisation this session works in (switchable); null until the user has one.
+   */
+  organizationId   String?       @map("organization_id")
+  organization     Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  /// When the session ends without activity; each visit moves it on, never past `maxExpiresAt` (src/lib/admin-auth.ts).
+  expiresAt        DateTime      @map("expires_at")
+  /// When the session ends however active it is: sign in again after this.
+  maxExpiresAt     DateTime      @map("max_expires_at")
+  /// "Keep me signed in": the longer limits and a cookie that outlives the browser.
+  persistent       Boolean       @default(false)
+  revokedAt        DateTime?     @map("revoked_at")
+  /// Who ended it: signout | self | organization | platform | password | deactivated (null while open, or expired).
+  endedReason      String?       @map("ended_reason")
+  lastSeenAt       DateTime?     @map("last_seen_at")
+  /// The browser it was opened in, and roughly where (city and country, when the host says): for "Where you're signed in".
+  userAgent        String?       @map("user_agent")
+  location         String?
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@index([impersonatorId])
+  @@index([organizationId])
+  @@map("user_sessions")
+  @@schema("public")
+}
+
+/**
+ * An organisation's partner (a school, a company, a sponsor): shown under "In partnership with" on
+ * learner pages and, through the website API, wherever the organisation's own site shows them. A
+ * course lists its partners in order; a group can list its own instead. A course's "Join" button
+ * can lead to one partner's website.
+ */
+model Partner {
+  id             String               @id @default(cuid())
+  organizationId String               @map("organization_id")
+  organization   Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  websiteUrl     String?              @map("website_url")
+  logoUrl        String?              @map("logo_url")
+  description    String?              @db.Text
+  coursePartners CoursePartner[]
+  groupPartners  CourseGroupPartner[]
+  joinFor        Course[]             @relation("CourseJoinPartner")
+  createdAt      DateTime             @default(now()) @map("created_at")
+  updatedAt      DateTime             @updatedAt @map("updated_at")
+
+  @@unique([organizationId, name])
+  @@map("partners")
+  @@schema("courses")
+}
+
+model Course {
+  id                  String              @id @default(cuid())
+  organizationId      String              @map("organization_id")
+  organization        Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  title               String
+  slug                String
+  summary             String?             @db.Text
+  /**
+   * Optional repo or org link shown on the public course access page.
+   */
+  githubUrl           String?             @map("github_url")
+  /**
+   * Listed on the public `/courses` page, which shows the latest published core version.
+   */
+  publicListed        Boolean             @default(false) @map("public_listed")
+  /**
+   * How many of the first published lessons anyone can read on `/courses`. Ignored when
+   * `allLessonsFree` is set.
+   */
+  freeLessonCount     Int                 @default(2) @map("free_lesson_count")
+  /**
+   * Every lesson is free to read on `/courses` (a fully free course).
+   */
+  allLessonsFree      Boolean             @default(false) @map("all_lessons_free")
+  /**
+   * Shown first on `/courses` (pinned courses by title, then the rest by title).
+   */
+  pinned              Boolean             @default(false)
+  /**
+   * Where the "Join" button after the free lessons leads: the site's default, `joinPartner`'s
+   * website, or `enrolUrl`.
+   */
+  joinTarget          CourseJoinTarget    @default(LINKEDIN) @map("join_target")
+  joinPartnerId       String?             @map("join_partner_id")
+  joinPartner         Partner?            @relation("CourseJoinPartner", fields: [joinPartnerId], references: [id], onDelete: SetNull)
+  /**
+   * Cover image on the `/courses` card and course page (a screenshot or GIF of what learners
+   * build). Without one, the generated share card is shown.
+   */
+  coverAssetId        String?             @map("cover_asset_id")
+  coverAsset          MediaAsset?         @relation("CourseCover", fields: [coverAssetId], references: [id], onDelete: SetNull)
+  /**
+   * "You build: …" on the `/courses` card, e.g. "a Recipe Keeper app".
+   */
+  outcome             String?
+  /**
+   * Short tech/level tags after the lesson count on the `/courses` card, e.g. Docker, React, Beginner.
+   */
+  tags                String[]            @default([])
+  /**
+   * The custom join link (`joinTarget` LINK), e.g. a course's own enrolment page.
+   */
+  enrolUrl            String?             @map("enrol_url")
+  /**
+   * Learner feedback switches for the whole course: `{ lessonQuestion, checks, surveys, reading }`,
+   * each true/false (missing = on). A group can override them (`CourseGroup.feedbackSettings`).
+   */
+  feedbackSettings    Json?               @map("feedback_settings")
+  /**
+   * The course's one optional extra survey question: `{ text, kind: 'text' | 'scale' | 'yesno' }`.
+   */
+  surveyExtraQuestion Json?               @map("survey_extra_question")
+  /**
+   * The language of its learner pages and learner script: a locale of src/i18n/config.ts (`en`,
+   * `sl`). A learner's own pick in the language menu wins over it.
+   */
+  language            String              @default("en")
+  lessons             Lesson[]
+  groups              CourseGroup[]
+  partners            CoursePartner[]
+  versions            CurriculumVersion[]
+  createdAt           DateTime            @default(now()) @map("created_at")
+  updatedAt           DateTime            @updatedAt @map("updated_at")
+
+  @@unique([organizationId, slug])
+  @@index([organizationId])
+  @@index([coverAssetId])
+  @@map("courses")
+  @@schema("courses")
+}
+
+model CurriculumVersion {
+  id            String                  @id @default(cuid())
+  courseId      String                  @map("course_id")
+  course        Course                  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  /**
+   * Display name; defaults to `v<version>` but freely editable.
+   */
+  label         String
+  /**
+   * Ordinal per course; drives ordering + uniqueness. Core versions count up from 1; group
+   * curricula take negative ordinals (-1, -2, …) so the core numbering stays contiguous.
+   */
+  version       Int
+  status        CurriculumVersionStatus @default(DRAFT)
+  publishedAt   DateTime?               @map("published_at")
+  /// Who last published it, and their name then (no FK: the record stays if they leave). Null before
+  /// this was recorded.
+  publishedById String?                 @map("published_by_id")
+  publisherName String?                 @map("publisher_name")
+  /**
+   * Set on a group curriculum: the feedback-driven group that owns this copy. Null = core version.
+   * One copy per group; it is deleted with the group.
+   */
+  ownerGroupId  String?                 @unique @map("owner_group_id")
+  ownerGroup    CourseGroup?            @relation("GroupCurriculum", fields: [ownerGroupId], references: [id], onDelete: Cascade)
+  /**
+   * The core version a group curriculum was copied from.
+   */
+  baseVersionId String?                 @map("base_version_id")
+  baseVersion   CurriculumVersion?      @relation("VersionBase", fields: [baseVersionId], references: [id], onDelete: SetNull)
+  forks         CurriculumVersion[]     @relation("VersionBase")
+  /**
+   * Group curricula only: closed (group finished). Learners can still read it; sync stops.
+   */
+  archivedAt    DateTime?               @map("archived_at")
+  lessons       Lesson[]
+  arcs          LessonArc[]
+  groups        CourseGroup[]           @relation("GroupAssignedVersion")
+  accessLinks   AccessLink[]
+  comments      CurriculumComment[]
+  createdAt     DateTime                @default(now()) @map("created_at")
+  updatedAt     DateTime                @updatedAt @map("updated_at")
+
+  @@unique([courseId, version])
+  @@index([courseId])
+  @@map("curriculum_versions")
+  @@schema("courses")
+}
+
+model Lesson {
+  id                        String                 @id @default(cuid())
+  courseId                  String                 @map("course_id")
+  course                    Course                 @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  /**
+   * Owning curriculum version; always belongs to `course`.
+   */
+  curriculumVersionId       String                 @map("curriculum_version_id")
+  curriculumVersion         CurriculumVersion      @relation(fields: [curriculumVersionId], references: [id], onDelete: Cascade)
+  /**
+   * Optional owning arc (section) within the version; null lessons render as an ungrouped flat list.
+   */
+  arcId                     String?                @map("arc_id")
+  arc                       LessonArc?             @relation(fields: [arcId], references: [id], onDelete: SetNull)
+  title                     String
+  slug                      String
+  /**
+   * Optional one-line summary shown under the lesson title on the course page; falls back to
+   * "Lesson <position>" when empty.
+   */
+  shortDescription          String?                @map("short_description") @db.Text
+  status                    LessonStatus           @default(DRAFT)
+  position                  Int
+  markdownContent           String                 @map("markdown_content") @db.Text
+  /**
+   * Content revision, bumped on every change to the lesson's content (title, body, arc, status,
+   * summary, slug) from sync or the admin editor. Sync clients send the revision they last saw
+   * (`baseRevision`) so concurrent edits are reported as conflicts instead of overwritten.
+   */
+  revision                  Int                    @default(1)
+  /**
+   * Group curricula only: the core lesson this one was copied from (no FK; null for lessons added
+   * to the group copy). Used to compare against and propose changes back to the core.
+   */
+  baseLessonId              String?                @map("base_lesson_id")
+  /**
+   * What learners see: a snapshot of the lesson taken when it was last published (saved as
+   * PUBLISHED, or its version was published). Editing afterwards changes only the working copy
+   * above; learners keep this text until the lesson is published again. Null = never published
+   * (hidden from learners). Preview links and the admin preview show the working copy instead.
+   */
+  publishedAt               DateTime?              @map("published_at")
+  /**
+   * `revision` of the working copy at publish time; lower than `revision` = unpublished changes.
+   */
+  publishedRevision         Int?                   @map("published_revision")
+  publishedTitle            String?                @map("published_title")
+  publishedShortDescription String?                @map("published_short_description") @db.Text
+  publishedMarkdownContent  String?                @map("published_markdown_content") @db.Text
+  /**
+   * Image bindings of the published text: `[{ sourcePath, assetId }]`.
+   */
+  publishedAssetBindings    Json?                  @map("published_asset_bindings")
+  /**
+   * Render cache for the published text (same scheme as `accessRenderedHtml`).
+   */
+  publishedRenderedHtml     String?                @map("published_rendered_html") @db.Text
+  publishedHtmlSourceHash   String?                @map("published_html_source_hash") @db.VarChar(64)
+  /**
+   * Pre-rendered HTML with stable placeholder asset URLs (hydrated per group at read time).
+   */
+  accessRenderedHtml        String?                @map("access_rendered_html") @db.Text
+  /**
+   * SHA-256 of markdown + asset reference bindings; must match live lesson for `accessRenderedHtml` to apply.
+   */
+  accessHtmlSourceHash      String?                @map("access_html_source_hash") @db.VarChar(64)
+  assetReferences           LessonAssetReference[]
+  comments                  CurriculumComment[]
+  notes                     LessonNote[]
+  publications              LessonPublication[]
+  changes                   LessonChange[]
+  pulses                    LessonPulse[]
+  check                     LessonCheck?
+  readingSessions           LessonReadingSession[]
+  taught                    LessonTaught[]
+  createdAt                 DateTime               @default(now()) @map("created_at")
+  updatedAt                 DateTime               @updatedAt @map("updated_at")
+
+  @@unique([curriculumVersionId, slug])
+  @@unique([curriculumVersionId, position])
+  @@index([courseId])
+  @@index([curriculumVersionId])
+  @@index([arcId])
+  @@index([baseLessonId])
+  /// Containment lookups (`published_asset_bindings @> …`) for one asset across lessons.
+  @@index([publishedAssetBindings(ops: JsonbPathOps)], type: Gin)
+  @@map("lessons")
+  @@schema("courses")
+}
+
+/**
+ * Optional grouping ("arc" / section) of lessons within a curriculum version. Arcs are additive:
+ * lessons with no arc render as a flat list; arcs render below in `position` order, each with an
+ * optional description and its assigned lessons.
+ */
+model LessonArc {
+  id                  String            @id @default(cuid())
+  curriculumVersionId String            @map("curriculum_version_id")
+  curriculumVersion   CurriculumVersion @relation(fields: [curriculumVersionId], references: [id], onDelete: Cascade)
+  title               String
+  description         String?           @db.Text
+  /**
+   * Order the arc appears on the course page; unique per version.
+   */
+  position            Int
+  lessons             Lesson[]
+  createdAt           DateTime          @default(now()) @map("created_at")
+  updatedAt           DateTime          @updatedAt @map("updated_at")
+
+  @@unique([curriculumVersionId, position])
+  @@index([curriculumVersionId])
+  @@map("lesson_arcs")
+  @@schema("courses")
+}
+
+model MediaAsset {
+  id               String                 @id @default(cuid())
+  r2Key            String                 @unique @map("r2_key")
+  originalFilename String                 @map("original_filename")
+  mimeType         String?                @map("mime_type")
+  bytes            Int?
+  checksum         String?
+  width            Int?
+  height           Int?
+  altText          String?                @map("alt_text") @db.Text
+  references       LessonAssetReference[]
+  /**
+   * Generic (entityType + entityId) references, e.g. images inside Obsidian-synced content entries.
+   */
+  courseCovers     Course[]               @relation("CourseCover")
+  groupAssetUrls   GroupAssetUrlCache[]
+  createdAt        DateTime               @default(now()) @map("created_at")
+  updatedAt        DateTime               @updatedAt @map("updated_at")
+
+  /// Synced uploads are de-duplicated by content hash before any bytes move, so this is read once
+  /// per image on every sync.
+  @@index([checksum])
+  @@map("media_assets")
+  @@schema("courses")
+}
+
+model LessonAssetReference {
+  id         String      @id @default(cuid())
+  lessonId   String      @map("lesson_id")
+  lesson     Lesson      @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  assetId    String?     @map("asset_id")
+  asset      MediaAsset? @relation(fields: [assetId], references: [id], onDelete: SetNull)
+  sourcePath String      @map("source_path")
+  altText    String?     @map("alt_text") @db.Text
+  position   Int?
+  createdAt  DateTime    @default(now()) @map("created_at")
+  updatedAt  DateTime    @updatedAt @map("updated_at")
+
+  @@unique([lessonId, sourcePath])
+  @@index([assetId])
+  @@index([lessonId, position])
+  @@map("lesson_asset_references")
+  @@schema("courses")
+}
+
+model CourseGroup {
+  id                  String                  @id @default(cuid())
+  courseId            String                  @map("course_id")
+  course              Course                  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  name                String
+  slug                String
+  slackHandle         String?                 @map("slack_handle")
+  description         String?                 @db.Text
+  sourceRosterText    String?                 @map("source_roster_text") @db.Text
+  /**
+   * Currently assigned curriculum version; the default stamped onto new access links.
+   */
+  curriculumVersionId String?                 @map("curriculum_version_id")
+  curriculumVersion   CurriculumVersion?      @relation("GroupAssignedVersion", fields: [curriculumVersionId], references: [id], onDelete: SetNull)
+  /**
+   * Opt-in: the group gets its own copy of the curriculum (`groupCurriculum`) that grows with its
+   * feedback, while the core versions stay untouched.
+   */
+  feedbackDriven      Boolean                 @default(false) @map("feedback_driven")
+  groupCurriculum     CurriculumVersion?      @relation("GroupCurriculum")
+  /**
+   * Optional cohort / run window (admin only).
+   */
+  startsAt            DateTime?               @map("starts_at")
+  endsAt              DateTime?               @map("ends_at")
+  /**
+   * This group's overrides of the course's learner feedback switches (same keys; null or a missing
+   * key = same as the course).
+   */
+  feedbackSettings    Json?                   @map("feedback_settings")
+  /**
+   * Overrides the course's optional extra survey question for this group (null = the course's).
+   */
+  surveyExtraQuestion Json?                   @map("survey_extra_question")
+  /**
+   * The end-of-course survey opened by hand (otherwise it opens a week before `endsAt` or at the
+   * end of the last lesson).
+   */
+  surveyOpenedAt      DateTime?               @map("survey_opened_at")
+  /**
+   * The halfway check, opened and closed by an instructor.
+   */
+  midSurveyOpenedAt   DateTime?               @map("mid_survey_opened_at")
+  midSurveyClosedAt   DateTime?               @map("mid_survey_closed_at")
+  /**
+   * "Reply to the class": the instructor's note shown at the top of the learners' course page.
+   */
+  classNote           String?                 @map("class_note") @db.Text
+  classNoteAt         DateTime?               @map("class_note_at")
+  members             CourseGroupMember[]
+  instructors         CourseGroupInstructor[]
+  accessLinks         AccessLink[]
+  assetUrlCache       GroupAssetUrlCache[]
+  partners            CourseGroupPartner[]
+  surveyResponses     CourseSurveyResponse[]
+  comments            CurriculumComment[]
+  taught              LessonTaught[]
+  createdAt           DateTime                @default(now()) @map("created_at")
+  updatedAt           DateTime                @updatedAt @map("updated_at")
+
+  @@unique([courseId, slug])
+  @@index([courseId])
+  @@index([curriculumVersionId])
+  @@map("course_groups")
+  @@schema("courses")
+}
+
+model CoursePartner {
+  id        String   @id @default(cuid())
+  courseId  String   @map("course_id")
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  partnerId String   @map("partner_id")
+  partner   Partner  @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  position  Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([courseId, partnerId])
+  @@index([courseId, position])
+  @@index([partnerId])
+  @@map("course_partners")
+  @@schema("courses")
+}
+
+model CourseGroupPartner {
+  id        String      @id @default(cuid())
+  groupId   String      @map("group_id")
+  group     CourseGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  partnerId String      @map("partner_id")
+  partner   Partner     @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  position  Int         @default(0)
+  createdAt DateTime    @default(now()) @map("created_at")
+  updatedAt DateTime    @updatedAt @map("updated_at")
+
+  @@unique([groupId, partnerId])
+  @@index([groupId, position])
+  @@index([partnerId])
+  @@map("course_group_partners")
+  @@schema("courses")
+}
+
+/**
+ * Who teaches a group: team members (any role, guests too), all equal, in the order they were added.
+ * Learners see their names; assigning gives them what they need for the group (src/lib/group-instructors.ts).
+ */
+model CourseGroupInstructor {
+  id          String      @id @default(cuid())
+  groupId     String      @map("group_id")
+  group       CourseGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId      String      @map("user_id")
+  user        User        @relation("GroupInstructor", fields: [userId], references: [id], onDelete: Cascade)
+  /// Who assigned them (no FK: the record stays if they leave).
+  createdById String?     @map("created_by_id")
+  createdAt   DateTime    @default(now()) @map("created_at")
+
+  @@unique([groupId, userId])
+  @@index([userId])
+  @@map("course_group_instructors")
+  @@schema("courses")
+}
+
+model CourseGroupMember {
+  id            String              @id @default(cuid())
+  groupId       String              @map("group_id")
+  group         CourseGroup         @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  fullName      String              @map("full_name")
+  position      Int
+  /**
+   * The learner asked not to count their reading (anonymous reading statistics stay off for them).
+   */
+  readingOptOut Boolean             @default(false) @map("reading_opt_out")
+  accessLinks   AccessLink[]
+  comments      CurriculumComment[]
+  createdAt     DateTime            @default(now()) @map("created_at")
+  updatedAt     DateTime            @updatedAt @map("updated_at")
+
+  @@unique([groupId, position])
+  @@index([groupId])
+  @@map("course_group_members")
+  @@schema("courses")
+}
+
+model AccessLink {
+  id                  String              @id @default(cuid())
+  groupId             String?             @map("group_id")
+  group               CourseGroup?        @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  memberId            String?             @map("member_id")
+  member              CourseGroupMember?  @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  /**
+   * Version this token serves; captured at mint time (source of truth for serving).
+   */
+  curriculumVersionId String?             @map("curriculum_version_id")
+  curriculumVersion   CurriculumVersion?  @relation(fields: [curriculumVersionId], references: [id], onDelete: SetNull)
+  token               String              @unique
+  expiresAt           DateTime            @map("expires_at")
+  revokedAt           DateTime?           @map("revoked_at")
+  lastAccessedAt      DateTime?           @map("last_accessed_at")
+  /**
+   * Admin-minted, shareable draft preview of `curriculumVersion` (no group/member). Serves any
+   * version status and follows group-link rules otherwise (read-only, expiry, revocable).
+   */
+  isPreview           Boolean             @default(false) @map("is_preview")
+  /**
+   * Preview-only admin note, e.g. who the link was shared with.
+   */
+  label               String?
+  /**
+   * One-time preview: the first browser to open it claims it (`claimedAt` + hashed cookie secret);
+   * every other browser sees it as used.
+   */
+  oneTime             Boolean             @default(false) @map("one_time")
+  claimedAt           DateTime?           @map("claimed_at")
+  claimSecretHash     String?             @map("claim_secret_hash")
+  /**
+   * An instructor link: one person's link to their group's learner pages (with `groupId`, no member,
+   * no version: it follows the group). Their marks are instructor notes under their name; it never
+   * counts as a learner, and it works only while they may still write notes on the group.
+   */
+  instructorUserId    String?             @map("instructor_user_id")
+  instructorUser      User?               @relation("InstructorLinks", fields: [instructorUserId], references: [id], onDelete: Cascade)
+  comments            CurriculumComment[]
+  createdAt           DateTime            @default(now()) @map("created_at")
+  updatedAt           DateTime            @updatedAt @map("updated_at")
+
+  @@index([groupId])
+  @@index([memberId])
+  @@index([expiresAt])
+  @@index([curriculumVersionId])
+  @@index([isPreview, curriculumVersionId])
+  @@index([instructorUserId])
+  @@map("access_links")
+  @@schema("courses")
+}
+
+model GroupAssetUrlCache {
+  id        String      @id @default(cuid())
+  groupId   String      @map("group_id")
+  group     CourseGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  assetId   String      @map("asset_id")
+  asset     MediaAsset  @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  signedUrl String      @map("signed_url") @db.Text
+  expiresAt DateTime    @map("expires_at")
+  createdAt DateTime    @default(now()) @map("created_at")
+  updatedAt DateTime    @updatedAt @map("updated_at")
+
+  @@unique([groupId, assetId])
+  @@index([assetId])
+  @@index([expiresAt])
+  @@map("group_asset_url_cache")
+  @@schema("courses")
+}
+
+/**
+ * Feedback left by an individual (member-bound) access-link holder on a specific lesson of the
+ * curriculum version their link serves. The commenter marks a passage (`selectedText`, with the
+ * surrounding `context` block used to re-locate + highlight it) and writes a `body`. The admin can
+ * add an `adminResponse` (shown back to the commenter) and `RESOLVED` it, or promote it to a Task.
+ * `proposerName` snapshots the member's name so attribution survives if the link or member is later
+ * removed (both relations are `SetNull`).
+ */
+model CurriculumComment {
+  id                  String                  @id @default(cuid())
+  curriculumVersionId String                  @map("curriculum_version_id")
+  curriculumVersion   CurriculumVersion       @relation(fields: [curriculumVersionId], references: [id], onDelete: Cascade)
+  lessonId            String                  @map("lesson_id")
+  lesson              Lesson                  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  /**
+   * Originating access link + proposing member; nullable so the comment survives their deletion.
+   */
+  accessLinkId        String?                 @map("access_link_id")
+  accessLink          AccessLink?             @relation(fields: [accessLinkId], references: [id], onDelete: SetNull)
+  memberId            String?                 @map("member_id")
+  member              CourseGroupMember?      @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  /**
+   * The group it came from (a learner's group, or the group an instructor note was written for), so a
+   * group's instructors see their group's feedback even when the group reads the core curriculum.
+   */
+  groupId             String?                 @map("group_id")
+  group               CourseGroup?            @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  /**
+   * Set for an instructor note: the team member who wrote it (no access link or member).
+   */
+  authorUserId        String?                 @map("author_user_id")
+  authorUser          User?                   @relation("CommentAuthor", fields: [authorUserId], references: [id], onDelete: SetNull)
+  /**
+   * An instructor note (not learner feedback). Stored, so a note stays a note when its author's
+   * account is deleted and `authorUserId` is cleared.
+   */
+  isInstructorNote    Boolean                 @default(false) @map("is_instructor_note")
+  /**
+   * Who wrote it, as the team sees it: the instructor's name for a note, "A learner · <group>" for
+   * learner feedback (learners are never named to the team; see src/lib/learner-label.ts).
+   */
+  proposerName        String                  @map("proposer_name")
+  /**
+   * The passage the commenter highlighted.
+   */
+  selectedText        String                  @map("selected_text") @db.Text
+  /**
+   * Surrounding block text, used to re-locate + highlight the passage when rendering.
+   */
+  context             String?                 @db.Text
+  /**
+   * The feedback message.
+   */
+  body                String                  @db.Text
+  adminResponse       String?                 @map("admin_response") @db.Text
+  adminRespondedAt    DateTime?               @map("admin_responded_at")
+  status              CurriculumCommentStatus @default(OPEN)
+  /**
+   * The lesson's published revision the learner was reading (null for older comments and notes on
+   * the working copy).
+   */
+  lessonRevision      Int?                    @map("lesson_revision")
+  /**
+   * When it was last resolved (null while open).
+   */
+  resolvedAt          DateTime?               @map("resolved_at")
+  createdAt           DateTime                @default(now()) @map("created_at")
+  updatedAt           DateTime                @updatedAt @map("updated_at")
+
+  @@index([lessonId])
+  @@index([curriculumVersionId])
+  @@index([accessLinkId])
+  @@index([groupId])
+  @@index([status])
+  @@index([memberId])
+  @@index([authorUserId])
+  @@index([curriculumVersionId, status, createdAt])
+  @@index([groupId, status, createdAt])
+  @@map("curriculum_comments")
+  @@schema("courses")
+}
+
+/**
+ * A learner's own note on a passage of a lesson — their working material, not a message to the
+ * instructor. Deliberately NOT a `kind` column on `CurriculumComment`: keeping notes out of the
+ * feedback triage flow (the admin inbox, replies, resolution, promotion to a Task) is then a
+ * property of the schema rather than of a filter every admin query has to remember. Notes are not
+ * secret — analysing them later is a deliberate query against this table, never an accident of a
+ * shared one.
+ * Ownership is the member when there is one, so notes survive access-link rotation — rotating a
+ * link revokes the old row and mints a new one (`createMemberAccessLinkAction`), which would
+ * orphan anything scoped by `accessLinkId`. `accessLinkId` is only the no-member fallback; the two
+ * namespaces stay disjoint (a link-owned note always has `memberId = null`).
+ * `memberId` / `accessLinkId` are plain columns with no hard FK, following the same pattern as
+ * `Task` and `Lesson.baseLessonId`. That keeps `CourseGroupMember` and `AccessLink` free of a
+ * `notes` back-relation, so an admin group query physically cannot `include` them. Member deletion
+ * is handled explicitly by `deleteNotesForMembers()`.
+ */
+model LessonNote {
+  id           String   @id @default(cuid())
+  lessonId     String   @map("lesson_id")
+  lesson       Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  /**
+   * Owning member — the authorization key. No hard FK: see the note above.
+   */
+  memberId     String?  @map("member_id")
+  /**
+   * Link the note was written from; scopes notes only when there is no member.
+   */
+  accessLinkId String?  @map("access_link_id")
+  /**
+   * The passage the reader marked, used to re-locate + highlight it on render.
+   */
+  selectedText String   @map("selected_text") @db.Text
+  context      String?  @db.Text
+  /**
+   * The note text. Editable, unlike feedback.
+   */
+  body         String   @db.Text
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([memberId, lessonId])
+  @@index([accessLinkId, lessonId])
+  @@index([lessonId])
+  @@map("lesson_notes")
+  @@schema("courses")
+}
+
+/**
+ * Table-agnostic CRM task. Like `ApiToken`, a Task holds no per-kind columns and no hard FK to the
+ * things it concerns: every task↔entity relation is a generic `TaskEntityLink` row, so a new task
+ * `kind` (curriculum today, anything later) needs zero schema. `kind` is a free-form label/filter.
+ * `proposerName` is a plain snapshot of whoever proposed the work, source-agnostic.
+ */
+model Task {
+  id             String           @id @default(cuid())
+  organizationId String           @map("organization_id")
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  /**
+   * Free-form label/filter for the task family, e.g. "curriculum". Not a table.
+   */
+  kind           String
+  title          String
+  description    String?          @db.Text
+  /**
+   * Curriculum tasks: the instructor's notes for AI, their own words about the change (who the group
+   * is, what to keep, what to avoid). Planning and drafting in the app use them; the connector's
+   * get_task and the sync API send them to Claude and the vault.
+   */
+  aiNotes        String?          @map("ai_notes") @db.Text
+  /**
+   * Revision plan written in the Obsidian feedback note (the vault is its source of truth); what
+   * the revision — by a person or an assistant — actually executes. Read-only in the dashboard.
+   */
+  plan           String?          @db.Text
+  /**
+   * When the plan last changed (set by the sync API).
+   */
+  planUpdatedAt  DateTime?        @map("plan_updated_at")
+  /**
+   * Group curriculum tasks: decided not to propose this change for the core curriculum (it stays
+   * group-only), so it no longer waits on that decision.
+   */
+  groupOnly      Boolean          @default(false) @map("group_only")
+  /**
+   * Curriculum tasks: worked on in the app or in the Obsidian vault (`TaskWorkplace`). The vault's
+   * checklist leaves out the ones worked on in the app.
+   */
+  workplace      TaskWorkplace?
+  /**
+   * Curriculum tasks: a person has cleared this revision for the local agent, i.e. the plan may be
+   * executed end to end without an instructor doing it by hand. Sent to the vault by the sync API;
+   * left false, the agent only assists. Set in the dashboard (or cleared back by the agent once it
+   * has taken the task over).
+   */
+  aiReady        Boolean          @default(false) @map("ai_ready")
+  status         TaskStatus       @default(TODO)
+  /**
+   * Snapshot of who proposed the change (the comment's `proposerName`: an instructor, or "A learner ·
+   * <group>", never a learner's name); no FK, works for any source.
+   */
+  proposerName   String?          @map("proposer_name")
+  /**
+   * Set when the task is moved to DONE.
+   */
+  completedAt    DateTime?        @map("completed_at")
+  /**
+   * Admin who created the task (audit only); the task survives if that user is removed.
+   */
+  createdById    String?          @map("created_by_id")
+  createdBy      User?            @relation("TaskCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  /**
+   * Admin the task is assigned to; null = unassigned. Survives that user's removal (SetNull).
+   */
+  assigneeId     String?          @map("assignee_id")
+  assignee       User?            @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  entityLinks    TaskEntityLink[]
+  comments       TaskComment[]
+  proposals      AiProposal[]
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@index([kind])
+  @@index([assigneeId])
+  @@index([organizationId])
+  @@index([createdById])
+  @@map("tasks")
+  @@schema("public")
+}
+
+/**
+ * An admin's note/discussion entry on a Task (internal collaboration). `authorName` snapshots the
+ * admin's name so the thread reads correctly even if the user is later removed (`authorId` SetNull).
+ */
+model TaskComment {
+  id         String   @id @default(cuid())
+  taskId     String   @map("task_id")
+  task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  authorId   String?  @map("author_id")
+  author     User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  authorName String   @map("author_name")
+  body       String   @db.Text
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([taskId])
+  @@index([authorId])
+  @@map("task_comments")
+  @@schema("public")
+}
+
+/**
+ * One polymorphic join row relating a `Task` to some CRM entity. Deliberately FK-free (resolved by
+ * `entityType` at read time, exactly like `ApiToken.entityType` + `entityId`) so tasks can relate to
+ * any current or future entity without new tables. `role` distinguishes the relation, e.g. a
+ * curriculum task links its lesson/version/course as `subject` and its originating comment as `source`.
+ */
+model TaskEntityLink {
+  id         String   @id @default(cuid())
+  taskId     String   @map("task_id")
+  task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  /**
+   * Kind of entity, e.g. "lesson", "curriculum_version", "course", "curriculum_comment", or
+   * "course_group" (the group whose feedback or curriculum copy the task is about; how a group's
+   * instructors find their tasks).
+   */
+  entityType String   @map("entity_type")
+  /**
+   * Id of the specific entity instance. Not a foreign key — resolved per `entityType` at read time.
+   */
+  entityId   String   @map("entity_id")
+  /**
+   * Which relation this is, e.g. "subject" or "source".
+   */
+  role       String   @default("subject")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@unique([taskId, entityType, entityId, role])
+  @@index([entityType, entityId])
+  @@index([taskId])
+  @@map("task_entity_links")
+  @@schema("public")
+}
+
+// ---------------------------------------------------------------------------------------------
+// Content entries (blog posts, projects, …) — authored in Obsidian, pushed via /api/sync/content.
+// `kind` is free-form and validated by the registry in src/lib/content/kinds.ts, so a new kind needs
+// no schema change. Tags, assets and comments link to entries polymorphically (entityType+entityId).
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * Generic key/value settings, scoped polymorphically (scope + scopeId, no FK) — e.g. the header and
+ * footer texts of a content section: scope "content_section", scopeId "project", key "subtitle".
+ */
+model Setting {
+  id        String   @id @default(cuid())
+  scope     String
+  scopeId   String   @map("scope_id")
+  key       String
+  value     Json
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([scope, scopeId, key])
+  @@map("settings")
+  @@schema("public")
+}
+
+enum OrgRole {
+  /// Created the organisation; manages the team and settings, cannot be removed by admins.
+  OWNER
+  /// Manages the team and settings.
+  ADMIN
+  /// Works on courses, groups, feedback and tasks.
+  MEMBER
+
+  @@schema("public")
+}
+
+/// Whether a member sees everything in the organisation or only what their `UserGrant`s there allow.
+/// Owners and admins always have full access, whatever this says.
+enum MemberAccess {
+  /// Every course and group (the default).
+  FULL
+  /// Exactly their grant rows in this organisation; none means nothing.
+  LIMITED
+
+  @@schema("public")
+}
+
+/// An organisation's plan (LOCAL in the local edition).
+enum OrgPlan {
+  SOLO
+  STUDIO
+  TEAM
+  ACADEMY
+  PILOT
+  /// The self-hosted local edition (one organisation per installation; never limited).
+  LOCAL
+
+  @@schema("public")
+}
+
+/// Where an organisation stands with its plan.
+enum PlanStatus {
+  /// A free first class, until `trialEndsAt`.
+  TRIAL
+  ACTIVE
+  /// Ends at `periodEndsAt`; nothing new after that.
+  CANCELLED
+  PAUSED
+
+  @@schema("public")
+}
+
+enum BillingInterval {
+  MONTHLY
+  YEARLY
+
+  @@schema("public")
+}
+
+/**
+ * A customer workspace: owns its courses (and through them versions, lessons, groups, comments),
+ * tasks, API tokens and invites. Every signed-in request works inside one organisation, kept on
+ * the session (`UserSession.organizationId`).
+ */
+model Organization {
+  id                        String                  @id @default(cuid())
+  name                      String
+  slug                      String                  @unique
+  plan                      OrgPlan                 @default(PILOT)
+  /// The plan's state and period.
+  planStatus                PlanStatus              @default(ACTIVE) @map("plan_status")
+  billingInterval           BillingInterval         @default(MONTHLY) @map("billing_interval")
+  /// The paid (or comped) period: renews on this date; a cancelled plan ends on it.
+  periodEndsAt              DateTime?               @map("period_ends_at")
+  /// Solo's free first class ends on this date.
+  trialEndsAt               DateTime?               @map("trial_ends_at")
+  foundingPrice             Boolean                 @default(false) @map("founding_price")
+  periodPriceUsd            Int?                    @map("period_price_usd")
+  coTeacher                 Boolean                 @default(false) @map("co_teacher")
+  extraClasses              Int                     @default(0) @map("extra_classes")
+  /// Overrides: no seat or class limit; never needs to pay; seats and classes given for free.
+  unlimited                 Boolean                 @default(false)
+  billingExempt             Boolean                 @default(false) @map("billing_exempt")
+  freeSeats                 Int                     @default(0) @map("free_seats")
+  freeClasses               Int                     @default(0) @map("free_classes")
+  /// The owner asked for more time on the free first class; cleared when it's extended.
+  trialExtensionRequestedAt DateTime?               @map("trial_extension_requested_at")
+  trialExtensionNote        String?                 @map("trial_extension_note") @db.Text
+  /// Paused between classes since (kept after cancelling a pause, until its month ends), and the plan
+  /// and billing that resuming returns to.
+  pausedAt                  DateTime?               @map("paused_at")
+  resumePlan                OrgPlan?                @map("resume_plan")
+  resumeInterval            BillingInterval?        @map("resume_interval")
+  planChanges               PlanChange[]
+  /// The organisation's own Anthropic API key (local edition), encrypted with SESSION_SECRET.
+  aiApiKeyEncrypted         String?                 @map("ai_api_key_encrypted")
+  /// Its last four characters, to show which key is set.
+  aiApiKeyHint              String?                 @map("ai_api_key_hint")
+  /// When Anthropic last accepted the key (checked on save), and when it last refused it in a call.
+  aiApiKeyCheckedAt         DateTime?               @map("ai_api_key_checked_at")
+  aiApiKeyInvalidAt         DateTime?               @map("ai_api_key_invalid_at")
+  /// Who saved the key (no FK: the record stays if they leave).
+  aiApiKeySetById           String?                 @map("ai_api_key_set_by_id")
+  aiHostedEnabled           Boolean                 @default(false) @map("ai_hosted_enabled")
+  aiHostedMonthlyCapCents   Int?                    @map("ai_hosted_monthly_cap_cents")
+  /// Whether members may connect their own Claude.
+  connectorEnabled          Boolean                 @default(true) @map("connector_enabled")
+  /// The organisation's logo (`organizations/<id>/logo/…` in storage), shown in the sidebar; null =
+  /// its icon on its colour instead (src/lib/organization-identity.ts).
+  logoKey                   String?                 @map("logo_key")
+  /// The icon and colour shown without a logo (keys from organization-identity.ts; null = defaults).
+  iconName                  String?                 @map("icon_name")
+  iconColor                 String?                 @map("icon_color")
+  /// Who created it: the person signing up or creating another organisation, or the platform admin
+  /// who set it up (no FK: the record stays if they leave). Self-created organisations count
+  /// towards a person's cap; null for organisations made before this was recorded.
+  createdById               String?                 @map("created_by_id")
+  /// A demo organisation (`yarn db:seed-demo`): fictional content to show and try the product, with a
+  /// login to share.
+  isDemo                    Boolean                 @default(false) @map("is_demo")
+  /// Always null in the self-hosted edition.
+  webhooksAppCreatedAt      DateTime?               @map("webhooks_app_created_at")
+  members                   OrganizationMember[]
+  courses                   Course[]
+  partners                  Partner[]
+  tasks                     Task[]
+  apiTokens                 ApiToken[]
+  termReports               TermReport[]
+  leavingNotices            LeavingNotice[]
+  feedbackSettingChanges    FeedbackSettingChange[]
+  answerRemovals            AnswerRemoval[]
+  aiUsage                   AiUsage[]
+  aiTopUps                  AiTopUp[]
+  aiProposals               AiProposal[]
+  grants                    UserGrant[]
+  connectorConnections      ConnectorConnection[]
+  oauthCodes                OAuthCode[]
+  invites                   UserInvite[]
+  sessions                  UserSession[]
+  createdAt                 DateTime                @default(now()) @map("created_at")
+  updatedAt                 DateTime                @updatedAt @map("updated_at")
+
+  @@index([createdById])
+  @@map("organizations")
+  @@schema("public")
+}
+
+/**
+ * Every change to an organisation's plan, with the fields that changed before and after.
+ */
+model PlanChange {
+  id             String       @id @default(cuid())
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  /// Who did it (no FK: the record stays if they leave).
+  actorId        String?      @map("actor_id")
+  actorName      String       @map("actor_name")
+  /// `checkout`, `cancel`, `pause`, `resume` or `admin`.
+  source         String
+  before         Json
+  after          Json
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  @@index([organizationId, createdAt])
+  @@map("plan_changes")
+  @@schema("public")
+}
+
+/**
+ * The emails to an organisation's owners after it stopped paying: 30 and 7 days before its learner
+ * pages close, and before its data is deleted. One row per notice and per time it left (`leftAt`:
+ * the day its free first group or its cancelled plan ended), so the daily job sends each one once
+ * however often it runs, and leaving again later starts afresh.
+ */
+model LeavingNotice {
+  id             String       @id @default(cuid())
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  /// `close-30`, `close-7`, `delete-30` or `delete-7`.
+  kind           String
+  /// Day 0 of the timeline it belongs to.
+  leftAt         DateTime     @map("left_at")
+  /// The date it gave: when the learner pages close, or when the data is deleted.
+  forDate        DateTime     @map("for_date")
+  /// Null while it is being sent; set once it went out (to every owner the job could reach).
+  sentAt         DateTime?    @map("sent_at")
+  /// How many owners it reached.
+  recipients     Int          @default(0)
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  @@unique([organizationId, kind, leftAt])
+  @@map("leaving_notices")
+  @@schema("public")
+}
+
+model OrganizationMember {
+  id             String       @id @default(cuid())
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String       @map("user_id")
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role           OrgRole      @default(MEMBER)
+  /// FULL or LIMITED to their `UserGrant` rows in this organisation (members only).
+  access         MemberAccess @default(FULL)
+  /// "Sign out" from the Team page: sessions started before this can't work in this organisation.
+  signedOutAt    DateTime?    @map("signed_out_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+  @@map("organization_members")
+  @@schema("public")
+}
+
+/// A call booked from the website, with its invitation's state.
+model CallBooking {
+  id              String    @id @default(cuid())
+  startsAt        DateTime  @map("starts_at")
+  endsAt          DateTime  @map("ends_at")
+  /// The start while it's booked, so two calls can't take the same time; null once cancelled.
+  activeSlot      DateTime? @unique @map("active_slot")
+  name            String
+  email           String
+  organization    String?
+  /// What it's about.
+  topic           String
+  message         String?   @db.Text
+  /// The guest's time zone and the page's language, for what we send them.
+  timeZone        String    @map("time_zone")
+  locale          String
+  /// booked | cancelled
+  status          String    @default("booked")
+  /// Raised on every change, so calendars update the event they have (the invitation's SEQUENCE).
+  sequence        Int       @default(0)
+  manageTokenHash String    @unique @map("manage_token_hash")
+  rescheduledAt   DateTime? @map("rescheduled_at")
+  cancelledAt     DateTime? @map("cancelled_at")
+  /// guest | admin
+  cancelledBy     String?   @map("cancelled_by")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@index([startsAt])
+  @@index([email])
+  @@map("call_bookings")
+  @@schema("public")
+}
+
+/// The hours for one week (Monday), replacing the usual weekly hours for that week only:
+/// `days` is seven lists of ranges, Monday first ({ from: "09:00", to: "12:00" }; empty: not that day).
+model BookingWeekHours {
+  weekStart DateTime @id @map("week_start") @db.Date
+  days      Json
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("booking_week_hours")
+  @@schema("public")
+}
+
+/// The hours on one date, replacing the week's: `ranges` as above (empty: not available that day).
+model BookingDayHours {
+  date      DateTime @id @db.Date
+  ranges    Json
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("booking_day_hours")
+  @@schema("public")
+}
+
+/// Time not available for calls within the hours (a meeting elsewhere, a day off).
+model BookingBlock {
+  id        String   @id @default(cuid())
+  startsAt  DateTime @map("starts_at")
+  endsAt    DateTime @map("ends_at")
+  note      String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([startsAt])
+  @@map("booking_blocks")
+  @@schema("public")
+}
+
+/// What platform admins did across organisations.
+/// Names are copied in, so the log reads the same after users are renamed or deleted.
+model PlatformAuditEvent {
+  id           String   @id @default(cuid())
+  actorId      String   @map("actor_id")
+  actorName    String   @map("actor_name")
+  /// impersonation.start, organization.plan, user.delete, … (PLATFORM_ACTIONS)
+  action       String
+  targetUserId String?  @map("target_user_id")
+  targetName   String?  @map("target_name")
+  /// What changed, when the action needs it (from and to; a "log in as" visit's session).
+  detail       Json?
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@map("platform_audit_events")
+  @@schema("public")
+}
+
+/// What a platform admin changed while logged in as someone ("log in as"): one row per database
+/// write, with the record and the fields it touched, never their values (src/lib/impersonated-changes.ts).
+/// Listed under the visit in the admin log; old rows are deleted from Storage. No FKs: the trail
+/// outlives the session, the people and the records.
+model ImpersonationChange {
+  id             String   @id @default(cuid())
+  /// The borrowed session: one "log in as" visit.
+  sessionId      String   @map("session_id")
+  /// The platform admin, and whose account they were in.
+  actorId        String   @map("actor_id")
+  userId         String   @map("user_id")
+  organizationId String?  @map("organization_id")
+  /// The page it was done from.
+  path           String?
+  /// The Prisma model and operation (Lesson, update).
+  model          String
+  operation      String
+  recordId       String?  @map("record_id")
+  /// The record's title or name, when the write returned one.
+  label          String?
+  fields         String[]
+  /// Rows a bulk write touched.
+  count          Int      @default(1)
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@index([sessionId, createdAt])
+  @@index([createdAt])
+  @@map("impersonation_changes")
+  @@schema("public")
+}
+
+/// A day someone used the app, signed in as themselves (never while a platform admin is logged in
+/// as them): one row per person and day. No FK, like `AiUsage`: the platform's history stays when
+/// people delete their accounts.
+model UserActivityDay {
+  userId    String   @map("user_id")
+  /// The UTC day.
+  day       DateTime @db.Date
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@id([userId, day])
+  @@index([day])
+  @@map("user_activity_days")
+  @@schema("public")
+}
+
+/**
+ * A password reset link (single use, an hour), from "Forgot your password?".
+ */
+/**
+ * Counts for the limits on public forms (src/lib/rate-limit.ts): one row per limit, visitor (or email)
+ * and time window, so every server instance shares them. Rows past `expiresAt` are deleted now and then.
+ */
+model RateLimit {
+  /// `<limit>:<hashed visitor or email>:<window number>`
+  key       String   @id
+  count     Int      @default(0)
+  expiresAt DateTime @map("expires_at")
+
+  @@index([expiresAt])
+  @@map("rate_limits")
+  @@schema("public")
+}
+
+// ---------------------------------------------------------------------------------------------
+// How lessons changed and what learners answered. Shared schema; tables an edition doesn't use stay
+// empty.
+// ---------------------------------------------------------------------------------------------
+
+/// What a save of a lesson did, when it came from proposed changes or finished an improvement: the
+/// feedback it answers and the improvement (task) it belongs to. Written in the save's transaction;
+/// settled (its feedback marked done) once that revision reaches learners, whichever way it is
+/// published. Undo reopens exactly the feedback it marked done.
+model LessonChange {
+  id                 String    @id @default(cuid())
+  lessonId           String    @map("lesson_id")
+  lesson             Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  /// The lesson revision the save produced.
+  revision           Int
+  /// The improvement it belongs to (no foreign key, like the task links).
+  taskId             String?   @map("task_id")
+  /// The drafts whose changes went in.
+  proposalIds        String[]  @map("proposal_ids")
+  /// The feedback it answers: marked done when it reaches learners.
+  commentIds         String[]  @map("comment_ids")
+  /// How many proposed changes were applied, and how many skipped.
+  applied            Int       @default(0)
+  skipped            Int       @default(0)
+  /// When it reached learners and its feedback was marked done.
+  settledAt          DateTime? @map("settled_at")
+  /// The feedback it marked done then (it may have been done already).
+  resolvedCommentIds String[]  @map("resolved_comment_ids")
+  /// What it changed: the changed blocks (proposed-changes shape: kind, section, before, after,
+  /// words), so "What changed" can show it later. Null for changes saved before this was recorded.
+  changes            Json?
+  createdById        String?   @map("created_by_id")
+  createdAt          DateTime  @default(now()) @map("created_at")
+
+  /// One per improvement a save finished (several when the lesson's Improvements view saves them together).
+  @@index([lessonId, revision])
+  @@index([taskId])
+  @@index([lessonId, settledAt])
+  @@map("lesson_changes")
+  @@schema("courses")
+}
+
+/// Every time a lesson was published: its text then, so "what changed" and "did it help" can be
+/// answered later (the lesson itself keeps only the working copy and the last published snapshot).
+model LessonPublication {
+  id              String   @id @default(cuid())
+  lessonId        String   @map("lesson_id")
+  lesson          Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  revision        Int
+  title           String
+  markdownContent String   @map("markdown_content") @db.Text
+  publishedAt     DateTime @default(now()) @map("published_at")
+  /// Who published it, and their name then (no FK: the record stays if they leave), for the version
+  /// history in "Export everything". Null before this was recorded, and for a group copy's first text.
+  publishedById   String?  @map("published_by_id")
+  publisherName   String?  @map("publisher_name")
+  /// Blocks added and removed against the publication before it, kept the first time they're counted:
+  /// neither text ever changes. Null until then.
+  addedBlocks     Int?     @map("added_blocks")
+  removedBlocks   Int?     @map("removed_blocks")
+
+  @@unique([lessonId, revision])
+  @@index([lessonId, publishedAt])
+  @@map("lesson_publications")
+  @@schema("courses")
+}
+
+enum PulseKind {
+  /// "Could you explain this lesson to someone else?"
+  EXPLAIN
+  /// The lesson's approved check question.
+  CHECK
+
+  @@schema("courses")
+}
+
+enum PulseAnswer {
+  YES
+  NOT_YET
+  /// The delayed ask: "Didn't read it".
+  NOT_READ
+  /// The learner closed the card (an explicit ×, never inferred).
+  DISMISSED
+
+  @@schema("courses")
+}
+
+/// A learner's one-tap answer at the end of a lesson (or at the start of the next one). One per
+/// learner, lesson and published revision; changing the answer updates it. Like `LessonNote`, the
+/// member and link are plain columns: instructors only ever see these in aggregate.
+model LessonPulse {
+  id                  String       @id @default(cuid())
+  lessonId            String       @map("lesson_id")
+  lesson              Lesson       @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  curriculumVersionId String       @map("curriculum_version_id")
+  groupId             String?      @map("group_id")
+  memberId            String?      @map("member_id")
+  accessLinkId        String?      @map("access_link_id")
+  /// The lesson's published revision the learner read.
+  revision            Int
+  kind                PulseKind    @default(EXPLAIN)
+  /// EXPLAIN answers (and DISMISSED for either kind).
+  answer              PulseAnswer?
+  /// CHECK answers: the option picked (null with `notSure`).
+  optionIndex         Int?         @map("option_index")
+  notSure             Boolean      @default(false) @map("not_sure")
+  /// CHECK answers: whether the picked option was the right one.
+  correct             Boolean?
+  /// "Which part?": the section (by heading order) that helped most (after YES) or was hardest.
+  sectionIndex        Int?         @map("section_index")
+  sectionTitle        String?      @map("section_title")
+  /// Optional one line after "Not yet".
+  note                String?      @db.Text
+  /// Answered at the start of the next lesson instead of at the end of this one.
+  delayed             Boolean      @default(false)
+  /// link (Chalkenso's learner page) | site (the organisation's own website)
+  source              String       @default("link")
+  /// Version of the standard wording, so a wording change never silently breaks a trend.
+  questionSet         String       @default("v1") @map("question_set")
+  createdAt           DateTime     @default(now()) @map("created_at")
+  updatedAt           DateTime     @updatedAt @map("updated_at")
+
+  @@unique([lessonId, memberId, revision])
+  /// Also the before/after windows of a revision (a version's answers of one kind over time).
+  @@index([curriculumVersionId, kind, updatedAt])
+  @@index([groupId])
+  @@index([memberId])
+  @@map("lesson_pulses")
+  @@schema("courses")
+}
+
+/// A lesson's one-tap check question (a hinge question): each wrong option names the misconception
+/// it reveals and the section that teaches the point. AI drafts it, an instructor approves it; only
+/// approved checks reach learners. Group copies without their own use the core lesson's.
+model LessonCheck {
+  id               String    @id @default(cuid())
+  lessonId         String    @unique @map("lesson_id")
+  lesson           Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  question         String    @db.Text
+  /// `[{ text, correct, misconception?, sectionIndex? }]`
+  options          Json
+  /// The lesson revision it was approved against (the editor warns when the lesson changed since).
+  approvedRevision Int?      @map("approved_revision")
+  approvedAt       DateTime? @map("approved_at")
+  /// ai | instructor
+  draftedBy        String    @default("instructor") @map("drafted_by")
+  createdById      String?   @map("created_by_id")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  @@map("lesson_checks")
+  @@schema("courses")
+}
+
+/// Anonymous reading statistics: one row per lesson opened in one page visit. No learner, no link,
+/// no time of day: only the day, and a random key the browser keeps in memory so its periodic
+/// updates replace one row. Arrays are per section, in heading order.
+model LessonReadingSession {
+  id              String   @id @default(cuid())
+  lessonId        String   @map("lesson_id")
+  lesson          Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  revision        Int
+  groupId         String?  @map("group_id")
+  sessionKey      String   @map("session_key")
+  day             DateTime @db.Date
+  /// link | site
+  source          String   @default("link")
+  activeSeconds   Int      @default(0) @map("active_seconds")
+  sectionCount    Int      @default(0) @map("section_count")
+  furthestSection Int      @default(0) @map("furthest_section")
+  finished        Boolean  @default(false)
+  sectionSeconds  Int[]    @default([]) @map("section_seconds")
+  sectionReached  Int[]    @default([]) @map("section_reached")
+  sectionRereads  Int[]    @default([]) @map("section_rereads")
+  sectionAiAsks   Int[]    @default([]) @map("section_ai_asks")
+  sectionCopies   Int[]    @default([]) @map("section_copies")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@unique([lessonId, sessionKey])
+  @@index([lessonId, revision])
+  @@index([groupId])
+  @@index([day])
+  @@map("lesson_reading_sessions")
+  @@schema("courses")
+}
+
+enum SurveyKind {
+  /// The halfway check.
+  MID
+  /// The end-of-course survey.
+  END
+
+  @@schema("courses")
+}
+
+/// A learner's halfway check or end-of-course survey: one score is the only required answer, the
+/// rest is optional and saved as it comes. Instructors see answers without names unless the learner
+/// chose to add theirs; quotes go public only with `quoteConsent`.
+model CourseSurveyResponse {
+  id                  String      @id @default(cuid())
+  groupId             String      @map("group_id")
+  group               CourseGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  courseId            String      @map("course_id")
+  curriculumVersionId String      @map("curriculum_version_id")
+  memberId            String?     @map("member_id")
+  accessLinkId        String?     @map("access_link_id")
+  kind                SurveyKind  @default(END)
+  /// 1–5 (labelled faces).
+  score               Int
+  /// "Which lesson should we improve first?" (null = None / not answered).
+  improveLessonId     String?     @map("improve_lesson_id")
+  improveNone         Boolean     @default(false) @map("improve_none")
+  /// helped (score 4–5) | change (1–3): which open question was asked.
+  answerPrompt        String?     @map("answer_prompt")
+  answer              String?     @db.Text
+  /// May be quoted publicly (without a name unless `named`).
+  quoteConsent        Boolean     @default(false) @map("quote_consent")
+  /// The learner chose to add their name to the open answer.
+  named               Boolean     @default(false)
+  /// Snapshot of the extra question asked, and its answer.
+  extraQuestion       Json?       @map("extra_question")
+  extraAnswer         String?     @map("extra_answer") @db.Text
+  /// "3 quick questions": `[{ lessonId, optionIndex, correct, notSure }]`.
+  checkAnswers        Json?       @map("check_answers")
+  source              String      @default("link")
+  questionSet         String      @default("v1") @map("question_set")
+  createdAt           DateTime    @default(now()) @map("created_at")
+  updatedAt           DateTime    @updatedAt @map("updated_at")
+
+  @@unique([groupId, memberId, kind])
+  @@index([courseId])
+  @@map("course_survey_responses")
+  @@schema("courses")
+}
+
+enum TaughtVerdict {
+  SMOOTH
+  RAN_LONG
+  LOST_THEM
+
+  @@schema("courses")
+}
+
+/// An instructor's one tap after teaching a lesson to a group.
+model LessonTaught {
+  id        String         @id @default(cuid())
+  groupId   String         @map("group_id")
+  group     CourseGroup    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  lessonId  String         @map("lesson_id")
+  lesson    Lesson         @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  taughtAt  DateTime       @default(now()) @map("taught_at")
+  verdict   TaughtVerdict?
+  userId    String?        @map("user_id")
+  createdAt DateTime       @default(now()) @map("created_at")
+  updatedAt DateTime       @updatedAt @map("updated_at")
+
+  @@unique([groupId, lessonId])
+  @@index([lessonId])
+  @@map("lesson_taught")
+  @@schema("courses")
+}
+
+/// An owner or admin removed the words of one learner answer (spam, something personal). The tap
+/// itself stays counted, and the text is never kept here: this only says who removed what kind, when.
+model AnswerRemoval {
+  id             String       @id @default(cuid())
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  courseId       String       @map("course_id")
+  /// pulse-note (after "Not yet") | survey-answer | survey-extra
+  kind           String
+  userId         String?      @map("user_id")
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  @@index([courseId, createdAt])
+  @@index([organizationId])
+  @@map("answer_removals")
+  @@schema("courses")
+}
+
+/// Every change to a learner feedback switch: for "off since" labels, shaded periods in insights
+/// and notes in term reports. Turning a feature off never deletes what was collected.
+model FeedbackSettingChange {
+  id             String       @id @default(cuid())
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  courseId       String       @map("course_id")
+  /// Null: the course's own setting.
+  groupId        String?      @map("group_id")
+  /// lessonQuestion | checks | surveys | reading
+  feature        String
+  /// Null: the group went back to "same as course".
+  enabled        Boolean?
+  userId         String?      @map("user_id")
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  @@index([courseId, createdAt])
+  @@index([organizationId])
+  @@map("feedback_setting_changes")
+  @@schema("courses")
+}
+
+enum TermReportStatus {
+  DRAFT
+  FINAL
+
+  @@schema("public")
+}
+
+/// A term report: a frozen snapshot of what was taught, what learners found hard and what changed,
+/// with an editable AI-drafted summary. Shared read-only through a hashed link.
+model TermReport {
+  id             String           @id @default(cuid())
+  organizationId String           @map("organization_id")
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  title          String
+  periodStart    DateTime         @map("period_start")
+  periodEnd      DateTime         @map("period_end")
+  /// `{ courseIds: string[], groupIds: string[] }`
+  scope          Json
+  /// The numbers, frozen when the report was made (or refreshed).
+  data           Json
+  summary        String?          @db.Text
+  /// AI-grouped themes from open answers: `[{ title, count, quotes[] }]`.
+  themes         Json?
+  status         TermReportStatus @default(DRAFT)
+  /// `app`, or `connector` for a draft proposed from Claude ("drafted in Claude").
+  createdVia     String           @default("app") @map("created_via")
+  createdById    String?          @map("created_by_id")
+  shareTokenHash String?          @unique @map("share_token_hash")
+  shareExpiresAt DateTime?        @map("share_expires_at")
+  shareRevokedAt DateTime?        @map("share_revoked_at")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+
+  @@index([organizationId, createdAt])
+  @@map("term_reports")
+  @@schema("public")
+}
+
+// ---------------------------------------------------------------------------------------------
+// AI without API pricing: usage, the "Use with Claude" connector and proposals
+// ---------------------------------------------------------------------------------------------
+
+/// One AI call made by the app (never for AI_MOCK): what it cost and whose key paid for it.
+model AiUsage {
+  id               String       @id @default(cuid())
+  organizationId   String       @map("organization_id")
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  /// Who asked (no FK: usage stays when people leave).
+  userId           String?      @map("user_id")
+  /// revise | plan | check | themes | report | wording
+  feature          String
+  /// The model that answered (a fallback model when the first declined).
+  model            String
+  /// organization | hosted | installation
+  source           String
+  inputTokens      Int          @default(0) @map("input_tokens")
+  outputTokens     Int          @default(0) @map("output_tokens")
+  cacheReadTokens  Int          @default(0) @map("cache_read_tokens")
+  cacheWriteTokens Int          @default(0) @map("cache_write_tokens")
+  /// US dollars × 1,000,000, from src/lib/ai-pricing.ts.
+  costMicros       Int          @default(0) @map("cost_micros")
+  fromTopUp        Boolean      @default(false) @map("from_top_up")
+  createdAt        DateTime     @default(now()) @map("created_at")
+
+  @@index([organizationId, source, createdAt])
+  @@map("ai_usage")
+  @@schema("public")
+}
+
+/// AI bought on top of what an organisation's plan includes, used once that runs out.
+model AiTopUp {
+  id             String       @id @default(cuid())
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  /// US cents paid, and so the AI it adds.
+  amountCents    Int          @map("amount_cents")
+  /// Who bought it (no FK: kept when people leave).
+  boughtById     String?      @map("bought_by_id")
+  /// The payment's reference.
+  paymentRef     String?      @map("payment_ref")
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  @@index([organizationId, createdAt])
+  @@map("ai_top_ups")
+  @@schema("public")
+}
+
+enum OAuthClientKind {
+  /// Client ID Metadata Document: the client id is an HTTPS URL describing the client.
+  CIMD
+  /// Dynamic Client Registration.
+  DCR
+
+  @@schema("public")
+}
+
+/// An app people connect to Chalkenso through OAuth (Claude, Claude Code, other MCP clients).
+model OAuthClient {
+  id           String                @id @default(cuid())
+  clientId     String                @unique @map("client_id")
+  name         String
+  kind         OAuthClientKind
+  redirectUris String[]              @map("redirect_uris")
+  /// CIMD: when the metadata document was last fetched.
+  fetchedAt    DateTime?             @map("fetched_at")
+  connections  ConnectorConnection[]
+  codes        OAuthCode[]
+  createdAt    DateTime              @default(now()) @map("created_at")
+  updatedAt    DateTime              @updatedAt @map("updated_at")
+
+  @@map("oauth_clients")
+  @@schema("public")
+}
+
+/// One person's Claude connected to one organisation. Tokens belong to it; revoking it ends them all.
+model ConnectorConnection {
+  id             String          @id @default(cuid())
+  userId         String          @map("user_id")
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId String          @map("organization_id")
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  clientId       String          @map("client_id")
+  client         OAuthClient     @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  /// courses:read, proposals:write, offline_access
+  scopes         String[]
+  lastUsedAt     DateTime?       @map("last_used_at")
+  revokedAt      DateTime?       @map("revoked_at")
+  tokens         OAuthToken[]
+  calls          ConnectorCall[]
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([organizationId])
+  @@map("connector_connections")
+  @@schema("public")
+}
+
+/// An authorization code (single use, 10 minutes), bound to its client, redirect and PKCE challenge.
+model OAuthCode {
+  id             String       @id @default(cuid())
+  codeHash       String       @unique @map("code_hash")
+  userId         String       @map("user_id")
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  clientId       String       @map("client_id")
+  client         OAuthClient  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  redirectUri    String       @map("redirect_uri")
+  codeChallenge  String       @map("code_challenge")
+  scopes         String[]
+  resource       String
+  expiresAt      DateTime     @map("expires_at")
+  usedAt         DateTime?    @map("used_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  @@index([organizationId])
+  @@index([expiresAt])
+  @@map("oauth_codes")
+  @@schema("public")
+}
+
+enum OAuthTokenKind {
+  ACCESS
+  REFRESH
+
+  @@schema("public")
+}
+
+/// Access (1 hour) and refresh (60 days, rotated on every use) tokens, stored as HMAC hashes.
+model OAuthToken {
+  id           String              @id @default(cuid())
+  tokenHash    String              @unique @map("token_hash")
+  kind         OAuthTokenKind
+  connectionId String              @map("connection_id")
+  connection   ConnectorConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  expiresAt    DateTime            @map("expires_at")
+  revokedAt    DateTime?           @map("revoked_at")
+  createdAt    DateTime            @default(now()) @map("created_at")
+
+  @@index([connectionId])
+  @@index([expiresAt])
+  @@map("oauth_tokens")
+  @@schema("public")
+}
+
+/// What Claude did through a connection (kept 90 days): each person sees their own, admins all.
+model ConnectorCall {
+  id             String              @id @default(cuid())
+  connectionId   String              @map("connection_id")
+  connection     ConnectorConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  organizationId String              @map("organization_id")
+  userId         String              @map("user_id")
+  tool           String
+  targetType     String?             @map("target_type")
+  targetId       String?             @map("target_id")
+  ok             Boolean
+  createdAt      DateTime            @default(now()) @map("created_at")
+
+  @@index([organizationId, createdAt])
+  @@index([userId, createdAt])
+  /// The 90-day prune runs across organisations.
+  @@index([createdAt])
+  @@map("connector_calls")
+  @@schema("public")
+}
+
+enum AiProposalKind {
+  LESSON_REVISION
+  TASK_PLAN
+  CHECK_QUESTION
+  REPORT_SUMMARY
+  FEEDBACK_THEMES
+
+  @@schema("public")
+}
+
+enum AiProposalStatus {
+  /// "Open in Claude" was clicked; nothing from Claude yet.
+  PENDING
+  /// Claude fetched the brief for it; or, for a draft made in the app, AI is writing it (its progress in `payload`).
+  WORKING
+  /// A proposal arrived and waits for review.
+  OPEN
+  USED
+  DISCARDED
+  /// A draft made in the app that AI couldn't finish (why in `payload.error`).
+  FAILED
+
+  @@schema("public")
+}
+
+/// A draft from AI (Claude through the connector, or the app) that a person reviews: never applied by itself.
+model AiProposal {
+  id             String           @id @default(cuid())
+  organizationId String           @map("organization_id")
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  kind           AiProposalKind
+  status         AiProposalStatus @default(OPEN)
+  /// lesson | task | report | course
+  targetType     String           @map("target_type")
+  targetId       String           @map("target_id")
+  /// Lesson revisions: the lesson's revision the draft was written against (stale once it moved on).
+  baseRevision   Int?             @map("base_revision")
+  /// The draft itself (Markdown, plan, check question, summary, themes); while the app's AI writes
+  /// it, how far it is (`stage`, the text so far).
+  payload        Json?
+  /// What changed and why, in a sentence or two.
+  summary        String?          @db.Text
+  /// connector | app
+  via            String           @default("connector")
+  /// The task it was made for, when there is one ("Send to Claude").
+  taskId         String?          @map("task_id")
+  task           Task?            @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  createdById    String?          @map("created_by_id")
+  createdBy      User?            @relation("AiProposalCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  assigneeId     String?          @map("assignee_id")
+  assignee       User?            @relation("AiProposalAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  decidedAt      DateTime?        @map("decided_at")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+
+  @@index([organizationId, status])
+  @@index([targetType, targetId])
+  @@index([taskId])
+  @@map("ai_proposals")
+  @@schema("public")
+}
+
+/// Better Auth's sessions (src/lib/auth.ts): what keeps someone signed in. `UserSession` (same id)
+/// is their history: who, where, how long and how each ended.
+model AuthSession {
+  id             String   @id @default(cuid())
+  token          String   @unique
+  userId         String   @map("user_id")
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// When it ends without activity (moved on by use, never past `maxExpiresAt`).
+  expiresAt      DateTime @map("expires_at")
+  /// Our additions: the hard end, "Keep me signed in", where, and the organisation it works in.
+  maxExpiresAt   DateTime @map("max_expires_at")
+  persistent     Boolean  @default(false)
+  location       String?
+  organizationId String?  @map("organization_id")
+  /// The platform admin looking through this session ("log in as": Better Auth's admin plugin).
+  impersonatedBy String?  @map("impersonated_by")
+  /// Never kept (the privacy page says so): Better Auth's column, left empty.
+  ipAddress      String?  @map("ip_address")
+  userAgent      String?  @map("user_agent")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@map("auth_sessions")
+  @@schema("public")
+}
+
+/// Better Auth's accounts: here only "credential", the password (our scrypt format, src/lib/security.ts).
+model AuthAccount {
+  id                    String    @id @default(cuid())
+  accountId             String    @map("account_id")
+  providerId            String    @map("provider_id")
+  userId                String    @map("user_id")
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  password              String?
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  idToken               String?   @map("id_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at")
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
+  scope                 String?
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@map("auth_accounts")
+  @@schema("public")
+}
+
+/// Better Auth's short-lived values: password reset links, the step between password and code.
+model AuthVerification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime @map("expires_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@index([identifier])
+  @@map("auth_verifications")
+  @@schema("public")
+}
+
+/// Better Auth's two-factor (TOTP) secrets and backup codes, encrypted with its secret.
+model AuthTwoFactor {
+  id                      String    @id @default(cuid())
+  userId                  String    @map("user_id")
+  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  secret                  String
+  backupCodes             String    @map("backup_codes")
+  verified                Boolean   @default(true)
+  failedVerificationCount Int       @default(0) @map("failed_verification_count")
+  lockedUntil             DateTime? @map("locked_until")
+
+  @@index([userId])
+  @@index([secret])
+  @@map("auth_two_factors")
+  @@schema("public")
+}
+
+/// Better Auth's request counts per address and route (its rate limits), shared by every instance.
+model AuthRateLimit {
+  id          String @id @default(cuid())
+  key         String @unique
+  count       Int
+  lastRequest BigInt @map("last_request")
+
+  @@map("auth_rate_limits")
+  @@schema("public")
+}

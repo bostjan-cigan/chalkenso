@@ -1,0 +1,106 @@
+.flag {
+  display: block;
+  flex-shrink: 0;
+  width: 18px;
+  height: 12px;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+
+.field {
+  flex-shrink: 0;
+}
+
+/* The trigger: flag, short code, chevron */
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 44px;
+  padding: 0 0.7rem;
+  border: 1px solid rgba(var(--foreground-rgb), 0.14);
+  border-radius: 999px;
+  background: rgba(var(--background-rgb), 0.8);
+  color: rgb(var(--foreground-rgb));
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.trigger:hover {
+  border-color: rgba(var(--foreground-rgb), 0.26);
+}
+
+.trigger:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(var(--accent-color), 0.16);
+  border-color: rgba(var(--accent-color), 0.45);
+}
+
+.trigger[aria-expanded='true'] {
+  border-color: rgba(var(--accent-color), 0.4);
+}
+
+/* In the website's header, beside "Sign in": as tall as the header's small button */
+.header {
+  min-height: 38px;
+  background: transparent;
+}
+
+/* Top-right corner, just left of the theme switch (44px, 1.5rem from the edge) */
+.floatingField {
+  position: fixed;
+  top: 1.5rem;
+  right: calc(1.5rem + 44px + 0.5rem);
+  z-index: 1000;
+}
+
+.floating {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* In the phone menu's panel, under the links: the language's own name */
+.menu {
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+/* In the app sidebar, beside the account name: as quiet as the theme switch */
+.sidebar {
+  min-height: max(34px, var(--touch-target, 0px));
+  gap: 0.35rem;
+  padding: 0 0.5rem;
+  border-color: transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(var(--foreground-rgb), 0.7);
+  font-size: 0.8rem;
+}
+
+.sidebar:hover {
+  border-color: transparent;
+  background: var(--surface-2);
+  color: rgb(var(--foreground-rgb));
+}
+
+/* Beside the account name there is room for the flag and the code, no chevron; collapsed, the flag only */
+.sidebar svg:last-child,
+:global([data-sidebar='collapsed']) .sidebar .code {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .floatingField {
+    top: 1rem;
+    right: calc(1rem + 40px + 0.5rem);
+  }
+
+  .floating {
+    min-height: 40px;
+  }
+}

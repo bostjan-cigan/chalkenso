@@ -1,0 +1,184 @@
+/* Backdrop: full viewport; click empty area (not the dialog) to dismiss — handled in portal */
+.modalRoot {
+  position: fixed;
+  inset: 0;
+  min-height: 100dvh;
+  z-index: 10000;
+  box-sizing: border-box;
+  padding: max(0.75rem, env(safe-area-inset-top)) max(0.75rem, env(safe-area-inset-right))
+    max(0.75rem, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Foreground-tinted scrim: visible on dark *and* light page backgrounds */
+  background: rgba(var(--foreground-rgb), 0.22);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  isolation: isolate;
+}
+
+/* Centered dialog: ~half viewport on wide screens; near-full width on small viewports */
+.modalDialog {
+  width: min(92vw, 28rem);
+  max-width: 100%;
+  max-height: min(90dvh, 36rem);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-radius: 16px;
+  border: 1px solid rgba(var(--foreground-rgb), 0.16);
+  background: rgb(var(--background-rgb));
+  box-shadow:
+    0 0 0 1px rgba(var(--foreground-rgb), 0.06),
+    0 24px 64px rgba(0, 0, 0, 0.38);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+@media (min-width: 640px) {
+  .modalDialog {
+    width: min(50vw, 28rem);
+  }
+}
+
+.modalDialogWide {
+  width: min(94vw, 40rem);
+  max-height: min(90dvh, 48rem);
+}
+
+.modalDialogLarge {
+  width: min(96vw, 72rem);
+  max-height: min(92dvh, 56rem);
+}
+
+.modalHeader {
+  flex-shrink: 0;
+  padding: 1.1rem 1.25rem 0.85rem;
+  border-bottom: 1px solid rgba(var(--foreground-rgb), 0.08);
+}
+
+.modalBody {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.modalFooter {
+  flex-shrink: 0;
+  padding: 0.85rem 1.25rem 1.1rem;
+  border-top: 1px solid rgba(var(--foreground-rgb), 0.08);
+  background: rgba(var(--foreground-rgb), 0.02);
+}
+
+.modalTitle,
+.title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: rgb(var(--foreground-rgb));
+  line-height: 1.25;
+}
+
+.modalDescription,
+.subtitle {
+  margin: 0.4rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: rgba(var(--foreground-rgb), 0.58);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.linkBox {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 14px;
+  background: rgba(var(--foreground-rgb), 0.05);
+  border: 1px solid rgba(var(--foreground-rgb), 0.08);
+}
+
+.linkUrl {
+  font-size: 0.78rem;
+  word-break: break-all;
+  color: rgba(var(--foreground-rgb), 0.82);
+  font-family: ui-monospace, monospace;
+}
+
+.copyFeedback {
+  font-size: 0.78rem;
+  color: rgb(var(--accent-color));
+}
+
+.inlineAccessBlock {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.inlineAccessRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 14px;
+  background: rgba(var(--foreground-rgb), 0.05);
+  border: 1px solid rgba(var(--foreground-rgb), 0.08);
+}
+
+.inlineAccessMain {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.inlineAccessUrl {
+  margin: 0;
+  font-size: 0.78rem;
+  word-break: break-all;
+  color: rgba(var(--foreground-rgb), 0.88);
+  font-family: ui-monospace, monospace;
+}
+
+/* A person's name in these rows (an instructor, an invite): the app's own type, not the links' monospace. */
+.inlineAccessName {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: rgb(var(--foreground-rgb));
+  overflow-wrap: anywhere;
+}
+
+.inlineAccessMeta {
+  margin: 0;
+  font-size: 0.75rem;
+  color: rgba(var(--foreground-rgb), 0.52);
+}
+
+.inlineAccessActions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.errorText {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #e16f68;
+}

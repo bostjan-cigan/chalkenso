@@ -1,0 +1,343 @@
+/* Course access page (`/l/course/<token>`): laid out like the course page on /courses (one
+   column, no cards, no site header), with lessons opening in place. */
+
+/* "Course access" / "Draft preview" tag above the title. */
+.eyebrow {
+  align-self: flex-start;
+}
+
+/* "Prepared by" and "In partnership with", side by side between two rules. */
+.credits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem 3rem;
+  padding: 1.25rem 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.credit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.creditLabel {
+  color: var(--accent-color-hex);
+  font-size: 0.76rem;
+  letter-spacing: 0.08rem;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.creditPeople {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 2rem;
+}
+
+.creditPerson {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.05rem;
+}
+
+.creditAvatar,
+.creditLogo {
+  flex-shrink: 0;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--line-subtle);
+}
+
+.creditLogo {
+  border-radius: 10px;
+  object-fit: contain;
+  padding: 0.3rem;
+}
+
+.creditName {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.creditName a {
+  width: fit-content;
+  font-size: 0.85rem;
+}
+
+/* The access page's own footer (not the /courses one). */
+.footer {
+  margin-top: 2rem;
+  padding: 2rem 0 0.5rem;
+  text-align: center;
+  border-top: 1px solid var(--line);
+  color: rgb(var(--foreground-rgb));
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+.footer p {
+  margin: 0.5rem 0;
+}
+
+.footerNote {
+  font-size: 0.9rem;
+  color: rgba(var(--foreground-rgb), 0.7);
+}
+
+.footerLink {
+  color: var(--accent-color-hex);
+  text-decoration: none;
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+.footerLink::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  bottom: -5px;
+  left: 0;
+  background-color: var(--accent-color-hex);
+  visibility: hidden;
+  transform: scaleX(0);
+  transition: all 0.4s ease-in-out 0s;
+}
+
+.footerLink:hover::before {
+  visibility: visible;
+  transform: scaleX(1);
+}
+
+/* Expired, revoked or one-time links: replaces the lesson list. */
+.notice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
+}
+
+.notice h2 {
+  font-size: 1.3rem;
+  font-weight: 500;
+}
+
+.notice p {
+  line-height: 1.6;
+  color: var(--text-muted);
+  max-width: 60ch;
+}
+
+/* A paused course: lessons read as usual, nothing can be sent. Quiet, above the outline. */
+.readOnlyNotice {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0 0 2rem;
+  padding: 0.9rem 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.readOnlyNotice h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.readOnlyNotice p {
+  margin: 0;
+  line-height: 1.6;
+  color: var(--text-muted);
+  max-width: 60ch;
+}
+
+/* Lesson list: the same outline as the course page on /courses (numbered rows, arcs as headings),
+   with each row opening its lesson inline. Room between the parts and around each row, so the
+   outline reads as sections rather than one long list. */
+.outline {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Only the part's own heading: a lesson opened inside the part has h2s of its own. */
+.arc > h2 {
+  font-size: 1.35rem;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+  color: rgb(var(--foreground-rgb));
+}
+
+.arcDescription {
+  margin-top: 0.4rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.lessons {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--line-subtle);
+}
+
+.arc .lessons {
+  margin-top: 1.1rem;
+}
+
+/* visible so copy tooltips above code headers are not clipped */
+.lessonRow {
+  overflow: visible;
+  min-width: 0;
+  max-width: 100%;
+  border-bottom: 1px solid var(--line-subtle);
+}
+
+.lessonRowButton {
+  display: flex;
+  align-items: baseline;
+  gap: 1.25rem;
+  width: 100%;
+  padding: 1.1rem 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.lessonNumber {
+  flex-shrink: 0;
+  width: 1.75rem;
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.lessonText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+/* Styled like the lesson links on /courses: accent colour, and on hover an underline that slides
+   in across the whole title line. */
+.lessonTitle {
+  position: relative;
+  font-size: 1.05rem;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  color: var(--accent-color-hex);
+  overflow-wrap: anywhere;
+}
+
+.lessonTitle::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  bottom: -5px;
+  left: 0;
+  background-color: var(--accent-color-hex);
+  visibility: hidden;
+  transform: scaleX(0);
+  transition: all 0.4s ease-in-out 0s;
+}
+
+.lessonRowButton:hover .lessonTitle::before,
+.lessonRowButton:focus-visible .lessonTitle::before,
+.lessonRowOpen .lessonTitle::before {
+  visibility: visible;
+  transform: scaleX(1);
+}
+
+.lessonDescription {
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.lessonChevron {
+  flex-shrink: 0;
+  align-self: center;
+  color: var(--text-muted);
+  transition: transform 0.22s ease, color 0.2s ease;
+}
+
+.lessonRowOpen .lessonChevron {
+  transform: rotate(180deg);
+  color: var(--accent-color-hex);
+}
+
+@keyframes accessLessonReveal {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lessonRowOpen .lessonBody {
+  animation: accessLessonReveal 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lessonRowOpen .lessonBody {
+    animation: none;
+  }
+}
+
+.lessonBody {
+  padding: 0 0 2rem;
+  border-top: 1px solid var(--line-subtle);
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  /* Do not let wide lesson markup participate in min-content width of ancestors */
+  overflow-x: hidden;
+}
+
+.lessonContent {
+  padding-top: 1.5rem;
+  color: rgba(var(--foreground-rgb), 0.86);
+  overflow-wrap: anywhere;
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  /* Horizontal scroll lives inside `.lesson-code-scroll` / `pre`, not the whole lesson column */
+  overflow-x: hidden;
+}
+
+/* Rendered markdown typography, code blocks and tables live in src/styles/markdown-content.module.css. */
+
+.lessonLoading,
+.lessonError {
+  margin-top: 1rem;
+  line-height: 1.5;
+}
+
+.lessonError {
+  color: #d87a7a;
+}
+
+/* Copy UI for lessons: global styles in `access-lesson-copy.css` (imperative DOM nodes). */

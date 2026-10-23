@@ -1,0 +1,34 @@
+{
+  "language": {
+    "label": "Jezik"
+  },
+  "theme": {
+    "toggle": "Preklopi temo",
+    "toDark": "Preklopi na temni način",
+    "toLight": "Preklopi na svetli način"
+  },
+  "select": {
+    "placeholder": "Izberite …",
+    "search": "Iskanje …",
+    "searchLabel": "Iskanje: {label}",
+    "noMatches": "Ni zadetkov"
+  },
+  "notFound": {
+    "metaTitle": "Strani ni mogoče najti",
+    "text": "Te strani ni v učnem načrtu.",
+    "back": "Nazaj na {product} →"
+  },
+  "handle": {
+    "problems": {
+      "length": "Uporabniško ime ima od {min} do {max} znakov.",
+      "format": "Uporabite male črke, številke in posamezne vezaje; na začetku in na koncu mora biti črka ali številka.",
+      "reserved": "To uporabniško ime je rezervirano. Poskusite drugo.",
+      "taken": "To uporabniško ime je že zasedeno. Poskusite drugo."
+    },
+    "availability": {
+      "yours": "@{handle} je vaše.",
+      "free": "@{handle} je prosto.",
+      "taken": "@{handle} je že zasedeno. Poskusite drugo."
+    }
+  }
+}

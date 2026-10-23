@@ -1,0 +1,62 @@
+# `docker compose up`: Chalkenso on http://localhost:3000 with its PostgreSQL. Settings come from
+# `.env` next to this file (SESSION_SECRET is required; see .env.example).
+# For development, `yarn db:up` starts only the database, and `yarn mail:up` a local mail catcher
+# (Mailpit: every email the app sends lands in the inbox at http://localhost:8025, never with anyone).
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: curriculum-ai-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-curriculum_ai}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      # Only this machine can reach the database.
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - curriculum-ai-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Development only (the `dev` profile: `docker compose up` never starts it). SMTP on localhost:1025,
+  # the inbox and its API (/api/v1/messages, for the tests) on http://localhost:8025.
+  mailpit:
+    image: axllent/mailpit:v1.27
+    container_name: chalkenso-mailpit
+    profiles: ["dev"]
+    restart: unless-stopped
+    environment:
+      MP_MAX_MESSAGES: "500"
+    ports:
+      # Only this machine can reach it.
+      - "127.0.0.1:${MAILPIT_SMTP_PORT:-1025}:1025"
+      - "127.0.0.1:${MAILPIT_UI_PORT:-8025}:8025"
+
+  app:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+    image: chalkenso:local
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-curriculum_ai}?schema=public
+      DATABASE_URL_UNPOOLED: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-curriculum_ai}?schema=public
+      SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET (a long random string) in .env}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    volumes:
+      - curriculum-ai-media:/app/.data
+
+volumes:
+  curriculum-ai-postgres-data:
+  curriculum-ai-media:

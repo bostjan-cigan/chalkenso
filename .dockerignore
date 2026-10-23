@@ -1,0 +1,13 @@
+.git
+.next
+.work
+.data
+node_modules
+tests/e2e/.shots
+.env*
+!.env.example
+*.tsbuildinfo
+.DS_Store
+.idea
+.claude
+obsidian-plugin

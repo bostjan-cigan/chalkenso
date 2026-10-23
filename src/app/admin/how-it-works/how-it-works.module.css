@@ -1,0 +1,147 @@
+/* How Chalkenso works: the sheet from Home and its page. Short sections, one action at the end. */
+.content {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.section h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+/* The loop: four steps side by side, two by two on a phone */
+.loop {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.loop li {
+  padding: 0.65rem 0.75rem;
+  border-radius: 10px;
+  background: rgba(var(--foreground-rgb), 0.05);
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.loop b {
+  display: block;
+  margin-bottom: 0.15rem;
+}
+
+/* Where AI helps: one card per way the plan has */
+.ways {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr));
+  gap: 0.5rem;
+}
+
+.way {
+  padding: 0.75rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.wayTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.tag {
+  margin-left: auto;
+  padding: 0.1rem 0.5rem;
+  border-radius: 6px;
+  background: rgba(var(--accent-color), 0.1);
+  color: rgb(var(--accent-color));
+  font-size: 0.72rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Running it (owners and admins): rows that open the right place */
+.rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.rows li + li {
+  border-top: 1px solid var(--line);
+}
+
+.rows a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: max(2.5rem, var(--touch-target, 0px));
+  padding: 0.55rem 0.75rem;
+  color: inherit;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.rows a:hover {
+  background: rgba(var(--foreground-rgb), 0.04);
+}
+
+.rows a:focus-visible {
+  outline: 2px solid rgb(var(--accent-color));
+  outline-offset: -2px;
+}
+
+.rowLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.where {
+  color: rgb(var(--accent-color));
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.quiet {
+  margin: 0;
+  color: rgba(var(--foreground-rgb), 0.62);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.quiet a {
+  color: rgb(var(--accent-color));
+}
+
+/* Mark as done (quiet) and the action, at the end */
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--line);
+}
+
+@media (max-width: 640px) {
+  .loop {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .footer {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+}

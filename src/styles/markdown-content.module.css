@@ -1,0 +1,564 @@
+/*
+ * Shared typography for HTML rendered by `renderCourseMarkdownToHtml` (lessons, blog posts, projects):
+ * headings, lists, the `.lesson-code-*` code-block wrappers, highlight.js tokens, tables, Obsidian
+ * callouts and lesson wikilinks.
+ * Apply `.markdownContent` to the element that receives the rendered HTML.
+ */
+
+.markdownContent h1,
+.markdownContent h2,
+.markdownContent h3,
+.markdownContent h4,
+.markdownContent h5,
+.markdownContent h6 {
+  margin: 1.4rem 0 0.5rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: rgb(var(--foreground-rgb));
+}
+
+.markdownContent h1,
+.markdownContent h2 {
+  margin-top: 2rem;
+}
+
+.markdownContent h1 {
+  font-size: 1.5rem;
+}
+
+.markdownContent h2 {
+  font-size: 1.3rem;
+}
+
+.markdownContent h3 {
+  font-size: 1.12rem;
+}
+
+.markdownContent h4,
+.markdownContent h5,
+.markdownContent h6 {
+  font-size: 1rem;
+}
+
+.markdownContent h1:first-child,
+.markdownContent h2:first-child,
+.markdownContent h3:first-child,
+.markdownContent h4:first-child,
+.markdownContent h5:first-child,
+.markdownContent h6:first-child,
+.markdownContent p:first-child,
+.markdownContent ul:first-child,
+.markdownContent ol:first-child,
+.markdownContent pre:first-child,
+.markdownContent blockquote:first-child {
+  margin-top: 0;
+}
+
+.markdownContent p,
+.markdownContent ul,
+.markdownContent ol,
+.markdownContent pre,
+.markdownContent blockquote {
+  margin: 0.75rem 0;
+  line-height: 1.65;
+}
+
+.markdownContent ul,
+.markdownContent ol {
+  padding-left: 2rem;
+}
+
+.markdownContent code,
+.markdownContent :global(.lesson-inline-code) {
+  padding: 0.18rem 0.42rem;
+  border-radius: 8px;
+  border: 1px solid var(--line-subtle);
+  background: var(--surface-2);
+  color: rgb(var(--foreground-rgb));
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.88em;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.markdownContent :global(.lesson-code-block) {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  /* width set inline in markdown render (768px + max-width:100%) */
+  box-sizing: border-box;
+  border-radius: 18px;
+  border: 1px solid var(--line-subtle);
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98));
+  color: rgba(241, 245, 249, 0.95);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.markdownContent :global(.lesson-code-block) > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Scrollport for long lines: bounded width so flex/grid ancestors don’t grow with hljs max-content */
+.markdownContent :global(.lesson-code-scroll) {
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 0 0 18px 18px;
+}
+
+.markdownContent :global(.lesson-code-header) {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.65rem;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.55rem 0.9rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(15, 23, 42, 0.54);
+  border-radius: 18px 18px 0 0;
+}
+
+.markdownContent :global(.lesson-code-language) {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  min-width: 0;
+  padding: 0.22rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.14);
+  color: rgba(226, 232, 240, 0.92);
+  font-size: 0.72rem;
+  letter-spacing: 0.06rem;
+  text-transform: uppercase;
+}
+
+.markdownContent pre {
+  margin: 0;
+  padding: 1rem 1.1rem;
+  background: transparent;
+  color: inherit;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Code fences: horizontal scroll is on `.lesson-code-scroll`, not `pre` (avoids double scrollbars / width bugs) */
+.markdownContent :global(.lesson-code-scroll) pre {
+  border-radius: 0;
+  width: max-content;
+  min-width: 100%;
+  max-width: none;
+  overflow-x: visible;
+  overflow-y: visible;
+}
+
+.markdownContent pre code {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 0.92rem;
+  line-height: 1.7;
+  white-space: pre;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+/* Highlighted block: inner code is as wide as the longest line; `.lesson-code-scroll` scrolls */
+.markdownContent :global(.lesson-code-scroll) pre :global(.hljs) {
+  display: block;
+  width: max-content;
+  min-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Cached lesson HTML from before `lesson-code-scroll` wrapper: pre was direct child of the block */
+.markdownContent :global(.lesson-code-block) > pre :global(.hljs) {
+  display: block;
+  width: max-content;
+  min-width: 100%;
+  box-sizing: border-box;
+}
+
+.markdownContent :global(.hljs) {
+  display: block;
+  background: transparent;
+  color: rgba(241, 245, 249, 0.95);
+}
+
+.markdownContent :global(.hljs-comment),
+.markdownContent :global(.hljs-quote) {
+  color: #8b949e;
+  font-style: italic;
+}
+
+.markdownContent :global(.hljs-keyword),
+.markdownContent :global(.hljs-selector-tag),
+.markdownContent :global(.hljs-literal),
+.markdownContent :global(.hljs-name) {
+  color: #ff7b72;
+}
+
+.markdownContent :global(.hljs-title),
+.markdownContent :global(.function_),
+.markdownContent :global(.hljs-section),
+.markdownContent :global(.hljs-built_in),
+.markdownContent :global(.hljs-type) {
+  color: #d2a8ff;
+}
+
+.markdownContent :global(.hljs-string),
+.markdownContent :global(.hljs-symbol),
+.markdownContent :global(.hljs-bullet),
+.markdownContent :global(.hljs-addition),
+.markdownContent :global(.hljs-attr) {
+  color: #a5d6ff;
+}
+
+.markdownContent :global(.hljs-number),
+.markdownContent :global(.hljs-meta),
+.markdownContent :global(.hljs-link),
+.markdownContent :global(.hljs-regexp) {
+  color: #79c0ff;
+}
+
+.markdownContent :global(.hljs-variable),
+.markdownContent :global(.hljs-template-variable),
+.markdownContent :global(.hljs-selector-class),
+.markdownContent :global(.hljs-selector-attr) {
+  color: #ffa657;
+}
+
+.markdownContent :global(.hljs-tag),
+.markdownContent :global(.hljs-attribute) {
+  color: #7ee787;
+}
+
+.markdownContent :global(.hljs-subst) {
+  color: rgba(241, 245, 249, 0.95);
+}
+
+.markdownContent :global(.hljs-deletion) {
+  color: #ffa198;
+}
+
+.markdownContent :global(.hljs-emphasis) {
+  font-style: italic;
+}
+
+.markdownContent :global(.hljs-strong) {
+  font-weight: 700;
+}
+
+.markdownContent blockquote {
+  padding-left: 0.9rem;
+  border-left: 3px solid rgba(var(--accent-color), 0.32);
+  color: rgba(var(--foreground-rgb), 0.68);
+}
+
+/* The hover underline is a background on the text itself, so a link that wraps is underlined
+   line by line instead of across the whole line it ends on. */
+.markdownContent a {
+  color: var(--accent-color-hex);
+  text-decoration: none;
+  padding-bottom: 3px;
+  background-image: linear-gradient(var(--accent-color-hex), var(--accent-color-hex));
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 0 2px;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  transition: color 1s, background-size 0.4s ease-in-out;
+}
+
+.markdownContent a:hover {
+  background-size: 100% 2px;
+}
+
+.markdownContent a:visited,
+.markdownContent a:active,
+.partnerLink:visited,
+.partnerLink:active {
+  color: var(--accent-color-hex);
+}
+
+.markdownContent picture {
+  display: block;
+  max-width: 100%;
+}
+
+/* Skeleton until the image has loaded (`data-loaded` from src/lib/image-skeleton.ts). Without known
+   dimensions the placeholder is 16:9 and, unless the embed set a width (`|320`), at least 320px
+   wide; a loaded image keeps its own ratio. */
+@keyframes imageSkeleton {
+  0% { background-position: 200% 50%; }
+  100% { background-position: -200% 50%; }
+}
+
+.markdownContent img:not([data-loaded]):not([style*='width']) {
+  min-width: min(100%, 320px);
+}
+
+.markdownContent img:not([data-loaded]) {
+  aspect-ratio: auto 16 / 9;
+  color: transparent;
+  background: linear-gradient(
+    90deg,
+    rgba(var(--foreground-rgb), 0.05) 25%,
+    rgba(var(--foreground-rgb), 0.11) 37%,
+    rgba(var(--foreground-rgb), 0.05) 63%
+  );
+  background-size: 200% 100%;
+  animation: imageSkeleton 1.5s ease-in-out infinite;
+}
+
+.markdownContent img {
+  display: block;
+  width: auto;
+  /* Beat HTML width/height attributes + large intrinsic dimensions */
+  max-width: 100% !important;
+  height: auto !important;
+  margin: 1rem 0;
+  border-radius: 16px;
+  box-sizing: border-box;
+  object-fit: contain;
+}
+
+/* Tables: rounded card like code blocks; wide tables scroll inside `.lesson-table-scroll` */
+.markdownContent :global(.lesson-table-scroll) {
+  margin: 1rem 0;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 18px;
+  border: 1px solid var(--line-subtle);
+  background: var(--surface-1);
+}
+
+.markdownContent :global(table) {
+  width: 100%;
+  min-width: 100%;
+  border-collapse: collapse;
+  font-size: 0.94rem;
+  line-height: 1.55;
+}
+
+/* Bare table (e.g. cached HTML without the scroll wrapper) */
+.markdownContent > :global(table) {
+  margin: 1rem 0;
+  display: block;
+  overflow-x: auto;
+}
+
+.markdownContent :global(th),
+.markdownContent :global(td) {
+  min-width: 6rem;
+  padding: 0.65rem 0.95rem;
+  text-align: left;
+  vertical-align: top;
+  /* Override `.markdownContent` anywhere-wrapping: long words widen the column and scroll instead */
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+/* GFM column alignment arrives as `align` attrs, which lose to the `text-align` above */
+.markdownContent :global(th[align='center']),
+.markdownContent :global(td[align='center']) {
+  text-align: center;
+}
+
+.markdownContent :global(th[align='right']),
+.markdownContent :global(td[align='right']) {
+  text-align: right;
+}
+
+.markdownContent :global(th) {
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.06rem;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--text-muted);
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--line-subtle);
+}
+
+.markdownContent :global(td) {
+  color: rgba(var(--foreground-rgb), 0.86);
+}
+
+.markdownContent :global(tbody tr + tr) :global(td) {
+  border-top: 1px solid var(--line-subtle);
+}
+
+.markdownContent :global(tbody tr) {
+  transition: background-color 0.2s ease;
+}
+
+.markdownContent :global(tbody tr:hover) {
+  background: rgba(var(--accent-color), 0.06);
+}
+
+/* GFM task lists */
+.markdownContent :global(.contains-task-list) {
+  padding-left: 0.4rem;
+  list-style: none;
+}
+
+.markdownContent :global(.task-list-item) {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+}
+
+.markdownContent :global(.task-list-item input[type='checkbox']) {
+  margin: 0;
+  flex-shrink: 0;
+  accent-color: var(--accent-color-hex);
+  transform: translateY(0.12rem);
+}
+
+/* Inline SVG / diagrams in markdown (not hljs icons inside pre) */
+.markdownContent > :global(svg),
+.markdownContent p :global(svg),
+.markdownContent li :global(svg) {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ---------- Obsidian callouts (built in src/lib/content/callouts.ts) ---------- */
+/* Lessons, blog posts and projects. */
+
+.markdownContent :global(.callout) {
+  --callout-color: 8, 109, 221;
+  margin: 1.25rem 0;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border-left: 3px solid rgb(var(--callout-color));
+  background: rgba(var(--callout-color), 0.1);
+  overflow: hidden;
+}
+
+.markdownContent :global(.callout-title) {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: rgb(var(--callout-color));
+  line-height: 1.4;
+}
+
+.markdownContent :global(details.callout) > :global(summary.callout-title) {
+  cursor: pointer;
+  list-style: none;
+}
+
+.markdownContent :global(details.callout) > :global(summary.callout-title)::-webkit-details-marker {
+  display: none;
+}
+
+/* Fold chevron, rotated when open. */
+.markdownContent :global(details.callout) > :global(summary.callout-title)::after {
+  content: '';
+  width: 0.45rem;
+  height: 0.45rem;
+  margin-left: 0.25rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 0.2s ease;
+}
+
+.markdownContent :global(details.callout[open]) > :global(summary.callout-title)::after {
+  transform: rotate(45deg);
+}
+
+.markdownContent :global(.callout-icon) {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.markdownContent :global(.callout-title-inner) :global(p) {
+  margin: 0;
+}
+
+.markdownContent :global(.callout-content) {
+  margin-top: 0.5rem;
+  color: rgb(var(--foreground-rgb));
+}
+
+.markdownContent :global(.callout-content) > :first-child {
+  margin-top: 0;
+}
+
+.markdownContent :global(.callout-content) > :last-child {
+  margin-bottom: 0;
+}
+
+/* Links to other lessons, from Obsidian [[wikilinks]] (src/lib/lesson-wikilinks.ts). */
+.markdownContent :global(a.lesson-wikilink) {
+  text-decoration: underline dotted;
+  text-underline-offset: 0.2em;
+}
+
+/* ---------- Layout: image rows and columns (src/lib/content/layout.ts, callouts.ts) ---------- */
+/* Blog posts and projects; `[!columns]` also in lessons. Mirrors the Site Sync plugin's styles. */
+
+.markdownContent :global(.image-row) {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 1rem;
+  margin: 1.25rem 0;
+}
+
+.markdownContent :global(.image-row) img {
+  margin: 0;
+  min-width: 0;
+}
+
+.markdownContent :global(.columns) {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5rem;
+  margin: 1.25rem 0;
+}
+
+.markdownContent :global(.column) {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.markdownContent :global(.column) > :first-child {
+  margin-top: 0;
+}
+
+.markdownContent :global(.column) > :last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 640px) {
+  .markdownContent :global(.columns) {
+    flex-direction: column;
+  }
+
+  .markdownContent :global(.column) {
+    flex: 1 1 auto !important;
+    width: 100%;
+  }
+}

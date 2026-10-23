@@ -1,0 +1,22 @@
+{
+  "layout": {
+    "copyLink": "Ali kopirajte to povezavo:"
+  },
+  "passwordReset": {
+    "subject": "Ponastavite geslo za {product}",
+    "greeting": "Pozdravljeni,",
+    "greetingNamed": "Pozdravljeni, {name},",
+    "body": "Nekdo (upamo, da vi) je zahteval ponastavitev gesla za vaš račun. Povezava deluje enkrat, eno uro.",
+    "action": "Izberite novo geslo",
+    "footer": "Če tega niste zahtevali, prezrite to sporočilo: vaše geslo ostane nespremenjeno."
+  },
+  "invite": {
+    "subject": "{inviter} vas vabi v organizacijo {organization} v aplikaciji {product}",
+    "body": "{inviter} vas vabi v organizacijo {organization} v aplikaciji {product}, kjer oblikujejo svoje tečaje in jih izboljšujejo na podlagi tega, kar se zgodi pri pouku.",
+    "teachSubject": "{inviter} vas vabi k poučevanju skupine {group} v organizaciji {organization}",
+    "teachBody": "{inviter} vas vabi, da kot gostujoči predavatelj poučujete skupino {group} ({course}) v organizaciji {organization}.",
+    "teachNext": "Brali boste lekcije, ki jih berejo udeleženci, in zapisovali, kaj se dogaja pri pouku: vaše opombe pomagajo izboljšati tečaj.",
+    "action": "Sprejmite povabilo",
+    "footer": "Povezava deluje enkrat, 7 dni. Če povabila niste pričakovali, ga prezrite."
+  }
+}

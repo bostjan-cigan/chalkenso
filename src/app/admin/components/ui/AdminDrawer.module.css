@@ -1,0 +1,78 @@
+/* Backdrop: full viewport, click the dimmed area to dismiss (handled in the shell). */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(var(--foreground-rgb), 0.22);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  isolation: isolate;
+  animation: drawerFade 140ms ease-out;
+}
+
+/* Side panel: wide enough for the detail body, full height, own scroll. */
+.panel {
+  position: relative;
+  width: min(100vw, 44rem);
+  max-width: 100%;
+  height: 100dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  box-sizing: border-box;
+  padding: 1rem 1.25rem 2rem;
+  border-left: 1px solid rgba(var(--foreground-rgb), 0.16);
+  background: rgb(var(--background-rgb));
+  box-shadow: -24px 0 64px rgba(0, 0, 0, 0.38);
+  animation: drawerSlide 180ms ease-out;
+}
+
+/* Floats over the panel's top-right corner: out of flow, so it never pushes or clips content. */
+.closeButton {
+  position: absolute;
+  top: 1rem;
+  right: 1.25rem;
+  z-index: 2;
+  /* Equal width and height with no padding — the only way the circle stays a circle. */
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-size: 0.95rem;
+  border: 1px solid rgba(var(--foreground-rgb), 0.15);
+  border-radius: 50%;
+  background: rgb(var(--background-rgb));
+  color: rgba(var(--foreground-rgb), 0.7);
+  font: inherit;
+  cursor: pointer;
+}
+
+.closeButton:hover {
+  color: rgb(var(--foreground-rgb));
+  border-color: rgba(var(--foreground-rgb), 0.3);
+}
+
+@keyframes drawerFade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes drawerSlide {
+  from {
+    transform: translateX(3%);
+    opacity: 0.4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop,
+  .panel {
+    animation: none;
+  }
+}

@@ -1,0 +1,367 @@
+/* Public /courses pages. Layout, cards and links come from content.module.css. */
+
+.cardStats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 1rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+}
+
+.freePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  padding: 0.15rem 0.65rem;
+  border-radius: 20px;
+  background-color: rgba(var(--accent-color), 0.18);
+  color: rgb(var(--accent-color));
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+/* The pitch on /courses: taught live by a person, material that adapts to the group. */
+.tldr {
+  margin: 1rem 2rem 0;
+  padding: 1rem 1.25rem;
+  border-radius: 8px;
+  border: 1px solid rgba(var(--accent-color), 0.5);
+  background: rgba(var(--accent-color), 0.08);
+  line-height: 1.55;
+}
+
+.tldrTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.5rem;
+  font-weight: 600;
+  color: rgb(var(--accent-color));
+}
+
+.tldr ul {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.tldr strong {
+  font-weight: 600;
+}
+
+/* Under the pitch: a pointer to the blog post on the platform behind the courses. */
+.tldrMore {
+  margin: 0.75rem 0 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(var(--accent-color), 0.3);
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+.tldrMore a {
+  font-weight: 600;
+  color: rgb(var(--accent-color));
+  white-space: nowrap;
+}
+
+.adapts {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.adapts svg {
+  flex-shrink: 0;
+  position: relative;
+  top: 0.15em;
+  color: rgb(var(--accent-color));
+}
+
+/* Free badge on a card's cover, styled like the project platform badges. */
+.coverBadge {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background-color: rgba(0, 0, 0, 0.62);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #fff;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.outcome {
+  line-height: 1.5;
+}
+
+.outcome strong {
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* /courses card: "Start lesson" is laid over the cover, outside the card's link. The overlay box
+   matches the cover's shape so the button lands in its bottom-left corner. */
+.courseCard {
+  position: relative;
+}
+
+.coverOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  aspect-ratio: 16 / 9;
+  display: flex;
+  align-items: flex-end;
+  padding: 0.75rem;
+  pointer-events: none;
+}
+
+/* Styled like the cover badge, with the accent for the action. */
+.coverStart {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid rgba(var(--accent-color), 0.6);
+  background-color: rgba(0, 0, 0, 0.68);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #fff;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.coverStart svg {
+  color: rgb(var(--accent-color));
+}
+
+.coverStart:hover {
+  border-color: rgb(var(--accent-color));
+  background-color: rgba(0, 0, 0, 0.82);
+}
+
+/* "Join" at the bottom of a /courses card, outside its link. */
+.cardActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 1.5rem 1.5rem;
+}
+
+/* ---------- Outline ---------- */
+
+.outline {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.arc h2 {
+  font-size: 1.3rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.arcDescription {
+  margin-top: 0.35rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.lessons {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  border-top: 1px solid var(--line-subtle);
+}
+
+.lessonRow {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--line-subtle);
+}
+
+.lessonNumber {
+  flex-shrink: 0;
+  width: 1.75rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.lessonText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.lessonTitle {
+  font-size: 1.05rem;
+}
+
+.lessonLocked .lessonTitle {
+  color: rgba(var(--foreground-rgb), 0.7);
+}
+
+.lessonDescription {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.lockIcon {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+/* ---------- Lesson page ---------- */
+
+.crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.pager {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
+}
+
+.pagerNext {
+  margin-left: auto;
+  text-align: right;
+}
+
+.pagerLabel {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* On /courses the box sits under the card grid, aligned with it. */
+.listCta {
+  margin: 0 2rem 1rem;
+}
+
+/* "Continue with the full course" box after the free lessons. */
+.cta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid rgba(var(--accent-color), 0.5);
+  background: var(--surface-1);
+}
+
+.cta h2 {
+  font-size: 1.3rem;
+  font-weight: 500;
+}
+
+.cta p {
+  line-height: 1.6;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--line-strong);
+  background-color: var(--surface-1);
+  color: rgb(var(--foreground-rgb));
+  text-decoration: none;
+  font: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.button:hover {
+  border-color: rgba(var(--accent-color), 0.6);
+}
+
+.buttonPrimary {
+  background-color: rgba(var(--accent-color), 0.18);
+  border-color: rgba(var(--accent-color), 0.5);
+  color: rgb(var(--accent-color));
+}
+
+/* Join button of a partner-supported course: the label, and under it the partner's logo (tinted
+   to the accent colour through a mask) with "In partnership with …". */
+.joinPartnered {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  padding-top: 0.35rem;
+  padding-bottom: 0.35rem;
+  line-height: 1.25;
+}
+
+.joinLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.joinPartner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  opacity: 0.75;
+}
+
+.partnerMark {
+  flex-shrink: 0;
+  width: 0.95rem;
+  height: 0.95rem;
+  background-color: rgb(var(--accent-color));
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+}

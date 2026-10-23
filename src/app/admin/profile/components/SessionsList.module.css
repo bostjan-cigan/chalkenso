@@ -1,0 +1,120 @@
+/* "Where you're signed in": one row per browser, like a device list. */
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+
+.list > li + li {
+  border-top: 1px solid var(--line-subtle);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.85rem;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.85rem 0;
+  text-align: left;
+}
+
+/* Another browser: the whole row opens its details, as a row with a chevron does. */
+.rowButton {
+  margin: 0;
+  padding-inline: 0.5rem;
+  margin-inline: -0.5rem;
+  width: calc(100% + 1rem);
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.rowButton:hover {
+  background: rgba(var(--foreground-rgb), 0.04);
+}
+
+.rowButton:focus-visible {
+  outline: 2px solid var(--accent-color-hex);
+  outline-offset: -2px;
+}
+
+.chevron {
+  color: var(--text-muted);
+}
+
+.glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 10px;
+  background: rgba(var(--foreground-rgb), 0.06);
+  color: rgba(var(--foreground-rgb), 0.78);
+}
+
+.text {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.15rem 0.5rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.current {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--accent-color-hex);
+}
+
+.detail {
+  color: var(--text-muted);
+  font-size: 0.84rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.footer {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: start;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--line-subtle);
+}
+
+.note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+/* The details of a session, in its sheet. */
+.facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 0.45rem 1.25rem;
+  margin: 0;
+}
+
+.facts dt {
+  color: var(--text-muted);
+}
+
+.facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}

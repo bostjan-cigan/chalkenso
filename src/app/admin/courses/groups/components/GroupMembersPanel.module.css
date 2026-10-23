@@ -1,0 +1,95 @@
+.wrap {
+  display: grid;
+  gap: 1rem;
+}
+
+.bulkBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.65rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+@media (max-width: 720px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  min-height: 100%;
+  padding: 0.85rem 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(var(--foreground-rgb), 0.08);
+  background: rgba(var(--background-rgb), 0.55);
+}
+
+.cardHead {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+}
+
+.index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 10px;
+  background: rgba(var(--foreground-rgb), 0.06);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: rgba(var(--foreground-rgb), 0.75);
+}
+
+.cardBody {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.name {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: rgb(var(--foreground-rgb));
+  line-height: 1.25;
+}
+
+.meta {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: rgba(var(--foreground-rgb), 0.52);
+}
+
+.cardActions {
+  margin-top: auto;
+}
+
+/* Feedback whose learner left the roster: a quiet line above the learners, with the way to move it. */
+.unattached {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--card-border);
+  background: rgba(var(--accent-color), 0.06);
+  font-size: 0.9rem;
+}
+

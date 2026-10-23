@@ -1,0 +1,461 @@
+{
+  "flash": {
+    "status": {
+      "groupCreated": "Group created.",
+      "groupDeleted": "Group deleted.",
+      "groupLinkCreated": "Group access link created.",
+      "groupLinkRevoked": "Group access link revoked.",
+      "groupUpdated": "Group updated.",
+      "memberLinkCreated": "Learner link created.",
+      "memberLinkRevoked": "Learner link revoked.",
+      "memberLinksCreated": "Learner links created."
+    },
+    "error": {
+      "groupCourse": "Select a valid course.",
+      "groupCourseLocked": "This group has its own copy of the lessons, so its course can’t change. Close the copy, or go back to the course’s lessons, first.",
+      "groupExpiry": "Enter a valid future expiry.",
+      "groupMembers": "This group has no learners yet.",
+      "groupName": "Enter a group name.",
+      "groupNotFound": "Select a valid group first.",
+      "groupPartner": "Select valid partners.",
+      "groupRoster": "Paste at least one learner.",
+      "groupScheduleInvalid": "Start and end dates must be valid date/time values.",
+      "groupScheduleRange": "End date must be on or after the start date.",
+      "groupVersion": "Pick the course version this group starts from.",
+      "groupVersionDraft": "Publish the version first: learner links show published lessons only.",
+      "planClasses": "Your plan’s groups at a time are all taken for these dates. Change the dates (an undated group runs all the time), or an owner or admin can move to a bigger plan in Settings → Plan.",
+      "planTrialClasses": "Your free first group is one group at a time. An owner or admin can choose a plan in Settings → Plan to run another.",
+      "planTrialEnded": "Your free first group has ended. An owner or admin can choose a plan in Settings → Plan to add groups again; your learners’ links keep working.",
+      "planEnded": "Your plan has ended. An owner or admin can choose a plan in Settings → Plan to add groups again.",
+      "planPaused": "Your organisation is paused, so no group can run. An owner or admin can resume the plan in Settings → Plan to save these dates."
+    }
+  },
+  "row": {
+    "from": "from {date}",
+    "until": "until {date}",
+    "ownCopyOf": "Own copy of {version}",
+    "ownCopy": "Own copy",
+    "reads": "Reads {version}"
+  },
+  "list": {
+    "kicker": "Groups",
+    "all": "All groups",
+    "mine": "My groups",
+    "new": "New group",
+    "lastOpened": "Last opened:",
+    "empty": {
+      "title": "No groups yet",
+      "text": "Create the first group from a pasted list of learners."
+    },
+    "emptyMine": {
+      "title": "You don’t teach any groups yet",
+      "text": "Groups you’re an instructor of show here. Whoever manages a group adds its instructors on its page."
+    }
+  },
+  "directory": {
+    "searchPlaceholder": "Find a group, course or instructor",
+    "searchLabel": "Find a group",
+    "noMatch": "No group matches “{query}”.",
+    "sections": {
+      "running": "Running now",
+      "upcoming": "Upcoming",
+      "undated": "No dates",
+      "finished": "Finished"
+    },
+    "openFeedback": "{count} open feedback",
+    "learners": "{count, plural, one {# learner} other {# learners}}",
+    "taughtBy": "{count, plural, other {Taught by {names}}}"
+  },
+  "deleteGroup": {
+    "more": "More for {name}",
+    "menuItem": "Delete group…",
+    "button": "Delete group",
+    "title": "Delete this group?",
+    "description": "This permanently deletes “{name}”, its learners and all of their access links. Existing links stop working immediately. Comments are kept. This action cannot be undone.",
+    "descriptionWithCopy": "This permanently deletes “{name}”, its learners and all of their access links. Existing links stop working immediately. Its own curriculum is deleted too, with its lessons and comments. This action cannot be undone."
+  },
+  "courseTab": {
+    "back": "Courses",
+    "suggested": {
+      "kicker": "Suggested by groups",
+      "text": "Changes groups made to their own lessons. Bring one to the course’s lessons, or keep it in the group."
+    },
+    "kicker": "Groups",
+    "new": "New group",
+    "empty": {
+      "title": "No groups yet",
+      "text": "A group is one run of this course, with its learners and their links."
+    }
+  },
+  "newGroup": {
+    "title": "New group",
+    "subtitle": "Lessons, a name and the learners are enough to start. The rest goes in the group's Settings.",
+    "back": "Back to groups",
+    "pending": "Creating group...",
+    "submit": "Create group"
+  },
+  "detail": {
+    "back": "Groups",
+    "subtitle": {
+      "ownCopyOf": "own copy of {version}",
+      "ownCopyOfCourse": "own copy of the course",
+      "reads": "reads {version}",
+      "noLessons": "no lessons yet",
+      "learners": "{count, plural, one {# learner} other {# learners}}",
+      "run": {
+        "running": "Running",
+        "upcoming": "Upcoming",
+        "finished": "Finished"
+      },
+      "taughtBy": "{count, plural, other {taught by {names}}}"
+    },
+    "created": "Group created. Add its dates, description and more in <link>Settings</link>.",
+    "readLessons": "Read the lessons",
+    "openCourse": "Open the course",
+    "openingCourse": "Opening…",
+    "openCourseHint": "The pages your learners read, through your instructor link: mark a passage to leave an instructor note.",
+    "insights": "Insights",
+    "tabs": {
+      "label": "Group",
+      "lessons": "Lessons",
+      "inClass": "In class",
+      "feedback": "Feedback",
+      "people": "People",
+      "learnerFeedback": "Learner feedback",
+      "settings": "Settings"
+    },
+    "lessons": {
+      "kicker": "Lessons",
+      "closed": "This group has finished: its lessons are closed. Learners can still read them.",
+      "ownCopyFrom": "This group’s own copy, made from {version}. Changes reach only this group; to bring one to the course, open its improvement and choose Suggest for the course.",
+      "ownCopyFromCourse": "This group’s own copy, made from the course. Changes reach only this group; to bring one to the course, open its improvement and choose Suggest for the course.",
+      "ownCopy": "This group’s own copy of the lessons.",
+      "none": "This group has no lessons yet. Pick the course version it starts from in Settings."
+    },
+    "feedback": {
+      "kicker": "Feedback",
+      "export": "Export CSV",
+      "empty": "Nothing open. When learners in this group leave feedback on a passage, it shows here.",
+      "tasksEmpty": "Plan an improvement from a piece of feedback (Open) and it shows here until the change is made.",
+      "tasksHint": "An improvement that is done marks the feedback it came from done.",
+      "openBoard": "Open the board"
+    },
+    "people": {
+      "learners": "Learners",
+      "empty": {
+        "title": "No learners yet",
+        "inSettings": "Paste the list of learners under <link>Settings</link>.",
+        "above": "Paste the list of learners above."
+      },
+      "instructors": "Instructors",
+      "givesNotes": "Adding them gives them notes on this group (guest instructor)",
+      "givesAccess": "Adding them adds this group to their access",
+      "instructorLinks": "Instructor links",
+      "groupLink": "Group link",
+      "until": "Until {date}",
+      "yoursUntil": "Yours, until {date}",
+      "linkCount": "{count, plural, one {# link} other {# links}}"
+    },
+    "settings": {
+      "group": "Group",
+      "name": "Name",
+      "nameSheet": "Name and short name",
+      "slack": "Slack",
+      "dates": "Dates",
+      "starts": "Starts",
+      "ends": "Ends",
+      "hasStart": "Start date",
+      "hasEnd": "End date",
+      "lessons": "Lessons",
+      "lessonsSheet": "Course and lessons",
+      "learners": "Learners",
+      "roster": "Roster",
+      "none": "None",
+      "save": "Save",
+      "saving": "Saving…",
+      "ownCopyOf": "Own copy of {version}",
+      "ownCopyOfCourse": "Own copy of the course",
+      "copy": {
+        "kicker": "The group’s lessons",
+        "reads": "This group reads {version} of the course, as it is. Give it its own copy to change lessons from its feedback without changing the course.",
+        "footer": "{closed, select, yes {Closed: learners can still read it, and you can reopen it.} other {Close it when the group has finished: learners can still read it.}}"
+      },
+      "delete": {
+        "text": "Deletes the group, its learners and their links.",
+        "textWithCopy": "Deletes the group, its learners and their links, and its own copy of the lessons with its feedback."
+      }
+    }
+  },
+  "links": {
+    "cancel": "Cancel",
+    "copy": "Copy",
+    "open": "Open",
+    "edit": "Edit",
+    "revoke": "Revoke",
+    "revoking": "Revoking…",
+    "create": "Create link",
+    "creating": "Creating…",
+    "createFailed": "Could not create link. Try again.",
+    "revokeFailed": "Could not revoke the link. Try again.",
+    "copied": "Copied to clipboard",
+    "copyFailed": "Could not copy — copy manually"
+  },
+  "roster": {
+    "label": "Roster paste",
+    "hint": "Paste the raw learner list. Numbering and heading lines are cleaned automatically. Removed learners lose their links.",
+    "learners": "{count, plural, one {# learner} other {# learners}}",
+    "saving": "Saving roster…",
+    "save": "Save roster"
+  },
+  "switcher": {
+    "label": "Switch group"
+  },
+  "groupLink": {
+    "modalTitle": "Group access link",
+    "modalText": "Shared link for everyone in this group. Creating a new link revokes the previous one.",
+    "expires": "Expires {date}",
+    "lastOpened": "Last opened {date}",
+    "notOpened": "Not opened yet",
+    "emptyTitle": "No active group link",
+    "emptyText": "Create one shared public link for the whole group when the course is ready.",
+    "create": "Create group link"
+  },
+  "members": {
+    "linkModalTitle": "Member access link",
+    "copiedAll": "Copied {count, plural, one {# link} other {# links}}",
+    "copiedAllMissing": "Copied {count, plural, one {# link} other {# links}} ({missing, plural, one {# learner has} other {# learners have}} no link yet)",
+    "copyAllFailed": "Could not copy — copy each link instead",
+    "unattached": "{count, plural, one {# piece} other {# pieces}} of feedback from learners no longer on the roster.",
+    "unattachedHint": "Move it to a learner so it shows on their link.",
+    "moveFeedback": "Move feedback…",
+    "copyAll": "Copy all links",
+    "makeAll": "Make links for all learners",
+    "active": "Active · expires {date}",
+    "lastOpened": "last opened {date}",
+    "notOpened": "not opened yet",
+    "noLink": "No active learner link"
+  },
+  "editExpiry": {
+    "failed": "Could not update expiry. Try again.",
+    "groupTitle": "Edit group link expiry",
+    "memberTitle": "Edit learner link expiry",
+    "groupText": "Change when this shared link stops working. The URL and token stay the same.",
+    "memberTextNamed": "{learner} — change when this link stops working. The URL and token stay the same.",
+    "memberText": "Change when this link stops working. The URL and token stay the same.",
+    "saving": "Saving…",
+    "save": "Save expiry"
+  },
+  "bulkLinks": {
+    "failed": "Could not create links. Try again.",
+    "doneTitle": "Links created",
+    "title": "Links for all learners",
+    "doneText": "Generated {count, plural, one {# link} other {# links}}. “Copy all links” copies them in one go, each with its learner’s name.",
+    "text": "Creates one fresh link per learner ({count, plural, one {# member} other {# members}}), revoking older active links.",
+    "create": "Create all links",
+    "close": "Close"
+  },
+  "linkFeedback": {
+    "title": "Link this feedback to a learner",
+    "olderLink": "It came through an older link of its learner. Link it to their current link, or choose who wrote it.",
+    "leftRoster": "Its learner is no longer on the roster. Choose who wrote it: it moves to them and shows on their link, as theirs.",
+    "anonymous": "The team still sees it as “A learner”.",
+    "learner": "Learner",
+    "choose": "Choose a learner",
+    "linking": "Linking…",
+    "link": "Link"
+  },
+  "moveFeedback": {
+    "title": "Move feedback to a learner",
+    "text": "From learners no longer on the roster, by the link it came from. It moves to the learner you choose and shows on their link, as theirs.",
+    "pieces": "{count, plural, one {# piece} other {# pieces}} of feedback",
+    "linkMade": "link made {date}",
+    "linkGone": "link gone",
+    "lessons": "{count, plural, one {lesson} other {lessons}} {lessons}",
+    "sample": "“{sample}”",
+    "moveTo": "Move it to",
+    "choose": "Choose a learner",
+    "moving": "Moving…",
+    "moveCount": "Move {count, plural, one {# piece} other {# pieces}} of feedback",
+    "move": "Move feedback"
+  },
+  "copyActions": {
+    "failed": "That didn’t work. Try again.",
+    "start": "Give this group its own copy",
+    "reopen": "Reopen the group’s lessons",
+    "close": "Close (the group has finished)",
+    "useCourse": "Use the course’s lessons instead",
+    "enable": {
+      "title": "Give this group its own copy?",
+      "text": "“{name}” gets its own copy of {version}, to change from its feedback. Its links keep working and show the copy; open feedback moves with it. The course’s own lessons don’t change.",
+      "textLessons": "“{name}” gets its own copy of its lessons, to change from its feedback. Its links keep working and show the copy; open feedback moves with it. The course’s own lessons don’t change.",
+      "confirm": "Make the copy"
+    },
+    "closeConfirm": {
+      "title": "Close the group’s lessons?",
+      "text": "For when the group has finished. Learners can still read them and nothing is deleted, but they stop syncing to Obsidian. You can reopen them later.",
+      "confirm": "Close"
+    },
+    "disable": {
+      "title": "Use the course’s lessons instead?",
+      "text": "Only while the copy is untouched: links and feedback move back to the course’s lessons and the copy is deleted. Once it has changes or improvements, close it instead.",
+      "confirm": "Use the course’s lessons"
+    }
+  },
+  "expiryPicker": {
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "weekdays": {
+      "sun": "Su",
+      "mon": "Mo",
+      "tue": "Tu",
+      "wed": "We",
+      "thu": "Th",
+      "fri": "Fr",
+      "sat": "Sa"
+    },
+    "time": "Time",
+    "hour": "Hour",
+    "minute": "Minute"
+  },
+  "instructorLinks": {
+    "intro": "Teach from the pages your learners read, here or on your own website. Mark a passage to leave an instructor note: the team sees it with your name, learners don’t, and you’re never counted as a learner.",
+    "copied": "Copied to clipboard",
+    "copyFailed": "Could not copy — copy manually",
+    "yours": "Your link · expires {date}",
+    "open": "Open",
+    "copy": "Copy",
+    "reset": "New address",
+    "resetFailed": "Could not make a new address. Try again.",
+    "create": "Get my instructor link",
+    "creating": "Making your link…",
+    "createFailed": "Could not make your link. Try again.",
+    "withLink": "Instructors with a link",
+    "lastOpened": "Last opened {date}",
+    "notOpened": "Not opened yet",
+    "expires": "expires {date}",
+    "revoke": "Revoke",
+    "revokeFailed": "Could not revoke the link. Try again."
+  },
+  "instructors": {
+    "intro": "Learners see who teaches them. Instructors find the group on their Overview, with their instructor link, and its improvements are offered to them first.",
+    "remove": "Remove",
+    "removeFailed": "Could not remove them. Try again.",
+    "none": "No instructors yet.",
+    "addLabel": "Add an instructor",
+    "addPlaceholder": "Someone from the team",
+    "addSearch": "Search the team…",
+    "add": "Add",
+    "addFailed": "Could not add them. Try again.",
+    "invite": {
+      "sendIt": "Send it to them: it works once and expires in 7 days.",
+      "done": "Done",
+      "nameLabel": "Who it's for",
+      "namePlaceholder": "Mia, guest lecturer for week 4",
+      "failed": "Could not make the invite. Try again.",
+      "send": "Send invite",
+      "createLink": "Create invite link",
+      "start": "Invite a guest instructor",
+      "startHint": "Someone who isn’t on the team yet: they join with notes on this group only, and teach it.",
+      "pending": "Invited as a guest instructor · not used yet · expires {date}",
+      "withdraw": "Withdraw",
+      "withdrawFailed": "Could not withdraw it. Try again."
+    }
+  },
+  "form": {
+    "course": "Course",
+    "selectCourse": "Select course",
+    "lessonsFrom": "Lessons from",
+    "lessonsFromHintEdit": "The course version this group reads. Only published versions serve live links; changing it revokes existing links.",
+    "lessonsFromHintNew": "The course version the group starts from. Only published versions serve live links.",
+    "selectVersion": "Select version",
+    "selectCourseFirst": "Select a course first",
+    "published": "Published",
+    "draft": "Draft",
+    "name": "Group name",
+    "namePlaceholder": "Evening group · Autumn 2026",
+    "slug": "Short name",
+    "slugHint": "Updates from the group name; you can change it.",
+    "slugPlaceholder": "evening-autumn-2026",
+    "slugQuiet": "Short name: {slug}",
+    "slugQuietEmpty": "The short name follows the group name.",
+    "slugChange": "Change",
+    "slack": "Slack handle",
+    "slackHint": "Optional channel or short handle for this group.",
+    "slackPlaceholder": "#frontend-spring",
+    "description": "Description",
+    "descriptionHint": "Optional. Keep it fit for learners: your own website can show it on their pages.",
+    "descriptionPlaceholder": "Tuesdays and Thursdays, 18:00–21:00, room 2.",
+    "partners": "Partners",
+    "partnersHint": "Learners in this group see these, in this order, instead of the course's partners. Leave it empty to show the course's.",
+    "roster": "Roster paste",
+    "rosterHint": "Paste the raw learner list. Numbering and heading lines are cleaned automatically.",
+    "parsed": "Parsed learners",
+    "parsedHint": "Stored exactly as pasted, in the order shown here.",
+    "learners": "{count, plural, one {# learner} other {# learners}}",
+    "parsedEmpty": {
+      "title": "No learners parsed yet",
+      "text": "Paste the roster and the cleaned list of learners will appear here."
+    },
+    "ownCopy": "Give the group its own copy of the lessons",
+    "ownCopyHint": "Then changes made from its feedback reach only this group, and the course's own lessons stay as they are. Leave it off for a group that should follow the course as it changes."
+  },
+  "actions": {
+    "groupNotFound": "Select a valid group first.",
+    "expiry": "Enter a valid future expiry.",
+    "versionDraft": "Assign a published curriculum version before creating access links.",
+    "noVersion": "Select a curriculum version for this group first.",
+    "missingLink": "Missing link information.",
+    "linkNotFound": "Link not found.",
+    "invalidLink": "Invalid link.",
+    "revokedLink": "Cannot extend a revoked link.",
+    "missingMember": "Missing group or member.",
+    "memberNotFound": "Member not found.",
+    "missingGroup": "Missing group.",
+    "groupGone": "Group not found.",
+    "noMembers": "No members in this group."
+  },
+  "curriculum": {
+    "notFound": "Group not found.",
+    "alreadyCopied": "This group already has its own copy of the lessons.",
+    "pickVersion": "Pick the course version the group starts from first (its Settings).",
+    "enabled": "The group has its own copy of the lessons now. Its links keep working and show the copy.",
+    "noCopy": "This group has no copy of its own.",
+    "baseGone": "The course version it was made from is gone. Close it instead.",
+    "hasChanges": "The group’s copy already has changes or improvements. Close it instead.",
+    "disabled": "The group reads the course’s lessons again.",
+    "closed": "The group’s lessons are closed. Learners can still read them; they no longer sync to Obsidian.",
+    "reopened": "The group’s lessons are open again, and sync to Obsidian."
+  },
+  "feedbackTransfer": {
+    "noAccess": "You can’t change this group’s learners.",
+    "notOnRoster": "That learner isn’t on this group’s roster.",
+    "chooseBoth": "Choose the feedback and the learner to move it to.",
+    "chooseLearner": "Choose the learner it belongs to.",
+    "notThisGroup": "That isn’t feedback from this group’s learners."
+  },
+  "instructorLinkActions": {
+    "noNotes": "You can’t add notes for this group.",
+    "groupGone": "This group no longer exists.",
+    "revokeNotAllowed": "Only people who manage this group can revoke instructor links.",
+    "alreadyGone": "That link is already gone.",
+    "revoked": "Link revoked. They can open a new one while they still teach this group."
+  },
+  "instructorActions": {
+    "chooseNotAllowed": "Only people who manage this group can choose its instructors.",
+    "pickSomeone": "Pick someone from the team.",
+    "notOnTeam": "They aren’t on this team.",
+    "addedWithAccess": "Added. This group was added to their access, so they can add notes here.",
+    "added": "Added.",
+    "noLongerTeaches": "They no longer teach this group.",
+    "removed": "Removed. Their access stays as it is; change it on the Team page.",
+    "inviteNotAllowed": "Only people who manage this group can invite its instructors.",
+    "sayWho": "Say who the invite is for.",
+    "emailInvalid": "Enter the email to send the invite to.",
+    "yourTeam": "Your team",
+    "emailed": "Invite emailed to {email}. It works once and expires in 7 days; the link is here too.",
+    "emailFailed": "The invite is made, but the email didn’t go out. Send them the link yourself: it works once and expires in 7 days.",
+    "linkReady": "Invite link ready. Send it to them: it works once and expires in 7 days.",
+    "inviteGone": "That invite is already used or gone.",
+    "withdrawn": "Invite withdrawn."
+  }
+}

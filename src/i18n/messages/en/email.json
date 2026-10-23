@@ -1,0 +1,22 @@
+{
+  "layout": {
+    "copyLink": "Or copy this link:"
+  },
+  "passwordReset": {
+    "subject": "Reset your {product} password",
+    "greeting": "Hi,",
+    "greetingNamed": "Hi {name},",
+    "body": "Someone (we hope you) asked to reset the password for your account. The link works once, for an hour.",
+    "action": "Choose a new password",
+    "footer": "If you didn't ask, ignore this email: your password stays as it is."
+  },
+  "invite": {
+    "subject": "{inviter} invited you to {organization} on {product}",
+    "body": "{inviter} invited you to join {organization} on {product}, where they design their courses and improve them from what happens in class.",
+    "teachSubject": "{inviter} invited you to teach {group} with {organization}",
+    "teachBody": "{inviter} invited you to teach {group} ({course}) with {organization}, as a guest instructor.",
+    "teachNext": "You’ll read the lessons your learners read and mark what happens in class: your notes help the course get better.",
+    "action": "Accept the invite",
+    "footer": "The link works once, for 7 days. If you weren’t expecting this, ignore it."
+  }
+}

@@ -1,0 +1,742 @@
+/*
+ * Medium-style margin comments for the lesson view. Global classes (not CSS Modules) because the
+ * highlight spans are injected imperatively into the rendered lesson HTML — see LessonCommentLayer.
+ * Colours reuse the access theme tokens (--foreground-rgb / --background-rgb / --accent-color-hex),
+ * so light/dark follow automatically.
+ */
+
+/*
+ * Notes read orange against the teal accent that feedback uses, so the two kinds are easy to tell
+ * apart wherever they appear together. Declared on :root (not .alc-wrap) because the floating
+ * toggle lives outside the lesson wrapper; mirrors globals.css theming.
+ */
+:root {
+  --alc-note-color: #f97316;
+  --alc-note-strong: #fb923c;
+}
+
+:root[data-theme='light'] {
+  --alc-note-color: #ea580c;
+  --alc-note-strong: #c2410c;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]),
+  :root[data-theme='system'] {
+    --alc-note-color: #ea580c;
+    --alc-note-strong: #c2410c;
+  }
+}
+
+.alc-wrap {
+  position: relative;
+}
+
+/* Global floating speed-dial: a collapsed circle that opens the feedback-comments action(s). */
+.alc-fab-wrap {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.alc-fab-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgb(var(--background-rgb));
+  color: rgba(var(--foreground-rgb), 0.8);
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  transition: color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.alc-fab-circle svg {
+  width: 22px;
+  height: 22px;
+}
+
+.alc-fab-circle:hover,
+.alc-fab-circle[aria-expanded='true'] {
+  border-color: var(--accent-color-hex);
+  color: var(--accent-color-hex);
+}
+
+.alc-fab-circle[data-on='false'] {
+  color: var(--text-muted);
+}
+
+.alc-fab-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: rgb(var(--background-rgb));
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+  animation: alcFabIn 0.14s ease both;
+}
+
+@keyframes alcFabIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.alc-fab-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: rgb(var(--foreground-rgb));
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.alc-fab-action:hover {
+  background: var(--surface-2);
+}
+
+.alc-fab-action svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 560px) {
+  .alc-fab-wrap {
+    bottom: 14px;
+    right: 14px;
+  }
+
+  .alc-fab-circle {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+/*
+ * Hidden state, per kind: a hidden annotation's highlight reads as plain text and its bubble goes
+ * away (the live-selection hue always stays). The `:not()` guards are what keep a passage carrying
+ * BOTH kinds visible while only one of them is hidden — it stays marked in the other kind's colour.
+ */
+.alc-wrap[data-alc-comments-hidden='true'] .alc-hl-comment:not(.alc-hl-note):not(.alc-hl-pending),
+.alc-wrap[data-alc-notes-hidden='true'] .alc-hl-note:not(.alc-hl-comment):not(.alc-hl-pending),
+.alc-wrap[data-alc-comments-hidden='true'][data-alc-notes-hidden='true'] .alc-hl:not(.alc-hl-pending) {
+  background: transparent;
+  border-bottom-color: transparent;
+  border-top-color: transparent;
+  box-shadow: none;
+  cursor: text;
+  pointer-events: none;
+}
+
+.alc-wrap[data-alc-comments-hidden='true'] .alc-bubble[data-alc-kind='comment'],
+.alc-wrap[data-alc-notes-hidden='true'] .alc-bubble[data-alc-kind='note'] {
+  display: none;
+}
+
+/* The gutter and its reserved width only collapse once BOTH kinds are hidden. */
+.alc-wrap[data-alc-comments-hidden='true'][data-alc-notes-hidden='true'] .alc-gutter {
+  display: none;
+}
+
+.alc-wrap[data-alc-comments-hidden='true'][data-alc-notes-hidden='true'][data-alc-active='true'] {
+  padding-right: 0;
+}
+
+/* Visible hue for the reader's live text selection inside the lesson. */
+[data-access-lesson-root]::selection,
+[data-access-lesson-root] ::selection {
+  background: color-mix(in srgb, var(--accent-color-hex) 40%, transparent);
+}
+
+[data-access-lesson-root]::-moz-selection,
+[data-access-lesson-root] *::-moz-selection {
+  background: color-mix(in srgb, var(--accent-color-hex) 40%, transparent);
+}
+
+/* Reserve the right gutter so bubbles never overlap the reading column (desktop only). */
+@media (min-width: 561px) {
+  .alc-wrap[data-alc-active='true'] {
+    padding-right: 56px;
+  }
+}
+
+.alc-gutter {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 56px;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* A single margin bubble, absolutely placed at its passage's vertical offset. */
+.alc-bubble {
+  position: absolute;
+  right: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: rgb(var(--background-rgb));
+  color: rgba(var(--foreground-rgb), 0.72);
+  cursor: pointer;
+  pointer-events: auto;
+  transform: translateY(-4px);
+  transition: border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.alc-bubble:hover,
+.alc-bubble[data-alc-emphasis='true'],
+.alc-bubble[aria-expanded='true'] {
+  border-color: var(--accent-color-hex);
+  color: var(--accent-color-hex);
+  box-shadow: 0 4px 14px rgba(var(--foreground-rgb), 0.12);
+}
+
+.alc-bubble svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Small status dot on resolved bubbles. */
+.alc-bubble[data-alc-status='RESOLVED']::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: #16a34a;
+  border: 2px solid rgb(var(--background-rgb));
+}
+
+/* web-highlighter wraps: base = a commented passage, active = open/hovered, pending = live selection. */
+.alc-hl {
+  background: color-mix(in srgb, var(--accent-color-hex) 12%, transparent);
+  border-bottom: 2px solid color-mix(in srgb, var(--accent-color-hex) 45%, transparent);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.alc-hl-active {
+  background: color-mix(in srgb, var(--accent-color-hex) 40%, transparent);
+  border-bottom-color: var(--accent-color-hex);
+}
+
+.alc-hl-pending {
+  background: color-mix(in srgb, var(--accent-color-hex) 42%, transparent);
+  border-bottom-color: var(--accent-color-hex);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent-color-hex) 30%, transparent);
+}
+
+/*
+ * Per-kind annotation colours. `.alc-hl-comment` carries no declarations — it inherits the accent
+ * from `.alc-hl` — but it has to exist as a class so the hidden-state and overlap rules above can
+ * tell the two kinds apart. Both classes are re-stamped by `repaintKinds` in LessonCommentLayer,
+ * because web-highlighter wipes a wrapper's classList whenever highlights overlap.
+ */
+.alc-hl-note {
+  background: color-mix(in srgb, var(--alc-note-color) 14%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--alc-note-color) 50%, transparent);
+}
+
+.alc-hl-note.alc-hl-active {
+  background: color-mix(in srgb, var(--alc-note-color) 40%, transparent);
+  border-bottom-color: var(--alc-note-strong);
+}
+
+/* Feedback and a note on one passage: the note's fill wins, feedback keeps a dashed top rule. */
+.alc-hl-comment.alc-hl-note {
+  border-top: 1px dashed color-mix(in srgb, var(--accent-color-hex) 55%, transparent);
+}
+
+/*
+ * A wrapper with no kind class belongs to no annotation — web-highlighter can leave one behind when
+ * overlapping highlights are removed. `repaintKinds` strips the kind classes off it, and this makes
+ * sure the leftover never paints as a ghost highlight.
+ */
+.alc-hl:not(.alc-hl-comment):not(.alc-hl-note):not(.alc-hl-pending) {
+  background: transparent;
+  border-bottom-color: transparent;
+  border-top-color: transparent;
+  box-shadow: none;
+  cursor: text;
+  pointer-events: none;
+}
+
+/* Medium-style selection toolbar shown next to a live text selection (viewer mode). */
+.alc-toolbar {
+  position: absolute;
+  z-index: 24;
+  display: flex;
+  align-items: stretch;
+  border-radius: 9px;
+  background: #1f2430;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.3);
+  transform: translate(-50%, -100%);
+  white-space: nowrap;
+}
+
+.alc-toolbar[data-placement='below'] {
+  transform: translate(-50%, 0);
+}
+
+.alc-tb-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 13px;
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.alc-tb-item:first-child {
+  border-radius: 9px 0 0 9px;
+}
+
+.alc-tb-item:last-child {
+  border-radius: 0 9px 9px 0;
+}
+
+.alc-tb-item:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.alc-tb-item svg {
+  width: 14px;
+  height: 14px;
+}
+
+.alc-tb-chevron {
+  font-size: 0.7rem;
+  opacity: 0.75;
+  transition: transform 0.15s ease;
+}
+
+.alc-tb-chevron-open {
+  transform: rotate(180deg);
+}
+
+.alc-tb-sep {
+  width: 1px;
+  margin: 7px 0;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* Little caret pointing at the selection. */
+.alc-tb-caret {
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid #1f2430;
+}
+
+.alc-toolbar[data-placement='below'] .alc-tb-caret {
+  bottom: auto;
+  top: -6px;
+  border-top: none;
+  border-bottom: 6px solid #1f2430;
+}
+
+/* Ask AI dropdown. */
+.alc-tb-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  min-width: 156px;
+  padding: 5px;
+  border-radius: 10px;
+  background: rgb(var(--background-rgb));
+  border: 1px solid var(--line);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.24);
+}
+
+.alc-toolbar[data-placement='below'] .alc-tb-dropdown {
+  top: auto;
+  bottom: 100%;
+  margin-top: 0;
+  margin-bottom: 6px;
+}
+
+.alc-tb-ai {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: rgb(var(--foreground-rgb));
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+
+.alc-tb-ai:hover {
+  background: var(--surface-2);
+}
+
+.alc-tb-ai svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+/* Ask AI step two: which assistant the passage goes to. */
+.alc-popover .alc-popover-ai-head {
+  display: flex;
+  align-items: center;
+  margin: 0 0 12px;
+  color: rgb(var(--foreground-rgb));
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.alc-popover .alc-popover-ai-head svg {
+  width: 16px;
+  height: 16px;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+/* Popover card (compose + reply views). */
+.alc-popover {
+  position: absolute;
+  z-index: 25;
+  width: min(320px, calc(100% - 24px));
+  max-width: 320px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgb(var(--background-rgb));
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.22);
+}
+
+.alc-popover-quote {
+  margin: 0 0 10px;
+  padding-left: 10px;
+  border-left: 3px solid var(--accent-color-hex);
+  color: rgba(var(--foreground-rgb), 0.72);
+  font-size: 0.82rem;
+  font-style: italic;
+  line-height: 1.4;
+  max-height: 4.6em;
+  overflow: hidden;
+}
+
+.alc-popover-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.alc-status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  background: var(--surface-2);
+  color: rgba(var(--foreground-rgb), 0.7);
+}
+
+.alc-status-pill[data-alc-status='RESOLVED'] {
+  background: rgba(22, 163, 74, 0.14);
+  color: #15803d;
+}
+
+.alc-popover-body {
+  margin: 0 0 10px;
+  color: rgb(var(--foreground-rgb));
+  font-size: 0.9rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.alc-response {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line-strong);
+}
+
+.alc-response-label {
+  margin: 0 0 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent-color-hex);
+}
+
+.alc-response-body {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: rgba(var(--foreground-rgb), 0.9);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.alc-textarea {
+  width: 100%;
+  min-height: 84px;
+  padding: 9px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  background: rgb(var(--background-rgb));
+  color: rgb(var(--foreground-rgb));
+  font: inherit;
+  font-size: 0.88rem;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.alc-textarea:focus {
+  outline: none;
+  border-color: var(--accent-color-hex);
+}
+
+.alc-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.alc-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.alc-btn-primary {
+  background: var(--accent-color-hex);
+  color: #fff;
+}
+
+.alc-btn-primary:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.alc-btn-ghost {
+  background: transparent;
+  border-color: var(--line-strong);
+  color: rgba(var(--foreground-rgb), 0.75);
+}
+
+.alc-btn-danger {
+  background: #dc2626;
+  color: #fff;
+}
+
+.alc-btn-danger:disabled,
+.alc-btn-ghost:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.alc-btn-text-danger {
+  background: transparent;
+  border-color: rgba(220, 38, 38, 0.4);
+  color: #dc2626;
+}
+
+.alc-btn-text-danger:hover {
+  border-color: #dc2626;
+  background: rgba(220, 38, 38, 0.08);
+}
+
+.alc-confirm-text {
+  margin-right: auto;
+  font-size: 0.8rem;
+  color: rgba(var(--foreground-rgb), 0.75);
+}
+
+.alc-link {
+  color: var(--accent-color-hex);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.alc-link:hover {
+  text-decoration: underline;
+}
+
+.alc-error {
+  margin: 6px 0 0;
+  color: #dc2626;
+  font-size: 0.78rem;
+}
+
+.alc-empty-hint {
+  margin-top: 6px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Inline indicator used on narrow screens where the side gutter is hidden. */
+.alc-inline-indicator {
+  display: none;
+}
+
+@media (max-width: 560px) {
+  .alc-gutter {
+    display: none;
+  }
+
+  .alc-inline-indicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    margin-left: 4px;
+    vertical-align: baseline;
+    border-radius: 999px;
+    border: 1px solid var(--accent-color-hex);
+    color: var(--accent-color-hex);
+    background: rgb(var(--background-rgb));
+    font-size: 0.66rem;
+    font-weight: 700;
+    cursor: pointer;
+    pointer-events: auto;
+  }
+
+  .alc-popover {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    top: auto;
+    transform: none;
+    width: auto;
+    max-width: none;
+    max-height: 72vh;
+    overflow-y: auto;
+  }
+
+  .alc-textarea {
+    min-height: 60px;
+  }
+}
+
+/* ---- Notes: bubbles, toolbar action, popover accents and the visibility row ---- */
+
+/*
+ * Each kind carries its colour at rest, not only on hover — when a lesson has both, the gutter has
+ * to read as two kinds at a glance.
+ */
+.alc-bubble[data-alc-kind='comment'] {
+  border-color: color-mix(in srgb, var(--accent-color-hex) 38%, transparent);
+  color: var(--accent-color-hex);
+}
+
+.alc-bubble[data-alc-kind='note'] {
+  border-color: color-mix(in srgb, var(--alc-note-color) 38%, transparent);
+  color: var(--alc-note-color);
+}
+
+.alc-bubble[data-alc-kind='note']:hover,
+.alc-bubble[data-alc-kind='note'][data-alc-emphasis='true'],
+.alc-bubble[data-alc-kind='note'][aria-expanded='true'] {
+  border-color: var(--alc-note-color);
+  color: var(--alc-note-color);
+}
+
+/* The toolbar sits on a dark chip, so the note action uses the brighter amber in both themes. */
+.alc-tb-item[data-alc-kind='note'] svg {
+  color: #fbbf24;
+}
+
+.alc-popover[data-alc-kind='note'] .alc-popover-quote {
+  border-left-color: var(--alc-note-color);
+}
+
+.alc-popover[data-alc-kind='note'] .alc-btn-primary {
+  background: var(--alc-note-color);
+}
+
+.alc-status-pill[data-alc-kind='note'] {
+  background: color-mix(in srgb, var(--alc-note-color) 16%, transparent);
+  color: var(--alc-note-strong);
+}
+
+/* Keeps Edit + Close together when Delete is pushed to the opposite end. */
+.alc-actions-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.alc-fab-action[data-alc-kind='note'] {
+  color: var(--alc-note-strong);
+}
+
+.alc-fab-kind-glyph {
+  display: inline-flex;
+  margin-left: auto;
+  padding-left: 10px;
+  opacity: 0.8;
+}
+
+.alc-fab-circle[data-notes-on='true'] {
+  border-color: var(--alc-note-color);
+}

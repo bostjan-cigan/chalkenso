@@ -1,0 +1,150 @@
+/* A sheet's header: its title, Done on the right (Apple's sheets). */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.done {
+  min-height: max(32px, var(--touch-target, 0px));
+  padding: 0 0.25rem;
+  border: 0;
+  background: none;
+  color: rgb(var(--accent-color));
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.done:focus-visible {
+  outline: 2px solid rgb(var(--accent-color));
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* A settings page's group: a short heading above the list, at most a line under it. */
+.group {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.group + .group {
+  margin-top: 0.6rem;
+}
+
+.groupTitle {
+  margin: 0;
+  padding: 0 1rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(var(--foreground-rgb), 0.6);
+}
+
+.groupFooter {
+  margin: 0;
+  padding: 0 1rem;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: rgba(var(--foreground-rgb), 0.6);
+}
+
+/* Rows that open sheets: an inset grouped list, hairlines starting where the text does. */
+.rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-radius: 12px;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  overflow: hidden;
+}
+
+.rows > li + li {
+  position: relative;
+}
+
+.rows > li + li::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 1rem;
+  height: 1px;
+  background: var(--card-border);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: max(48px, var(--touch-target, 0px));
+  padding: 0.6rem 0.85rem 0.6rem 1rem;
+  border: 0;
+  background: none;
+  color: rgb(var(--foreground-rgb));
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.row:hover {
+  background: rgba(var(--foreground-rgb), 0.03);
+}
+
+/* A row with its own control: nothing to press but the control. */
+.controlRow {
+  cursor: default;
+}
+
+.controlRow:hover {
+  background: none;
+}
+
+.row:focus-visible {
+  outline: 2px solid rgb(var(--accent-color));
+  outline-offset: -2px;
+}
+
+/* A row that does something: blue words, or quiet red for what can't be undone. */
+.actionRow .label {
+  color: rgb(var(--action-rgb));
+}
+
+.destructiveRow .label {
+  color: var(--red-pen);
+}
+
+.row:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.row:disabled:hover {
+  background: none;
+}
+
+.label {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.value {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 60%;
+  overflow: hidden;
+  font-size: 0.9rem;
+  color: rgba(var(--foreground-rgb), 0.6);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chevron {
+  flex: none;
+  color: rgba(var(--foreground-rgb), 0.35);
+}

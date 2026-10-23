@@ -1,0 +1,107 @@
+/**
+ * Global classes for copy UI injected with document.createElement.
+ * CSS Modules hashes do not reliably apply to imperative nodes in all builds,
+ * so we use stable class names here.
+ */
+.access-lesson-copy-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.access-lesson-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.28rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(226, 232, 240, 0.88);
+  cursor: pointer;
+  line-height: 0;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.access-lesson-copy-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(241, 245, 249, 0.98);
+}
+
+.access-lesson-copy-btn:focus-visible {
+  outline: 2px solid rgba(96, 165, 250, 0.95);
+  outline-offset: 2px;
+}
+
+[data-access-lesson-root] .access-lesson-copy-tooltip {
+  --access-tooltip-bg: rgba(30, 41, 59, 0.98);
+  --access-tooltip-border: rgba(148, 163, 184, 0.35);
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  z-index: 5;
+  padding: 0.45rem 0.65rem;
+  border-radius: 10px;
+  border: 1px solid var(--access-tooltip-border);
+  background: var(--access-tooltip-bg);
+  color: rgba(248, 250, 252, 0.98);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  white-space: nowrap;
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.22),
+    0 12px 28px rgba(0, 0, 0, 0.38);
+  pointer-events: none;
+  transform: translateX(-50%);
+  animation: accessLessonCopyTooltipIn 0.18s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+[data-access-lesson-root] .access-lesson-copy-tooltip::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 7px solid var(--access-tooltip-border);
+}
+
+[data-access-lesson-root] .access-lesson-copy-tooltip::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -5px;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 6px solid var(--access-tooltip-bg);
+}
+
+@keyframes accessLessonCopyTooltipIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(6px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-access-lesson-root] .access-lesson-copy-tooltip {
+    animation: none;
+  }
+}

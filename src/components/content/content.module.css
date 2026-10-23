@@ -1,0 +1,721 @@
+/*
+ * Public content sections (/blog, /projects). Rebuilt from the old /kitchen design
+ * (git show 42d0c6a:src/app/kitchen/cooking.module.css): Cairo, theme variables, header card with
+ * avatar, animated underline links, card grid, tag pills, 800px reading column.
+ */
+
+.layout {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  background-color: rgb(var(--background-rgb));
+  color: rgb(var(--foreground-rgb));
+}
+
+.content {
+  width: 100%;
+  max-width: 1000px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- Header ---------- */
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 2rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--line-subtle);
+}
+
+.avatar {
+  flex-shrink: 0;
+  display: block;
+}
+
+.avatar img {
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+.headerText {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.headerText h1,
+.headerTitle {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: rgb(var(--foreground-rgb));
+}
+
+.subtitle {
+  margin: 0.5rem 0 0;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--text-color-hex);
+}
+
+.headerNav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  margin-top: 0.75rem;
+  font-size: 1rem;
+}
+
+/* Signature underline link (same as src/styles/Link.module.css). */
+.link {
+  text-decoration: none;
+  color: var(--accent-color-hex);
+  position: relative;
+  transition: color 1s;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.link::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  bottom: -5px;
+  left: 0;
+  background-color: var(--accent-color-hex);
+  visibility: hidden;
+  transform: scaleX(0);
+  transition: all 0.4s ease-in-out 0s;
+}
+
+.link:hover::before,
+.linkActive::before {
+  visibility: visible;
+  transform: scaleX(1);
+}
+
+.link:visited,
+.link:active {
+  color: var(--accent-color-hex);
+}
+
+/* ---------- Lists ---------- */
+
+.sectionHeading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1rem 2rem 0;
+}
+
+.sectionHeading h2 {
+  font-size: 1.4rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2rem;
+  padding: 2rem;
+}
+
+.card {
+  background: var(--surface-1);
+  border: 1px solid var(--line-subtle);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.4s ease-in-out, background 0.4s ease-in-out;
+  display: flex;
+  flex-direction: column;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  background: var(--surface-2);
+}
+
+.cardLink {
+  color: inherit;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.cardImage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+}
+
+.cardImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+/* Skeleton behind card thumbnails and covers until the image has loaded (`SkeletonImg`). */
+@keyframes imageSkeleton {
+  0% { background-position: 200% 50%; }
+  100% { background-position: -200% 50%; }
+}
+
+.cardImage:has(img:not([data-loaded])),
+.cover:has(img:not([data-loaded])) {
+  background: linear-gradient(
+    90deg,
+    rgba(var(--foreground-rgb), 0.05) 25%,
+    rgba(var(--foreground-rgb), 0.11) 37%,
+    rgba(var(--foreground-rgb), 0.05) 63%
+  );
+  background-size: 200% 100%;
+  animation: imageSkeleton 1.5s ease-in-out infinite;
+}
+
+/* Covers have no fixed height: hold the usual social-image shape while loading. */
+.cover:has(img:not([data-loaded])) {
+  aspect-ratio: 1200 / 630;
+}
+
+.card:hover .cardImage img {
+  transform: scale(1.05);
+}
+
+.cardBody {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.cardBody h2,
+.cardBody h3 {
+  font-size: 1.5rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 1rem;
+  /* Muted: metadata shouldn't compete with the title, tags and links. */
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.metaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  white-space: nowrap;
+}
+
+/* Safety net if a browser still auto-links the date: keep it plain, like the rest of the line. */
+.meta a,
+.meta :global(a[x-apple-data-detectors]) {
+  color: inherit !important;
+  text-decoration: none !important;
+}
+
+.metaItem svg {
+  flex-shrink: 0;
+  width: 1em;
+  height: 1em;
+}
+
+.excerpt {
+  line-height: 1.6;
+  color: rgba(var(--foreground-rgb), 0.82);
+}
+
+.cardFooter {
+  padding: 0 1.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+/* ---------- Tags ---------- */
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tag {
+  display: inline-block;
+  padding: 0.2rem 0.75rem;
+  background-color: rgba(var(--accent-color), 0.18);
+  color: rgb(var(--accent-color));
+  border-radius: 20px;
+  font-size: 0.85rem;
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+a.tag:hover {
+  background-color: rgba(var(--accent-color), 0.3);
+}
+
+/* Project tech (non-OS `platforms` terms): tag look, under the title instead of a date */
+.techPills {
+  gap: 0.4rem;
+}
+
+.tagCount {
+  opacity: 0.7;
+  margin-left: 0.3rem;
+}
+
+.tagCloud {
+  padding: 0 2rem;
+}
+
+/* ---------- Term badges (platforms / tech) ---------- */
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background-color: var(--surface-2);
+  color: rgba(var(--foreground-rgb), 0.85);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.badge svg {
+  flex-shrink: 0;
+  width: 1em;
+  height: 1em;
+}
+
+/*
+ * Over the cover, top-right (generated previews put their label top-left). The icons sit on one
+ * shared dark panel rather than on the image itself, so they stay legible on any cover colour — the
+ * light border and shadow keep the panel visible on dark covers too. Same look in both themes.
+ */
+.badgesOverlay {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  max-width: calc(100% - 1.5rem);
+  z-index: 1;
+  justify-content: flex-end;
+  gap: 0.15rem;
+  padding: 0.25rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background-color: rgba(0, 0, 0, 0.62);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  pointer-events: none;
+}
+
+.badgesOverlay .badge {
+  border: none;
+  background: none;
+  color: #fff;
+}
+
+.badgeIconOnly {
+  padding: 0.4rem;
+  font-size: 1.1rem;
+}
+
+.cardBody .badges {
+  margin-bottom: 0.25rem;
+}
+
+/* ---------- Pagination / footer ---------- */
+
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 2rem 2rem;
+  font-size: 1.05rem;
+}
+
+.footer {
+  /* Same as the curriculum page footer (src/app/l/access.module.css). */
+  margin-top: auto;
+  padding: 2rem 0 0.5rem;
+  text-align: center;
+  border-top: 1px solid var(--line);
+  color: rgb(var(--foreground-rgb));
+}
+
+.footer p {
+  margin: 0.5rem 0;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.empty {
+  padding: 3rem 2rem;
+  text-align: center;
+  color: rgba(var(--foreground-rgb), 0.7);
+}
+
+/* ---------- Article ---------- */
+
+.article {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.article h1 {
+  font-size: 2.5rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.lead {
+  font-size: 1.15rem;
+  line-height: 1.6;
+  color: rgba(var(--foreground-rgb), 0.75);
+}
+
+.cover {
+  width: 100%;
+  max-height: 420px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.cover img {
+  width: 100%;
+  height: 100%;
+  max-height: 420px;
+  object-fit: cover;
+  display: block;
+}
+
+.body {
+  font-size: 1.1rem;
+  line-height: 1.7;
+}
+
+.footerTags {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
+}
+
+.footerTagsIcon {
+  flex-shrink: 0;
+  font-size: 1.1rem;
+  color: var(--text-muted);
+}
+
+.backLink {
+  padding-top: 1rem;
+}
+
+/* Project meta bar: repo link + download buttons. */
+.metaBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.metaBarLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.downloads {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.downloadButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid var(--line-strong);
+  background-color: var(--surface-1);
+  color: rgb(var(--foreground-rgb));
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.downloadButton:hover {
+  border-color: rgba(var(--accent-color), 0.6);
+}
+
+.downloadCompact {
+  padding: 0.3rem 0.7rem;
+  font-size: 0.85rem;
+  gap: 0.35rem;
+}
+
+/* List card: one Download button and a plain link to the instructions. */
+.cardActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.85rem;
+}
+
+.downloadPrimary {
+  background-color: rgba(var(--accent-color), 0.18);
+  border-color: rgba(var(--accent-color), 0.5);
+  color: rgb(var(--accent-color));
+}
+
+/* ---------- Comments ---------- */
+
+.comments {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.comments h2 {
+  font-size: 1.4rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.comment {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.commentHeader {
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+  font-size: 0.9rem;
+}
+
+.commentAuthor {
+  font-weight: 600;
+}
+
+.commentBody {
+  white-space: pre-wrap;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.commentResponse {
+  margin-top: 0.4rem;
+  padding: 0.6rem 0.9rem;
+  border-left: 2px solid rgb(var(--accent-color));
+  background: rgba(var(--accent-color), 0.08);
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+.commentForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+}
+
+.field input,
+.field textarea {
+  font: inherit;
+  font-size: 1rem;
+  color: rgb(var(--foreground-rgb));
+  background: var(--surface-1);
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+}
+
+.field input:focus,
+.field textarea:focus {
+  outline: 2px solid rgba(var(--accent-color), 0.5);
+  outline-offset: 1px;
+}
+
+.field textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.honeypot {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.formActions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.submit {
+  font: inherit;
+  cursor: pointer;
+  padding: 0.5rem 1.1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(var(--accent-color), 0.5);
+  background: rgba(var(--accent-color), 0.18);
+  color: rgb(var(--accent-color));
+}
+
+.submit:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.formNote {
+  font-size: 0.9rem;
+}
+
+.formError {
+  color: #d9534f;
+}
+
+.formSuccess {
+  color: rgb(var(--accent-color));
+}
+
+/* ---------- Responsive ---------- */
+
+@media (min-width: 768px) {
+  .layout {
+    padding: 2rem 3rem;
+  }
+
+  .headerText h1,
+  .headerTitle {
+    font-size: 3rem;
+  }
+
+  .article h1 {
+    font-size: 3rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .content {
+    padding: 1rem;
+  }
+
+  .header {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+    padding: 1.5rem 0;
+  }
+
+  .headerNav {
+    justify-content: center;
+  }
+
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+    padding: 1.5rem 0;
+  }
+
+  .sectionHeading,
+  .tagCloud,
+  .pagination {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .formRow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .metaBarLinks {
+    margin-left: 0;
+  }
+}

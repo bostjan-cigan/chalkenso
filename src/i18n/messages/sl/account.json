@@ -1,0 +1,716 @@
+{
+  "team": {
+    "metaTitle": "Ekipa",
+    "eyebrow": "Ekipa",
+    "invite": {
+      "button": "Povabi",
+      "title": "Povabite sodelavca",
+      "intro": "Ustvarite povezavo in jo pošljite, kakor želite. Povabljeni se registrira (ali prijavi) in se takoj pridruži."
+    },
+    "members": {
+      "kicker": "Člani",
+      "title": "{count, plural, one {# oseba} two {# osebi} few {# osebe} other {# oseb}}",
+      "you": "(vi)",
+      "lastSignedIn": "{email} · zadnja prijava: {date}",
+      "never": "nikoli",
+      "customAccess": "Dostop te osebe je bil nastavljen ročno. Če ga shranite tukaj, ga nadomestite."
+    },
+    "invites": {
+      "kicker": "Odprta povabila",
+      "title": "{count, plural, one {# odprto} two {# odprti} few {# odprta} other {# odprtih}}",
+      "details": "{access} · poteče {date}",
+      "withdraw": "Umakni"
+    },
+    "inviteForm": {
+      "label": "Za koga je",
+      "placeholder": "npr. Ana, predavateljica spomladanske skupine",
+      "role": "Vloga",
+      "joinsAs": "Pridruži se kot {role}: {hint}.",
+      "access": "Dostop",
+      "sending": "Pošiljanje …",
+      "creating": "Ustvarjanje povezave …",
+      "send": "Pošlji povabilo",
+      "create": "Ustvari povezavo s povabilom",
+      "copied": "Kopirano",
+      "copy": "Kopiraj povezavo"
+    },
+    "accessDialog": {
+      "open": "Dostop",
+      "title": "Do česa lahko dostopa {name}",
+      "description": "Lastniki in skrbniki imajo vedno polni dostop; to velja za člane.",
+      "cancel": "Prekliči",
+      "saving": "Shranjevanje …",
+      "save": "Shrani dostop"
+    },
+    "memberControls": {
+      "role": "Vloga",
+      "more": "Več možnosti: {name}",
+      "signOutItem": "Odjavi …",
+      "removeItem": "Odstrani iz ekipe …",
+      "removeTitle": "Želite osebo {name} odstraniti iz ekipe?",
+      "signOutTitle": "Želite odjaviti osebo {name}?",
+      "removeDescription": "Oseba takoj izgubi dostop do organizacije {organization}, njeni žetoni za sinhronizacijo in povezane aplikacije pa prenehajo delovati. Njene opombe ostanejo.",
+      "signOutDescription": "Za odpiranje organizacije {organization} se bo oseba morala znova prijaviti. Njeno delo in dostop ostaneta.",
+      "remove": "Odstrani",
+      "signOut": "Odjavi",
+      "cancel": "Prekliči"
+    },
+    "actions": {
+      "emailMissing": "Vnesite e-poštni naslov, na katerega želite poslati povabilo.",
+      "emailed": "Povabilo je poslano na {email}. Deluje enkrat in poteče čez 7 dni; povezava je tudi tukaj.",
+      "emailFailed": "Povabilo je ustvarjeno, vendar e-pošta ni bila poslana. Povezavo pošljite sami: deluje enkrat in poteče čez 7 dni.",
+      "linkCreated": "Povezava s povabilom je ustvarjena. Pošljite jo sodelavcu: deluje enkrat in poteče čez 7 dni.",
+      "chooseRole": "Izberite vlogo.",
+      "roleUpdated": "Vloga je posodobljena.",
+      "removed": "Odstranjeno iz ekipe.",
+      "signedOut": "Odjavljeno. Za odpiranje te organizacije se bo oseba morala znova prijaviti.",
+      "chooseAccess": "Izberite, do česa lahko oseba dostopa.",
+      "accessSaved": "Dostop je shranjen. Velja od naslednjega klika te osebe."
+    },
+    "errors": {
+      "pickCourse": "Izberite vsaj en tečaj.",
+      "foreignCourses": "Izberite tečaje te organizacije.",
+      "pickGroup": "Izberite vsaj eno skupino.",
+      "foreignGroups": "Izberite skupine te organizacije.",
+      "notOnTeam": "Ta oseba ni v tej ekipi.",
+      "alwaysFull": "Lastniki in skrbniki imajo vedno polni dostop.",
+      "rolesFixed": "V tej namestitvi se vloge ne spreminjajo.",
+      "notMember": "Ta oseba ni v tej organizaciji.",
+      "ownersOnly": "Lastnike lahko spreminja samo lastnik.",
+      "lastOwner": "Organizacija potrebuje vsaj enega lastnika.",
+      "removeRank": "Odstranite lahko samo osebe z enako ali nižjo vlogo, kot je vaša.",
+      "signOutSelf": "Če se želite odjaviti drugje, uporabite Kje ste prijavljeni v svojem profilu.",
+      "signOutRank": "Odjavite lahko samo osebe z enako ali nižjo vlogo, kot je vaša."
+    },
+    "policy": {
+      "roles": {
+        "manager": {
+          "label": "Upravitelj",
+          "inSentence": "upravitelj",
+          "hint": "upravlja to namestitev in njeno ekipo"
+        },
+        "owner": {
+          "label": "Lastnik",
+          "inSentence": "lastnik",
+          "hint": "vodi organizacijo"
+        },
+        "admin": {
+          "label": "Skrbnik",
+          "inSentence": "skrbnik",
+          "hint": "upravlja tudi ekipo"
+        },
+        "instructor": {
+          "label": "Predavatelj",
+          "inSentence": "predavatelj",
+          "hint": "oblikuje tečaje, poučuje skupine, obdeluje povratne informacije (vse ali tisto, kar izberete pod Dostop)"
+        },
+        "member": {
+          "label": "Član",
+          "inSentence": "član",
+          "hint": "dela na tečajih: vseh ali tistih, ki jih izberete"
+        }
+      },
+      "description": {
+        "installation": "To namestitev upravljate vi. Predavatelji, ki jih povabite, oblikujejo in urejajo tečaje, vodijo skupine in obdelujejo povratne informacije: vse ali samo tečaje oziroma skupine, ki jim jih dodelite.",
+        "organization": "Člani oblikujejo in urejajo tečaje, vodijo skupine in obdelujejo povratne informacije: vse tečaje ali samo tečaje oziroma skupine, ki jim jih dodelite. Lastniki in skrbniki vidijo vse in upravljajo ekipo."
+      }
+    }
+  },
+  "access": {
+    "full": "Polni dostop",
+    "none": "Še brez tečajev in skupin",
+    "custom": "Dostop po meri",
+    "everyCourse": "vsi tečaji",
+    "noCourse": "še noben tečaj",
+    "noGroup": "še nobena skupina",
+    "removedCourse": "odstranjen tečaj",
+    "removedGroup": "odstranjena skupina",
+    "two": "{first} in {second}",
+    "more": "{first}, {second} in še {count}",
+    "guestLine": "{scope} · gostujoči predavatelj: bere lekcije in dodaja opombe",
+    "editsLessons": "ureja lekcije",
+    "viewsLessons": "si ogleduje lekcije",
+    "worksOnFeedback": "obdeluje povratne informacije in izboljšave",
+    "readsFeedback": "bere povratne informacije",
+    "editor": {
+      "label": "Dostop",
+      "full": {
+        "title": "Vse",
+        "text": "Vsi tečaji in skupine, zdaj in pozneje"
+      },
+      "limited": {
+        "title": "Omejeno",
+        "text": "Samo tečaji ali skupine, ki jih izberete"
+      },
+      "scopeLabel": "Tečaji",
+      "lessonsLabel": "Lekcije",
+      "scopes": {
+        "allCourses": {
+          "label": "Vsi tečaji",
+          "hint": "Vsak tečaj in njegove skupine, zdaj in pozneje"
+        },
+        "courses": {
+          "label": "Izbrani tečaji",
+          "hint": "Ti tečaji in njihove skupine"
+        },
+        "groups": {
+          "label": "Izbrane skupine",
+          "hint": "Samo skupine, ki jih poučuje: njihovi udeleženci, povezave, povratne informacije in izboljšave"
+        }
+      },
+      "lessons": {
+        "edit": {
+          "label": "Lahko ureja",
+          "hint": "Ureja lekcije in objavlja različice"
+        },
+        "view": {
+          "label": "Samo ogled",
+          "hint": "Bere lekcije, ničesar ne spreminja"
+        },
+        "guest": {
+          "label": "Gostujoči predavatelj",
+          "hint": "Bere lekcije in dodaja opombe prek svoje povezave za predavatelje. Brez udeležencev, povratnih informacij in izboljšav."
+        }
+      },
+      "noCourses": "Tečajev še ni.",
+      "noGroups": "Skupin še ni.",
+      "feedback": {
+        "label": "Lahko obdeluje povratne informacije in izboljšave",
+        "hint": "Odgovarja, rešuje, načrtuje in premika izboljšave, dodaja opombe iz razreda. Če je izklopljeno, jih lahko še vedno bere."
+      },
+      "pickCourse": "Izberite vsaj en tečaj.",
+      "pickGroup": "Izberite vsaj eno skupino."
+    }
+  },
+  "export": {
+    "metaTitle": "Izvoz",
+    "title": "Izvoz",
+    "description": "Vse, kar imate v Chalkensu, v eni datoteki, ki jo obdržite.",
+    "downloadFirst": "Najprej prenesite vse",
+    "page": {
+      "title": "Prenesite vse",
+      "intro": "Ena datoteka .zip z vsem tem. Datoteka README.txt v njej razloži vsako datoteko.",
+      "own": "Vsebuje to, kar lahko odprete v organizaciji {organization}. Lastniki in skrbniki izvozijo celotno organizacijo.",
+      "download": "Prenesi vse",
+      "hint": "Prenos se začne takoj. Pri veliki organizaciji traja nekaj minut.",
+      "limit": "V zadnji uri ste izvažali že večkrat. Poskusite znova čez nekaj časa.",
+      "nothing": "Tukaj še ni ničesar, kar bi lahko izvozili.",
+      "impersonating": "Prijavljeni ste kot nekdo drug. Podatke svoje organizacije lahko izvozi samo ta oseba.",
+      "contents": {
+        "lessons": "Lekcije kot zapiski Markdown",
+        "versions": "Različice tečajev",
+        "groupCopies": "Lastne kopije skupin",
+        "publications": "Objavljena besedila: kdaj in kdo",
+        "groups": "Skupine in seznami udeležencev",
+        "feedback": "Povratne informacije in opombe predavateljev",
+        "tasks": "Naloge",
+        "team": "Ljudje v ekipi"
+      },
+      "obsidian": {
+        "text": "Lekcije so urejene tako, kot jih hrani vtičnik Chalkenso za Obsidian. Mapo „{folder}“ iz datoteke .zip kopirajte v mapo Chalkenso v svojem trezorju in vtičnik bo vse zapiske prebral kot sinhronizirane."
+      },
+      "never": {
+        "text": "Gesel, žetonov za sinhronizacijo, ključev za spletno mesto, ključev AI in povezav za udeležence ter ničesar iz drugih organizacij. Udeleženci so poimenovani le na seznamu svoje skupine in ob odgovoru v anketi, ki so ga sami podpisali."
+      }
+    },
+    "file": {
+      "readme": {
+        "title": "Izvoz iz Chalkensa: {organization}",
+        "exported": "Izvoženo {date} ob {time} (UTC), izvozil(a): {name}.",
+        "everything": "Vsebuje vse v organizaciji {organization}.",
+        "own": "Vsebuje to, kar lahko {name} odpre v organizaciji {organization}.",
+        "plain": "Vse datoteke so navadno besedilo (UTF-8), razen slik v lekcijah. Datoteke CSV se odprejo v vsakem programu za preglednice. Časi so v UTC.",
+        "contents": "Kaj vsebuje",
+        "obsidianTitle": "Nadaljujte delo v Obsidianu",
+        "obsidian": "Mapo „{folder}“ kopirajte v mapo Chalkenso v svojem trezorju (korensko mapo vtičnika). Vtičnik bo vse zapiske lekcij prebral kot sinhronizirane: označite njihovo različico pod What to sync ali mapo povežite z ukazom Map folder to a curriculum version. Za sinhronizacijo z drugim strežnikom Chalkenso (na primer svojim) najprej zaženite Disconnect folder from its previous server, nato naložite.",
+        "neverTitle": "Česa ne vsebuje",
+        "never": "Gesel, žetonov za sinhronizacijo, ključev za spletno mesto, ključev AI in povezav za udeležence. Ničesar iz drugih organizacij. Udeleženci so poimenovani le na seznamu svoje skupine (group-learners.csv) in ob odgovoru v anketi, ki so ga sami podpisali.",
+        "leftOutTitle": "Izpuščeno"
+      },
+      "describe": {
+        "vault": "Vaše lekcije kot zapiski Markdown, urejeni tako, kot jih hrani vtičnik Chalkenso za Obsidian.",
+        "curriculums": "Ena mapa za vsako različico tečaja, en zapisek za vsako lekcijo, kot je bila nazadnje shranjena (delovna kopija, ki je lahko novejša od tega, kar berejo udeleženci). Lastnosti zapiskov so lastnosti vtičnika: title, arc, shortDescription, status in slug ter njegove lessonId, lessonStatus, revision, lastSynced in syncStatus.",
+        "groups": "Ena mapa za vsako skupino z lastno kopijo lekcij, urejena enako, z datoteko README.md vtičnika. Tu je tudi kopija končane skupine.",
+        "attachments": "Slike, ki jih uporabljajo lekcije: vdelane z ![[…]] v mapi _attachments vsake mape, povezane z ![](pot) na tej poti.",
+        "courses": "Vsi tečaji: njihov povzetek, oznake in jezik.",
+        "groupList": "Vse skupine: tečaj, datumi, različica, ki jo berejo, predavatelji in število udeležencev.",
+        "learners": "Seznam udeležencev vsake skupine: imena, kot so vnesena na strani skupine.",
+        "versions": "Vse različice vseh tečajev in kopije vseh skupin: kdaj so nastale in bile objavljene, kdo jih je objavil in njihova mapa v tem izvozu.",
+        "publications": "Vsaka objava lekcije: popravek, kdaj in kdo jo je objavil, koliko blokov je bilo dodanih in odstranjenih ter datoteka z njenim besedilom.",
+        "texts": "Besedilo vsakega objavljenega popravka lekcije, vsako v svoji datoteki, da vidite, kaj se je spremenilo.",
+        "feedback": "Povratne informacije udeležencev in opombe predavateljev, najprej odprte in najnovejše, z odgovori in nalogami, ki so iz njih nastale. Udeleženci so prikazani kot „Udeleženec · skupina“, kot v aplikaciji.",
+        "tasks": "Vse naloge: stanje, lekcija, na katero se nanašajo, kdo jih je predlagal, komu so dodeljene, opis in načrt popravka.",
+        "taskNotes": "Opombe ekipe pri posameznih nalogah.",
+        "team": "Ljudje v organizaciji in njihove vloge.",
+        "readme": "Ta datoteka."
+      },
+      "leftOut": {
+        "imagesTime": "{count, plural, one {# slika ni vključena} two {# sliki nista vključeni} few {# slike niso vključene} other {# slik ni vključenih}}: izvoz je dosegel časovno omejitev. V Chalkensu so še vedno.",
+        "imagesLarge": "{count, plural, one {# slika je večja} two {# sliki sta večji} few {# slike so večje} other {# slik je večjih}} od {size} MB in {count, plural, one {ni vključena} two {nista vključeni} few {niso vključene} other {niso vključene}}.",
+        "imagesTotal": "{count, plural, one {# slika ni vključena} two {# sliki nista vključeni} few {# slike niso vključene} other {# slik ni vključenih}}: slike so skupaj dosegle {size} GB.",
+        "imagesMissing": "{count, plural, one {# slike} two {# slik} few {# slik} other {# slik}} ni bilo mogoče prebrati iz shrambe.",
+        "textsTime": "{count, plural, one {# objavljeno besedilo ni vključeno} two {# objavljeni besedili nista vključeni} few {# objavljena besedila niso vključena} other {# objavljenih besedil ni vključenih}}: izvoz je dosegel časovno omejitev. V history/publications.csv so še vedno navedena."
+      },
+      "columns": {
+        "courses": {
+          "title": "Tečaj",
+          "slug": "Kratko ime",
+          "summary": "Povzetek",
+          "outcome": "Kaj zgradite",
+          "tags": "Oznake",
+          "language": "Jezik",
+          "listed": "Na strani s tečaji",
+          "created": "Ustvarjen",
+          "updated": "Nazadnje spremenjen"
+        },
+        "groups": {
+          "name": "Skupina",
+          "course": "Tečaj",
+          "slug": "Kratko ime",
+          "starts": "Začetek",
+          "ends": "Konec",
+          "reads": "Bere",
+          "ownCopy": "Lastna kopija",
+          "instructors": "Predavatelji",
+          "learners": "Udeleženci",
+          "description": "Opis",
+          "created": "Ustvarjena"
+        },
+        "learners": {
+          "group": "Skupina",
+          "course": "Tečaj",
+          "number": "Št.",
+          "name": "Ime"
+        },
+        "versions": {
+          "course": "Tečaj",
+          "version": "Različica",
+          "kind": "Vrsta",
+          "group": "Skupina",
+          "copiedFrom": "Kopirano iz",
+          "status": "Stanje",
+          "created": "Ustvarjena",
+          "published": "Objavljena",
+          "publishedBy": "Objavil(a)",
+          "closed": "Zaprta",
+          "lessons": "Lekcije",
+          "folder": "Mapa"
+        },
+        "publications": {
+          "course": "Tečaj",
+          "lessons": "Lekcije",
+          "lesson": "Lekcija",
+          "revision": "Popravek",
+          "title": "Takratni naslov",
+          "published": "Objavljena",
+          "publishedBy": "Objavil(a)",
+          "added": "Dodani bloki",
+          "removed": "Odstranjeni bloki",
+          "file": "Datoteka"
+        },
+        "tasks": {
+          "task": "Naloga",
+          "status": "Stanje",
+          "course": "Tečaj",
+          "lessons": "Lekcije",
+          "lesson": "Lekcija",
+          "from": "Predlagatelj",
+          "assignee": "Dodeljeno",
+          "created": "Ustvarjena",
+          "done": "Opravljena",
+          "aiReady": "Odobreno za AI",
+          "description": "Opis",
+          "plan": "Načrt popravka"
+        },
+        "taskNotes": {
+          "task": "Naloga",
+          "date": "Datum",
+          "author": "Napisal(a)",
+          "note": "Opomba"
+        },
+        "team": {
+          "name": "Ime",
+          "email": "E-poštni naslov",
+          "role": "Vloga",
+          "access": "Dostop",
+          "joined": "Pridružen(a)"
+        }
+      },
+      "values": {
+        "yes": "da",
+        "no": "ne",
+        "core": "Različica tečaja",
+        "groupCopy": "Kopija skupine",
+        "draft": "Osnutek",
+        "published": "Objavljena",
+        "fullAccess": "Vse",
+        "limitedAccess": "Kar mu je dodeljeno"
+      }
+    }
+  },
+  "profile": {
+    "page": {
+      "twoFactorRequired": "Za nadaljevanje spodaj nastavite dvostopenjsko preverjanje. Za vaš račun je obvezno; dokler ni vklopljeno, ostaneta preostanek aplikacije in vaši žetoni API zaklenjena.",
+      "back": "Nazaj domov",
+      "subtitle": "Varnost računa",
+      "title": "Profil",
+      "details": "Podatki profila",
+      "photo": "Profilna fotografija",
+      "photoRow": "Fotografija"
+    },
+    "details": {
+      "signedInAs": "Prijavljeni kot {identifier}",
+      "roles": {
+        "superadmin": "Glavni skrbnik",
+        "user": "Račun"
+      },
+      "firstName": "Ime",
+      "firstNamePlaceholder": "Ana",
+      "lastName": "Priimek",
+      "lastNamePlaceholder": "Novak",
+      "handle": "Uporabniško ime",
+      "handleHint": "Samo vaše; ljudje in organizacije si delijo en seznam imen.",
+      "email": "E-poštni naslov",
+      "emailHint": "S tem naslovom se prijavljate.",
+      "emailPlaceholder": "ana@primer.si",
+      "saving": "Shranjevanje …",
+      "save": "Shrani",
+      "name": "Ime",
+      "handleRow": "Uporabniško ime",
+      "emailRow": "E-pošta",
+      "none": "Brez"
+    },
+    "photo": {
+      "alt": "Profilna fotografija",
+      "choose": "Izberi sliko",
+      "formats": "PNG, JPG ali WEBP · do 5 MB",
+      "uploading": "Nalaganje …",
+      "save": "Shrani fotografijo",
+      "working": "Obdelava …",
+      "remove": "Odstrani fotografijo"
+    },
+    "twoFactor": {
+      "kicker": "Dvostopenjsko preverjanje",
+      "active": "TOTP vklopljen",
+      "inactive": "Ni vklopljeno",
+      "manage": "Upravljaj",
+      "setUp": "Nastavi aplikacijo za preverjanje",
+      "on": "Ob prijavi vaš račun zahteva kodo iz aplikacije za preverjanje pristnosti.",
+      "onRequired": "Ob prijavi vaš račun zahteva kodo iz aplikacije za preverjanje pristnosti. Za vaš račun je obvezno in ga ni mogoče izklopiti.",
+      "off": "Dodajte drugi korak za geslom z aplikacijo za preverjanje TOTP (npr. 1Password, Google Authenticator).",
+      "offRequired": "Za vaš račun je obvezno: za nadaljevanje nastavite aplikacijo za preverjanje TOTP (npr. 1Password, Google Authenticator). Do takrat lahko uporabljate samo to stran.",
+      "codesTitle": "Shranite rezervne kode",
+      "passwordStep": "Za začetek potrdite geslo.",
+      "scanStep": "Skenirajte kodo QR ali ročno vnesite skrivni ključ, nato za potrditev vnesite 6-mestno kodo.",
+      "codesStep": "Vsaka vas enkrat prijavi, če izgubite aplikacijo za preverjanje. Shranite jih na varno: znova ne bodo prikazane.",
+      "password": "Geslo",
+      "secret": "Skrivni ključ (za ročni vnos)",
+      "code": "6-mestna koda",
+      "done": "Končano",
+      "cancel": "Prekliči",
+      "checking": "Preverjanje …",
+      "continue": "Naprej",
+      "enabling": "Vklapljanje …",
+      "enable": "Vklopi",
+      "manageDescription": "Izklopite ga le, če se lahko prijavite brez te naprave. Potrebovali boste geslo.",
+      "close": "Zapri",
+      "turningOff": "Izklapljanje …",
+      "turnOff": "Izklopi dvostopenjsko preverjanje",
+      "rowOn": "Vklopljeno",
+      "rowOff": "Izklopljeno"
+    },
+    "sessions": {
+      "kicker": "Varnost",
+      "title": "Kje ste prijavljeni",
+      "lastActive": "{unit, select, now {Zdaj} minutes {pred {count} min} hours {pred {count} h} yesterday {včeraj} other {pred {count, plural, one {# dnevom} two {# dnevoma} few {# dnevi} other {# dnevi}}}}",
+      "activeNow": "Aktivno zdaj",
+      "active": "Aktivno {when}",
+      "staysKept": "Do {days, plural, one {# dan} two {# dneva} few {# dni} other {# dni}} (Ohrani prijavo)",
+      "staysShort": "Dokler se brskalnik ne zapre",
+      "policy": "Seje se končajo po {idle, plural, one {# uri} two {# urah} few {# urah} other {# urah}} nedejavnosti (najpozneje po {max, plural, one {# uri} two {# urah} few {# urah} other {# urah}}) oziroma po {keptIdle, plural, one {# dnevu} two {# dnevih} few {# dnevih} other {# dnevih}} z možnostjo Ohrani prijavo (najpozneje po {keptMax, plural, one {# dnevu} two {# dnevih} few {# dnevih} other {# dnevih}}).",
+      "readOnly": "Prijavljeni ste kot ta oseba: njene seje lahko odjavi samo ona.",
+      "device": {
+        "on": "{browser} ({system})",
+        "unknown": "Neznan brskalnik"
+      },
+      "thisBrowser": "Ta brskalnik",
+      "signOutAll": "Odjava iz vseh naprav",
+      "signOutAllTitle": "Se želite odjaviti iz vseh naprav?",
+      "signOutAllDescription": "Vsak brskalnik, tudi ta, bo znova zahteval vaše geslo. To uporabite, če ste izgubili napravo ali sumite, da je v vaš račun vstopil nekdo drug.",
+      "signOutDescription": "Po odjavi bo ta brskalnik znova zahteval vaše geslo. Če ga ne prepoznate, ponastavite tudi geslo.",
+      "signOutAllConfirm": "Odjavi povsod",
+      "signOut": "Odjavi",
+      "cancel": "Prekliči",
+      "facts": {
+        "where": "Kje",
+        "unknown": "Ni znano",
+        "lastActive": "Nazadnje aktivno",
+        "signedIn": "Prijava",
+        "stays": "Prijava velja"
+      }
+    },
+    "actions": {
+      "emailInvalid": "Vnesite veljaven e-poštni naslov ali pa polje pustite prazno.",
+      "handle": "Vaše uporabniško ime: {problem}",
+      "taken": "Ta e-poštni naslov ali uporabniško ime je že v uporabi.",
+      "detailsSaved": "Podatki profila so shranjeni.",
+      "checkPassword": "Preverite geslo in poskusite znova.",
+      "codeInvalid": "Koda za preverjanje ni veljavna. Poskusite znova.",
+      "tooManyCodes": "Preveč napačnih kod. Počakajte 15 minut in poskusite znova.",
+      "totpAlreadyOn": "Dvostopenjsko preverjanje je že vklopljeno.",
+      "totpNotStarted": "Nastavitve dvostopenjskega preverjanja ni bilo mogoče začeti. Poskusite znova.",
+      "totpOn": "Dvostopenjsko preverjanje je zdaj vklopljeno za ta račun.",
+      "totpAlreadyOff": "Dvostopenjsko preverjanje je že izklopljeno.",
+      "totpOff": "Dvostopenjsko preverjanje je izklopljeno.",
+      "photoMissing": "Najprej izberite sliko za nalaganje.",
+      "photoNotImage": "Ta datoteka ni slika. Uporabite PNG, JPG ali WEBP.",
+      "photoTooLarge": "Slika je prevelika. Biti mora manjša od {max} MB.",
+      "photoUploadFailed": "Slike ni bilo mogoče naložiti. Poskusite znova.",
+      "photoUpdated": "Profilna fotografija je posodobljena.",
+      "photoNone": "Ni profilne fotografije za odstranitev.",
+      "photoRemoved": "Profilna fotografija je odstranjena.",
+      "sessionEnded": "Vaša seja se je končala. Znova se prijavite.",
+      "signedOut": "Odjavljeno.",
+      "alreadyEnded": "Ta seja se je že končala."
+    }
+  },
+  "deleteAccount": {
+    "kicker": "Nevarno območje",
+    "panelTitle": "Izbris računa",
+    "intro": "Takoj izbriše vašo prijavo in profil, skupaj z vsemi organizacijami, v katerih ste edini. Organizacije z drugimi ljudmi ostanejo, vaše opombe v njih pa obdržijo vaše ime. Tega ni mogoče razveljaviti.",
+    "impersonating": "Prijavljeni ste kot ta oseba: svoj račun lahko izbriše samo ona.",
+    "delete": "Izbriši moj račun",
+    "title": "Želite izbrisati svoj račun?",
+    "sureTitle": "Ste prepričani?",
+    "description": "Izbris je takojšen in ga ni mogoče razveljaviti.",
+    "sureDescription": "Vaš račun bo izbrisan. Poti nazaj ni.",
+    "typePhrase": "Za potrditev vnesite <strong>{phrase}</strong>",
+    "cancel": "Prekliči",
+    "continue": "Želim izbrisati svoj račun",
+    "deleting": "Brisanje …",
+    "effects": {
+      "signIn": "Vaša prijava, profil in fotografija, takoj; odjavljeni boste povsod",
+      "deleted": "{name}, kjer ste edini: izbrisana z vsem, kar je v njej{courses, plural, =0 {} one { (# tečaj)} two { (# tečaja)} few { (# tečaji)} other { (# tečajev)}}",
+      "left": "Zapustite {names}: vse tam ostane, vaše opombe pa obdržijo ime, pod katerim ste jih napisali",
+      "links": "Vaše povezave za predavatelje, žetoni za sinhronizacijo in povezane aplikacije AI prenehajo delovati"
+    },
+    "errors": {
+      "impersonating": "Prijavljeni ste kot nekdo drug. Svoj račun lahko izbriše samo ta oseba.",
+      "phrase": "Vnesite stavek natanko tako, kot je prikazan."
+    }
+  },
+  "deleteOrganization": {
+    "kicker": "Nevarno območje",
+    "delete": "Izbriši to organizacijo",
+    "intro": "Takoj in za vse izbriše njene tečaje, skupine, podatke udeležencev, povratne informacije, izboljšave, datoteke in nastavitve. Člani obdržijo svoje račune. Tega ni mogoče razveljaviti.",
+    "ownersOnly": "Organizacijo lahko izbriše samo lastnik.",
+    "title": "Želite izbrisati organizacijo {name}?",
+    "sureTitle": "Ste prepričani?",
+    "description": "Vse v njej bo takoj izbrisano za vse. Tega ni mogoče razveljaviti.",
+    "sureDescription": "Organizacija {name} bo izbrisana z vsem, kar je v njej. Poti nazaj ni.",
+    "typePhrase": "Za potrditev vnesite <strong>{phrase}</strong>",
+    "cancel": "Prekliči",
+    "continue": "Želim izbrisati to organizacijo",
+    "deleting": "Brisanje …",
+    "effects": {
+      "courses": "{courses, plural, one {# tečaj} two {# tečaja} few {# tečaji} other {# tečajev}} z {versions, plural, one {# različico} two {# različicama} few {# različicami} other {# različicami}} in {lessons, plural, one {# lekcijo} two {# lekcijama} few {# lekcijami} other {# lekcijami}}",
+      "groups": "{groups, plural, one {# skupina} two {# skupini} few {# skupine} other {# skupin}} in v njih {learners, plural, one {# udeleženec} two {# udeleženca} few {# udeleženci} other {# udeležencev}}: povezave za udeležence prenehajo delovati, njihovi odgovori in branja pa se izbrišejo",
+      "feedback": "{feedback, plural, one {# povratna informacija} two {# povratni informaciji} few {# povratne informacije} other {# povratnih informacij}} in {tasks, plural, one {# izboljšava} two {# izboljšavi} few {# izboljšave} other {# izboljšav}}",
+      "reports": "{count, plural, one {# poročilo za obdobje} two {# poročili za obdobje} few {# poročila za obdobje} other {# poročil za obdobje}}",
+      "siteKeys": "{count, plural, one {# ključ za spletno mesto} two {# ključa za spletno mesto} few {# ključi za spletno mesto} other {# ključev za spletno mesto}}: vaše spletno mesto ne bo več prejemalo tečajev",
+      "tokens": "Prenehajo delovati: {tokens, plural, one {# žeton za sinhronizacijo} two {# žetona za sinhronizacijo} few {# žetoni za sinhronizacijo} other {# žetonov za sinhronizacijo}} in {connections, plural, one {# povezava s Claudom} two {# povezavi s Claudom} few {# povezave s Claudom} other {# povezav s Claudom}}",
+      "members": "{count, plural, one {# član izgubi} two {# člana izgubita} few {# člani izgubijo} other {# članov izgubi}} dostop do te organizacije; računi in druge organizacije ostanejo",
+      "files": "Odstranijo se njene slike, logotip in nastavitve"
+    },
+    "errors": {
+      "impersonating": "Prijavljeni ste kot nekdo drug. Organizacijo lahko izbrišejo samo lastniki sami.",
+      "switchFirst": "Najprej preklopite na to organizacijo, nato jo izbrišite v njenih nastavitvah.",
+      "ownersOnly": "Organizacijo lahko izbriše samo lastnik.",
+      "phrase": "Vnesite stavek natanko tako, kot je prikazan."
+    }
+  },
+  "settings": {
+    "general": {
+      "metaTitle": "Nastavitve",
+      "title": "Splošno",
+      "description": "Kako vašo organizacijo vidijo vaša ekipa in udeleženci.",
+      "organization": "Organizacija",
+      "lookTitle": "Logotip in ikona",
+      "name": "Ime organizacije",
+      "saving": "Shranjevanje …",
+      "saveName": "Shrani ime"
+    },
+    "errors": {
+      "nameLength": "Vnesite ime z največ {max, plural, one {# znakom} two {# znakoma} few {# znaki} other {# znaki}}."
+    },
+    "ai": {
+      "metaTitle": "Nastavitve AI",
+      "title": "AI",
+      "description": "Ključ, s katerim deluje AI v aplikaciji, in koliko je stal ta mesec.",
+      "plan": {
+        "title": "Vključeno v vaš paket",
+        "info": "AI v aplikaciji uporablja Chalkensov ključ za Anthropic, vključen v vaš paket, do mesečnega zneska; z dokupi dobite več po Anthropicovih cenah. Ko je aktiven vaš lastni ključ, AI paketa čaka in se ne porablja.",
+        "state": "Stanje",
+        "inUse": "V uporabi",
+        "inUseTopUp": "V uporabi, iz dokupa",
+        "standby": "Čaka: v uporabi je vaš ključ",
+        "usedUp": "Ta mesec porabljeno",
+        "off": "Izklopljeno",
+        "paused": "Začasno ustavljeno",
+        "money": "{spent} od {cap} ta mesec",
+        "drafts": "Približno {drafts, plural, one {# osnutek} two {# osnutka} few {# osnutki} other {# osnutkov}} na mesec. Znova na voljo {date}.",
+        "spent": "Porabljeno ta mesec",
+        "usedUpTrial": "Porabljeno za brezplačno skupino",
+        "moneyTrial": "{spent} od {cap} za brezplačno skupino",
+        "draftsTrial": "Približno {drafts, plural, one {# osnutek} two {# osnutka} few {# osnutki} other {# osnutkov}} za brezplačno skupino. Potrebujete več? Prosite v Nastavitve → Paket.",
+        "spentTrial": "Porabljeno v brezplačni skupini"
+      },
+      "installation": {
+        "title": "Ključ te namestitve"
+      },
+      "key": {
+        "title": "Vaš lastni ključ za Anthropic",
+        "info": "Ko je aktiven lastni ključ vaše organizacije, AI v aplikaciji uporablja njega in Anthropic zaračunava neposredno vam. Namig: v konzoli Anthropic ustvarite delovni prostor za Chalkenso z mesečno omejitvijo porabe in ključ ustvarite tam. Ob shranjevanju ga preverimo pri Anthropicu in ga hranimo šifriranega.",
+        "models": "Popravki lekcij uporabljajo {revise}; načrti, kontrolna vprašanja, teme, povzetki in preverjanje besedila uporabljajo {plan}.",
+        "notInPlan": "Na voljo s paketoma Team in Academy",
+        "seePlans": "Oglejte si pakete"
+      },
+      "sample": "Ta strežnik namesto klicev Anthropicu vrača vzorčne odgovore (AI_MOCK).",
+      "usage": {
+        "title": "Ta mesec",
+        "own": "Vaš ključ",
+        "hosted": "Vključeno v vaš paket",
+        "topUp": "Vaši dokupi",
+        "none": "Ta mesec še ni klicev AI",
+        "short": "{calls, plural, one {# klic} two {# klica} few {# klici} other {# klicev}} · {cost}",
+        "feature": "{label} {calls}",
+        "amount": "{amount} $",
+        "under": "manj kot {amount} $"
+      },
+      "noTraining": "Chalkenso nobenih podatkov nikoli ne uporablja za učenje modelov, ne AI ne drugih, <terms>poslovni pogoji</terms> podjetja Anthropic pa mu ne dovoljujejo učenja modelov s tem, kar mu pošlje AI v aplikaciji, z našim ali vašim ključem."
+    },
+    "aiKey": {
+      "label": "Ključ API za Anthropic",
+      "active": "Aktiven",
+      "notActive": "Ni aktiven",
+      "unreadableShort": "Ni berljiv: nastavite ga znova",
+      "refusedShort": "Anthropic ga je zavrnil",
+      "setKey": "Nastavi ključ …",
+      "replaceKey": "Zamenjaj ključ …",
+      "remove": "Odstrani ključ",
+      "removeTitle": "Odstranim vaš ključ?",
+      "removeText": "AI v aplikaciji se vrne na AI vašega paketa ali se izklopi, če ga paket ne vključuje.",
+      "cancel": "Prekliči",
+      "saving": "Shranjujem …",
+      "save": "Shrani ključ",
+      "errors": {
+        "refusedMock": "Anthropic je ta ključ zavrnil.",
+        "refused": "Anthropic je ta ključ zavrnil. Preverite, ali ste ga kopirali v celoti in ali je aktiven.",
+        "unreachable": "Za preverjanje ključa se ni bilo mogoče povezati z Anthropicom. Poskusite znova čez trenutek.",
+        "managed": "V tej različici ključe AI upravlja ponudnik gostovanja.",
+        "incomplete": "Prilepite celoten ključ iz Anthropic Console (začne se z sk-ant-).",
+        "notInPlan": "Lastni ključ je na voljo s paketoma Team in Academy."
+      }
+    },
+    "identity": {
+      "shown": "Prikazano na vrhu stranske vrstice in ko nekdo zamenja organizacijo.",
+      "chooseAnother": "Izberi drug logotip",
+      "choose": "Izberi logotip",
+      "formats": "PNG, JPG ali WEBP · do 2 MB · najbolje kvadraten",
+      "saving": "Shranjevanje …",
+      "saveLogo": "Shrani logotip",
+      "removeLogo": "Odstrani logotip",
+      "iconUnderLogo": "Ikona (prikazana, če odstranite logotip)",
+      "icon": "Ikona",
+      "colour": "Barva",
+      "icons": {
+        "building": "Stavba",
+        "school": "Šola",
+        "book": "Knjiga",
+        "certificate": "Potrdilo",
+        "code": "Koda",
+        "bulb": "Ideja",
+        "rocket": "Raketa",
+        "users": "Ljudje"
+      },
+      "colours": {
+        "blue": "Modra",
+        "teal": "Turkizna",
+        "green": "Zelena",
+        "amber": "Jantarna",
+        "coral": "Koralna",
+        "red": "Rdeča",
+        "pink": "Rožnata",
+        "purple": "Vijolična"
+      }
+    },
+    "actions": {
+      "saved": "Shranjeno.",
+      "keySaved": "Shranjeno. Anthropic je ključ sprejel in AI v aplikaciji ga zdaj uporablja.",
+      "keyRemoved": "Odstranjeno.",
+      "logoMissing": "Najprej izberite sliko.",
+      "logoType": "Uporabite sliko PNG, JPG ali WEBP.",
+      "logoTooLarge": "Slika je prevelika. Biti mora manjša od {max} MB.",
+      "logoUploadFailed": "Logotipa ni bilo mogoče naložiti. Poskusite znova.",
+      "logoSaved": "Logotip je shranjen.",
+      "logoNone": "Ni logotipa za odstranitev.",
+      "logoRemoved": "Logotip je odstranjen: znova je prikazana ikona.",
+      "pickIcon": "Izberite ikono in barvo."
+    }
+  },
+  "apiTokens": {
+    "page": {
+      "you": "Vi",
+      "eyebrow": "Integracije",
+      "title": "Žetoni API",
+      "description": "Osebni žetoni za sinhronizacijo lekcij s trezorjem Obsidian (in z drugimi orodji). Žeton deluje v tej organizaciji in v vašem imenu: zmore natanko to, kar zmore vaš račun, spremembe vašega dostopa pa takoj veljajo za vse žetone."
+    },
+    "about": "Žetoni povežejo vtičnik za sinhronizacijo z Obsidianom in druga orodja s to organizacijo. Žeton deluje v vašem imenu: naredi lahko točno to, kar vaš račun, spremembe vašega dostopa pa takoj veljajo za vse žetone. Prikaže se samo enkrat, ko ga ustvarite.",
+    "errors": {
+      "create": "Žetona ni bilo mogoče ustvariti. Poskusite znova.",
+      "revoke": "Žetona ni bilo mogoče preklicati. Poskusite znova.",
+      "delete": "Žetona ni bilo mogoče izbrisati. Poskusite znova."
+    },
+    "copied": "Kopirano v odložišče",
+    "copyFailed": "Kopiranje ni uspelo — označite in kopirajte ročno",
+    "revoked": "Preklican",
+    "active": "Aktiven",
+    "owner": "Lastnik: {name}",
+    "lastUsed": "Nazadnje uporabljen {date}",
+    "neverUsed": "Še ni bil uporabljen",
+    "created": "Ustvarjen {date}",
+    "revokedOn": "Preklican {date}",
+    "delete": "Izbriši",
+    "revoke": "Prekliči žeton",
+    "activeKicker": "Aktivni žetoni ({count})",
+    "new": "Nov žeton",
+    "emptyTitle": "Ni aktivnih žetonov",
+    "revokedKicker": "Preklicani žetoni ({count})",
+    "revokedHint": "Preklicani žetoni ne delujejo več. Izbrišite jih, da jih odstranite s seznama.",
+    "createKicker": "Ustvari žeton",
+    "createdTitle": "Žeton je ustvarjen — kopirajte ga zdaj",
+    "copy": "Kopiraj žeton",
+    "done": "Končano",
+    "name": "Ime žetona",
+    "namePlaceholder": "npr. Obsidian — MacBook",
+    "creating": "Ustvarjanje …",
+    "create": "Ustvari žeton",
+    "revokeTitle": "Želite preklicati žeton?",
+    "revokeDescription": "„{name}“ bo takoj prenehal delovati za vsa orodja, ki ga uporabljajo. Tega ni mogoče povrniti.",
+    "revokeConfirm": "Prekliči žeton",
+    "deleteTitle": "Želite izbrisati žeton?",
+    "deleteDescription": "„{name}“ bo trajno odstranjen s seznama. Tega ni mogoče povrniti.",
+    "deleteConfirm": "Izbriši žeton",
+    "cancel": "Prekliči",
+    "actions": {
+      "nameMissing": "Žetonu dajte ime, da ga boste pozneje prepoznali.",
+      "noOrganization": "Najprej se pridružite organizaciji ali jo ustvarite.",
+      "created": "Žeton je ustvarjen. Kopirajte ga zdaj — znova ne bo prikazan.",
+      "notFound": "Žetona ni mogoče najti.",
+      "alreadyRevoked": "Žeton je bil že preklican.",
+      "revoked": "Žeton je preklican.",
+      "onlyRevoked": "Izbrisati je mogoče samo preklicane žetone.",
+      "deleted": "Žeton je izbrisan."
+    }
+  }
+}

@@ -1,0 +1,354 @@
+{
+  "status": {
+    "todo": "To do",
+    "inProgress": "In progress",
+    "done": "Done",
+    "ignored": "Ignored"
+  },
+  "kinds": {
+    "curriculum": {
+      "label": "Lessons",
+      "emptyHint": "Plan an improvement from feedback on a group’s or a course’s Feedback tab."
+    }
+  },
+  "lanes": {
+    "courseOwn": "The course’s own lessons",
+    "closed": "Closed",
+    "readsCourse": "{course} · reads the course’s lessons",
+    "groupEmpty": "No changes to this group’s lessons yet.",
+    "groupFeedbackEmpty": "No improvements from this group's feedback yet.",
+    "untied": "Not tied to a curriculum",
+    "deletedCourse": "A deleted course"
+  },
+  "page": {
+    "eyebrow": "Course improvements",
+    "title": "Improvements",
+    "description": "Every change being made, from feedback and notes: one lane per course (its own lessons) and per group (its copy). Drag a card between columns to change its status. Each group's and course's own changes are also on its Feedback tab.",
+    "kicker": "Improvement board",
+    "kindNav": "Kind",
+    "empty": "No curricula to show here yet.",
+    "doneLimit": "Done shows the {count} most recently finished improvements.",
+    "showAllDone": "Show all finished improvements",
+    "drawerLabel": "Improvement detail",
+    "closeTask": "Close improvement",
+    "close": "Close"
+  },
+  "detailPage": {
+    "eyebrow": "Improvements",
+    "title": "Improvement",
+    "description": "What should change in the lesson, why, and the plan to change it."
+  },
+  "filter": {
+    "label": "Course or group",
+    "all": "Every course and group",
+    "option": "{label} ({count})"
+  },
+  "board": {
+    "laneLabel": "{label} improvements",
+    "laneCount": "{open} open · {total}",
+    "openCourse": "Open course",
+    "openGroup": "Open group",
+    "untiedTasks": "{count, plural, one {# untied improvement} other {# untied improvements}}",
+    "ignoredTasks": "{count, plural, one {# ignored improvement} other {# ignored improvements}}",
+    "deleteAll": "Delete all {count}",
+    "noTasksYet": "No improvements yet. {hint}",
+    "clear": "Clear",
+    "assignedTo": "Assigned to {name}",
+    "contextGroup": "Group {name}",
+    "contextLesson": "Lesson {position}",
+    "proposedBy": "Proposed by {name}",
+    "core": "→ Course: {title} ({status})",
+    "created": "Created {unit, select, today {today} days {{count}d ago} weeks {{count}w ago} months {{count}mo ago} other {{count}y ago}}",
+    "age": "{unit, select, today {today} days {{count}d} weeks {{count}w} months {{count}mo} other {{count}y}}",
+    "plan": "Plan",
+    "planTitle": "Has a revision plan",
+    "ai": "AI",
+    "aiTitle": "Cleared for the local agent: it may execute this revision on its own",
+    "notes": "{count, plural, one {# discussion note} other {# discussion notes}}",
+    "delete": "Delete",
+    "dropHere": "Drop improvements here",
+    "nothingHere": "Nothing here",
+    "confirm": {
+      "title": "Delete improvement",
+      "titleIgnored": "Delete ignored improvement",
+      "quoted": "\"{title}\"",
+      "description": "Permanently deletes {what}, {mode, select, ignored {{count, plural, one {which was ignored} other {which were ignored}}} other {{count, plural, one {which is not tied to any curriculum} other {which are not tied to any curriculum}}}}. Discussion notes go too. This cannot be undone.",
+      "deleteOne": "Delete improvement",
+      "deleteMany": "Delete {count} improvements",
+      "cancel": "Cancel"
+    }
+  },
+  "detail": {
+    "kicker": "Improvement",
+    "allTasks": "← All improvements",
+    "openFullPage": "Open full page ↗",
+    "openInLesson": "Open in the lesson",
+    "groupCopy": "{group}’s copy",
+    "courseOwn": "The course’s own lessons",
+    "aiReady": "AI ready",
+    "unknownCourse": "Unknown course",
+    "lesson": "Lesson {position}: {title}",
+    "workflow": {
+      "title": "Workflow",
+      "hint": "Who is on this improvement, how far along it is, and whether the agent may run with it. All save as soon as you pick.",
+      "assigned": "{status} · assigned to {name}",
+      "unassigned": "{status} · unassigned"
+    },
+    "whose": {
+      "title": "Where the change goes",
+      "group": "This improvement changes <link>{group}</link>'s own copy of the lessons only. The course's own lessons stay as they are.",
+      "alreadySuggested": "Already suggested for the course as <task>{title}</task> ({status}).",
+      "suggestHint": "Should the course's own lessons get this change too? Suggest it for the course: that makes a linked improvement on the course for whoever manages it to accept or decline. This group's improvement stays as it is.",
+      "suggest": "Suggest for the course",
+      "course": "This improvement changes the course’s own lessons: new groups start from them. Groups that already have their own copy keep theirs.",
+      "suggestedFrom": "Suggested for the course from the group improvement <task>{title}</task> ({status}).",
+      "both": "This improvement changes <link>{group}</link>'s copy and the main course's lesson it came from. Saving the group's copy puts the same changes on the main course's lesson, to review there. It's done when both are saved."
+    },
+    "plan": {
+      "title": "Revision plan",
+      "hint": "What the revision does. Write it here or in the lesson's Obsidian feedback note: it's the same plan.",
+      "hintUpdated": "What the revision does. Write it here or in the lesson's Obsidian feedback note: it's the same plan · updated {date}.",
+      "hintApp": "What the revision does: what changes, where and why.",
+      "hintAppUpdated": "What the revision does: what changes, where and why · updated {date}.",
+      "readHint": "What the improvement does: what changes, where and why. It’s planned in the lesson, with AI.",
+      "readHintVault": "What the improvement does. It’s planned in the lesson, with AI, or in the lesson’s Obsidian feedback note.",
+      "updatedOn": "updated {date}",
+      "none": "No plan yet.",
+      "changeInLesson": "Change it in the lesson"
+    },
+    "instructions": {
+      "title": "Notes for whoever does it",
+      "hint": "Anything they should know before changing the lesson. What learners said is under Feedback above.",
+      "none": "No instructions yet.",
+      "placeholder": "What should change in the lesson?",
+      "save": "Save instructions",
+      "show": "Show the notes",
+      "add": "Add notes"
+    },
+    "clear": {
+      "title": "Clear this improvement",
+      "hint": "Ignored means the revision was looked at and turned down. Deleting removes it from the board for good, with its discussion notes."
+    },
+    "details": {
+      "title": "Details",
+      "proposedBy": "Proposed by",
+      "unknown": "Unknown",
+      "timeline": "Timeline",
+      "created": "Created {date}",
+      "updated": "Last updated {date}",
+      "completed": "Completed {date}",
+      "quote": "“{text}”"
+    },
+    "discussion": {
+      "kicker": "Discussion",
+      "empty": "No notes yet. Add the first one below.",
+      "placeholder": "Add an internal note…",
+      "label": "New note",
+      "add": "Add note"
+    },
+    "feedback": {
+      "title": "Feedback"
+    },
+    "delete": {
+      "sectionTitle": "Delete",
+      "hint": "For an improvement made by mistake. Its feedback goes back to be decided.",
+      "button": "Delete this improvement…",
+      "title": "Delete this improvement?",
+      "description": "“{title}” is deleted for good. Its feedback goes back to be decided, and the lesson stays as it is.",
+      "confirm": "Delete improvement"
+    },
+    "places": {
+      "lessonsLabel": "The lessons it changes",
+      "lesson": "Lesson {position} · {title}",
+      "saved": "Saved",
+      "remove": "Remove",
+      "removed": "Lesson {position} is no longer part of this improvement.",
+      "addLabel": "Add a lesson",
+      "addPlaceholder": "Choose a lesson",
+      "add": "Add",
+      "added": "Lesson {position} added. The plan covers it too: say what changes there.",
+      "leaveCourse": "Leave the main course as it is",
+      "leaveCourseHint": "Only the group’s copy changes. Proposed changes waiting on the main course’s lesson go.",
+      "leftCourse": "The main course stays as it is.",
+      "moved": "“{title}” is done.",
+      "undo": "Undo"
+    },
+    "inVault": "In Obsidian"
+  },
+  "controls": {
+    "status": "Status",
+    "aiReady": {
+      "label": "Ready for the AI agent",
+      "hint": "The agent may take this revision over end to end. Off, it only assists whoever edits the lesson."
+    },
+    "assignee": {
+      "label": "Assignee",
+      "unassigned": "Unassigned",
+      "teachesGroup": "Teaches this group",
+      "search": "Search people…"
+    }
+  },
+  "plan": {
+    "label": "Revision plan",
+    "placeholder": "What will change in the lesson, where, and why.",
+    "scopeLabel": "Where the change goes",
+    "scopes": {
+      "groupOnly": {
+        "title": "This group only",
+        "text": "Their examples, pace or tools. The main course stays as it is."
+      },
+      "groupAndCore": {
+        "title": "Group and main course",
+        "text": "Saving the group’s lesson puts the same changes on the main course’s lesson, to review there."
+      },
+      "noCourseLesson": "The main course has no lesson to change: this one was added in the group’s copy. Suggest it for the course instead."
+    },
+    "save": "Save plan",
+    "saving": "Saving…",
+    "draft": "Draft with AI",
+    "drafting": "Drafting…",
+    "draftReady": "Draft ready. Edit it if needed, then save.",
+    "saved": "Plan saved.",
+    "notFound": "Improvement not found.",
+    "noLesson": "This improvement is not about a lesson, so there is nothing to plan from.",
+    "aiDraft": {
+      "stages": {
+        "reading": "Getting the feedback ready…",
+        "thinking": "Claude is thinking…",
+        "writing": "Claude is writing the plan…"
+      },
+      "claudeStages": {
+        "waiting": "Waiting for your Claude…",
+        "waitingOther": "Waiting for Claude…",
+        "reading": "Claude is reading the improvement…",
+        "writing": "Claude is writing the plan…"
+      },
+      "startedBy": "started by {name}",
+      "elapsed": "{time} so far",
+      "stop": "Stop",
+      "soFar": "The plan so far",
+      "leave": "You can leave this page. The draft is saved and waits here when it’s ready.",
+      "inClaude": "In your Claude. The plan appears here when it sends it.",
+      "send": "Send the message in the Claude tab that opened. The plan appears here when Claude sends it.",
+      "notStarted": "Claude hasn’t started yet. In that chat, turn on the Chalkenso connector (＋ → Connectors) and send the message again.",
+      "ready": "AI drafted a plan",
+      "readyBy": "{name} drafted a plan with AI",
+      "readyClaude": "Your Claude drafted a plan",
+      "readyClaudeBy": "{name}’s Claude drafted a plan",
+      "use": "Use this plan",
+      "discard": "Discard"
+    },
+    "started": "“{title}” is in progress.",
+    "undo": "Undo"
+  },
+  "path": {
+    "label": "Where this improvement is",
+    "steps": {
+      "feedback": "Feedback",
+      "plan": "Plan",
+      "changes": "Proposed changes",
+      "published": "Published"
+    },
+    "skipped": "—",
+    "feedbackCount": "{count, plural, one {# note} other {# notes}}",
+    "brief": "A brief",
+    "planWritten": "Written",
+    "drafting": "Drafting…",
+    "draftReady": "Draft ready",
+    "writing": "Writing…",
+    "toReview": "{count, plural, one {# to review} other {# to review}}",
+    "saved": "Saved",
+    "lessonsSaved": "{count} of {total} saved",
+    "learnersSee": "Learners see it",
+    "savedAsDraft": "Saved as a draft",
+    "doneAll": "Done · learners see it",
+    "next": {
+      "writePlan": "Write the plan",
+      "planDrafting": "Drafting the plan…",
+      "reviewPlanDraft": "Review the plan draft",
+      "revise": "Open in the lesson",
+      "edit": "Open in the lesson",
+      "writing": "Writing proposed changes…",
+      "reviewChanges": "{count, plural, one {Review # proposed change} other {Review # proposed changes}}",
+      "reviewDraft": "Review the proposed changes",
+      "publish": "Publish the lesson",
+      "startAgain": "Ignored · start again"
+    },
+    "targets": {
+      "label": "The lessons it changes",
+      "lesson": "Lesson {position} · {title}",
+      "course": "Main course · {lesson}",
+      "copy": "{group}’s copy · {lesson}",
+      "toChange": "To change"
+    }
+  },
+  "improvements": {
+    "doneTitle": "Done",
+    "lesson": "Lesson {position} · {title}",
+    "lessons": "Lessons {positions}",
+    "noLesson": "No lesson",
+    "copyOf": "{group}’s copy",
+    "mainCourse": "Main course",
+    "work": {
+      "yours": "Yours",
+      "improvements": "{count, plural, one {# improvement} other {# improvements}}",
+      "toReview": "{count, plural, one {# change to review} other {# changes to review}}",
+      "plans": "{count, plural, one {plan to write} other {# plans to write}}",
+      "writing": "AI is writing changes",
+      "feedback": "{count, plural, one {# new to decide} other {# new to decide}}",
+      "unpublished": "learners don’t see the changes yet",
+      "used": "{count, plural, one {# piece of feedback} other {# pieces of feedback}}",
+      "plansToUpdate": "{count, plural, one {plan to update} other {# plans to update}}",
+      "plansReady": "{count, plural, one {plan ready} other {# plans ready}}"
+    },
+    "cta": {
+      "review": "Review",
+      "plan": "Plan",
+      "improve": "Improve",
+      "publish": "Publish",
+      "decide": "Decide",
+      "update": "Update plan",
+      "draft": "Draft"
+    },
+    "doneNoChange": "Done without a change to the lesson",
+    "publishBar": "{count, plural, one {# lesson has saved changes learners don't see yet.} other {# lessons have saved changes learners don't see yet.}}",
+    "publishButton": "{count, plural, =1 {Publish it} =2 {Publish both} other {Publish all #}}",
+    "publishTitle": "{count, plural, one {Publish this lesson?} other {Publish # lessons?}}",
+    "publishDescription": "Learners see the saved changes from now on, and the feedback they answer is marked done.",
+    "publishConfirm": "Publish",
+    "cancel": "Cancel",
+    "empty": "Nothing to improve here right now.",
+    "openBoard": "Open the board"
+  },
+  "record": {
+    "title": "What changed",
+    "savedSoFar": "Saved so far",
+    "here": "This lesson",
+    "lesson": "Lesson {position} · {title}",
+    "copy": "{group}’s copy",
+    "course": "main course",
+    "saved": "Changed · saved {date} by {name}",
+    "savedNoName": "Changed · saved {date}",
+    "seen": "learners see it since {date}",
+    "draft": "saved as a draft, learners don’t see it yet",
+    "publish": "Publish",
+    "publishTitle": "Publish this lesson?",
+    "publishDescription": "Learners see the lesson as it’s saved now, with this change.",
+    "cancel": "Cancel",
+    "notRecorded": "What changed wasn’t recorded for this one: it was saved before Chalkenso kept a record.",
+    "nothing": "Nothing was saved for it. It was marked done without a change to the lesson.",
+    "section": "in “{section}”",
+    "kinds": {
+      "edit": "Changed",
+      "add": "Added",
+      "remove": "Removed",
+      "rewrite": "Rewritten"
+    },
+    "waiting": "{place}: its changes wait for review",
+    "review": "Review",
+    "statusSeen": "Learners see it since {date}",
+    "statusDraft": "Saved as a draft · learners don’t see it yet",
+    "statusWaiting": "Changes wait for review on the main course",
+    "seeWhatChanged": "See what changed"
+  }
+}

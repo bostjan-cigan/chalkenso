@@ -1,0 +1,1695 @@
+/* Lesson workspace: the document in the middle, notes and AI in the margin (exercise-book look). */
+
+.workspace {
+  display: grid;
+  gap: 1rem;
+}
+
+/* Top bar: breadcrumbs, save state, editor mode, actions */
+.topBar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  margin: -0.5rem 0 0;
+  padding: 0.65rem 0;
+  background: rgb(var(--background-rgb));
+  border-bottom: 1px solid var(--card-border);
+}
+
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  font-size: 0.9rem;
+  color: rgba(var(--foreground-rgb), 0.6);
+}
+
+.crumbs a {
+  color: rgba(var(--foreground-rgb), 0.72);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 16rem;
+}
+
+.crumbs a:hover {
+  color: rgb(var(--accent-color));
+}
+
+.crumbs span {
+  color: rgb(var(--foreground-rgb));
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.topActions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.saveState,
+.saveStateDirty {
+  font-size: 0.82rem;
+  color: rgba(var(--foreground-rgb), 0.55);
+  margin-right: 0.25rem;
+}
+
+.saveStateDirty {
+  color: var(--marker-text);
+  background: var(--marker);
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.segmented {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 9px;
+  background: var(--surface-2);
+}
+
+.segment,
+.segmentActive {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 0;
+  background: transparent;
+  color: rgba(var(--foreground-rgb), 0.66);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.3rem 0.65rem;
+  border-radius: 7px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.segment:disabled,
+.segmentActive:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.segmentActive {
+  background: var(--card-bg);
+  color: rgb(var(--foreground-rgb));
+  box-shadow: var(--card-shadow), inset 0 0 0 1px var(--card-border);
+}
+
+/* The same as AdminButton's compact size (34px, 10px corners), so the editor's buttons match the rest. */
+.ghostButton,
+.primaryButton,
+.reviseReady,
+.reviseAttention,
+.statusSelect {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  min-height: max(34px, var(--touch-target, 0px));
+  padding: 0 0.75rem;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.ghostButton {
+  border: 1px solid var(--line-strong);
+  background: var(--card-bg);
+  color: rgb(var(--foreground-rgb));
+}
+
+.ghostButton:hover {
+  border-color: rgba(var(--accent-color), 0.5);
+}
+
+.statusSelect {
+  border: 1px solid var(--line-strong);
+  background: var(--card-bg);
+  color: rgb(var(--foreground-rgb));
+  padding-right: 0.5rem;
+}
+
+.primaryButton {
+  border: 1px solid transparent;
+  background: rgb(var(--accent-color));
+  color: var(--on-accent);
+}
+
+.primaryButton:hover {
+  background: rgba(var(--accent-color), 0.88);
+}
+
+.primaryButton:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.flashSuccess,
+.flashError {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+}
+
+.flashSuccess {
+  background: rgba(var(--accent-color), 0.1);
+  color: rgb(var(--foreground-rgb));
+}
+
+.flashError {
+  background: var(--red-pen-soft);
+  color: var(--red-pen-text);
+}
+
+.flashSuccess button,
+.flashError button {
+  margin-left: auto;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+/* Layout: document + margin */
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.documentColumn {
+  min-width: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.titleRow {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.titleInput {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: rgb(var(--foreground-rgb));
+  font: inherit;
+  font-size: clamp(1.6rem, 2.6vw, 2.1rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  padding: 0.25rem 0;
+}
+
+.titleInput:focus {
+  outline: none;
+}
+
+.titleInput::placeholder {
+  color: rgba(var(--foreground-rgb), 0.3);
+}
+
+.statusLine {
+  font-size: 0.85rem;
+  color: rgba(var(--foreground-rgb), 0.58);
+}
+
+/* The page: white paper with a red margin line */
+.paper {
+  position: relative;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  box-shadow: var(--card-shadow-raised);
+  min-height: 480px;
+}
+
+.documentEditor {
+  position: relative;
+  /* Its width comes from where it sits; narrow places (Improve's column) get slimmer margins below. */
+  container-type: inline-size;
+}
+
+.editorLoading {
+  padding: 3rem 3.5rem;
+  color: rgba(var(--foreground-rgb), 0.5);
+}
+
+/* Formatting toolbar */
+.toolbar {
+  position: sticky;
+  top: 56px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.6rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--card-border);
+  background: var(--card-bg);
+  border-radius: 14px 14px 0 0;
+}
+
+.toolGroup,
+.toolGroupEnd {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  padding-left: 0.5rem;
+  border-left: 1px solid var(--card-border);
+}
+
+.toolGroupEnd {
+  margin-left: auto;
+}
+
+.tool,
+.toolActive {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: rgba(var(--foreground-rgb), 0.72);
+  cursor: pointer;
+}
+
+.tool:hover {
+  background: var(--surface-2);
+  color: rgb(var(--foreground-rgb));
+}
+
+.tool:disabled {
+  opacity: 0.35;
+  cursor: default;
+  background: transparent;
+}
+
+.toolActive {
+  background: rgba(var(--accent-color), 0.12);
+  color: rgb(var(--accent-color));
+}
+
+/* Selection bubble */
+.bubble {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 10px;
+  background: #0f1e33;
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.45);
+  z-index: 30;
+}
+
+.bubbleTool,
+.bubbleAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 30px;
+  padding: 0 0.5rem;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #e2e8f0;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.bubbleTool:hover,
+.bubbleAction:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.bubbleAction {
+  color: #fcd98e;
+}
+
+.bubbleDivider {
+  width: 1px;
+  height: 18px;
+  margin: 0 3px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* The editable text */
+.editorSurface {
+  position: relative;
+  padding: 2.25rem 3rem 3rem 3.75rem;
+}
+
+.editorSurface::before,
+.markdownPane::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 2.4rem;
+  width: 1.5px;
+  background: var(--red-pen-line);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.prose {
+  outline: none;
+  color: rgb(var(--foreground-rgb));
+  font-size: 1.02rem;
+  line-height: 1.75;
+  min-height: 360px;
+}
+
+.prose > * + * {
+  margin-top: 0.85rem;
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4 {
+  color: rgb(var(--foreground-rgb));
+  letter-spacing: -0.015em;
+  line-height: 1.3;
+  font-weight: 700;
+}
+
+.prose h1 {
+  font-size: 1.75rem;
+}
+
+.prose h2 {
+  font-size: 1.4rem;
+  margin-top: 2rem;
+}
+
+.prose h3 {
+  font-size: 1.15rem;
+  margin-top: 1.5rem;
+}
+
+.prose h4 {
+  font-size: 1rem;
+  margin-top: 1.25rem;
+}
+
+.prose ul,
+.prose ol {
+  padding-left: 1.4rem;
+}
+
+.prose li + li {
+  margin-top: 0.25rem;
+}
+
+.prose li > p {
+  margin: 0;
+}
+
+.prose a,
+.prose :global(.ws-wikilink) {
+  color: rgb(var(--accent-color));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.prose :global(.ws-wikilink)::before {
+  content: '↗ ';
+  text-decoration: none;
+  display: inline-block;
+  margin-right: 0.1rem;
+  opacity: 0.6;
+}
+
+.prose code {
+  padding: 0.1rem 0.35rem;
+  border-radius: 5px;
+  background: var(--surface-2);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.88em;
+}
+
+.prose pre {
+  padding: 0.9rem 1.1rem;
+  border-radius: 10px;
+  background: #0f1e33;
+  color: #d6e4f5;
+  overflow-x: auto;
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+
+.prose pre code {
+  padding: 0;
+  background: none;
+  color: inherit;
+}
+
+.prose blockquote {
+  padding-left: 1rem;
+  border-left: 3px solid var(--line-strong);
+  color: rgba(var(--foreground-rgb), 0.75);
+}
+
+.prose hr {
+  border: 0;
+  border-top: 1px solid var(--card-border);
+  margin: 1.5rem 0;
+}
+
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.prose th,
+.prose td {
+  border: 1px solid var(--card-border);
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.prose th {
+  background: var(--surface-1);
+  font-weight: 600;
+}
+
+.prose img {
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+.prose :global(.ws-embed) {
+  display: inline-block;
+  max-width: 100%;
+}
+
+.prose :global(.ws-image-missing) {
+  display: inline-flex;
+  padding: 0.35rem 0.7rem;
+  border-radius: 8px;
+  border: 1px dashed var(--line-strong);
+  color: rgba(var(--foreground-rgb), 0.6);
+  font-size: 0.86rem;
+}
+
+.prose :global(.ProseMirror-selectednode) {
+  outline: 2px solid rgba(var(--accent-color), 0.5);
+  border-radius: 6px;
+}
+
+.prose ul[data-type='taskList'] {
+  list-style: none;
+  padding-left: 0.2rem;
+}
+
+.prose ul[data-type='taskList'] li {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.prose ul[data-type='taskList'] li > label {
+  margin-top: 0.3rem;
+}
+
+/* Callouts as the learner pages render them (review) */
+.prose :global(.callout) {
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(var(--accent-color), 0.25);
+  background: rgba(var(--accent-color), 0.06);
+}
+
+.prose :global(.callout-title) {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: rgb(var(--accent-color));
+}
+
+.prose :global(.callout-icon) svg {
+  width: 16px;
+  height: 16px;
+}
+
+.prose :global(.callout-content) > * + * {
+  margin-top: 0.5rem;
+}
+
+/* Callouts (> [!tip]) */
+.prose :global(.ws-callout) {
+  position: relative;
+  padding: 0.85rem 1rem 0.85rem 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(var(--accent-color), 0.25);
+  background: rgba(var(--accent-color), 0.06);
+}
+
+.prose :global(.ws-callout)::before {
+  content: attr(data-label);
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: rgb(var(--accent-color));
+}
+
+.prose :global(.ws-callout-tip) {
+  border-color: rgba(59, 109, 17, 0.3);
+  background: rgba(99, 153, 34, 0.08);
+}
+
+.prose :global(.ws-callout-tip)::before {
+  color: #3b6d11;
+}
+
+.prose :global(.ws-callout-warning) {
+  border-color: rgba(239, 159, 39, 0.45);
+  background: rgba(250, 199, 117, 0.16);
+}
+
+.prose :global(.ws-callout-warning)::before {
+  color: #854f0b;
+}
+
+.prose :global(.ws-callout-danger) {
+  border-color: rgba(226, 75, 74, 0.35);
+  background: var(--red-pen-soft);
+}
+
+.prose :global(.ws-callout-danger)::before {
+  color: var(--red-pen);
+}
+
+.prose :global(.ws-callout) > * + * {
+  margin-top: 0.5rem;
+}
+
+/* Noted passages: marker for instructor notes, blue for learner feedback */
+.prose :global(.ws-note) {
+  border-radius: 3px;
+  cursor: pointer;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.prose :global(.ws-note-instructor) {
+  background: rgba(252, 217, 142, 0.6);
+  box-shadow: 0 2px 0 rgba(226, 75, 74, 0.55);
+}
+
+.prose :global(.ws-note-learner) {
+  background: rgba(133, 183, 235, 0.3);
+  box-shadow: 0 2px 0 rgba(55, 138, 221, 0.55);
+}
+
+.prose :global(.ws-note-active) {
+  background: var(--marker);
+  color: var(--marker-text);
+}
+
+.prose p:global(.is-editor-empty):first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  color: rgba(var(--foreground-rgb), 0.35);
+  pointer-events: none;
+}
+
+/* Markdown mode (developers) */
+.markdownPane {
+  position: relative;
+  padding: 1.25rem 1.5rem 1rem 3.75rem;
+}
+
+.markdownInput {
+  display: block;
+  width: 100%;
+  min-height: 520px;
+  border: 0;
+  resize: vertical;
+  background: transparent;
+  color: rgb(var(--foreground-rgb));
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+
+.markdownInput:focus {
+  outline: none;
+}
+
+.markdownHint {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: rgba(var(--foreground-rgb), 0.5);
+}
+
+.fidelityNote {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  background: rgba(250, 199, 117, 0.18);
+  color: rgb(var(--foreground-rgb));
+  font-size: 0.85rem;
+}
+
+.imagesCard {
+  margin-top: 0.75rem;
+  padding: 1rem 1.15rem;
+  border-radius: 14px;
+  border: 1px dashed var(--line-strong);
+  background: var(--card-bg);
+}
+
+.imagesCard h3 {
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.imagesCard p {
+  font-size: 0.88rem;
+  color: rgba(var(--foreground-rgb), 0.65);
+  margin-bottom: 0.75rem;
+}
+
+/* Code blocks as the learner pages render them: a small language bar, then the code */
+.prose :global(.lesson-code-block) {
+  border-radius: 10px;
+  overflow: hidden;
+  background: #0f1e33;
+}
+
+.prose :global(.lesson-code-header) {
+  padding: 0.3rem 0.9rem;
+  background: #142843;
+  color: #8fa6c4;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.prose :global(.lesson-code-scroll) {
+  overflow-x: auto;
+}
+
+.prose :global(.lesson-code-block) pre {
+  margin: 0;
+  border-radius: 0;
+}
+
+/* Margin column */
+.side {
+  position: sticky;
+  top: 64px;
+  display: grid;
+  gap: 0.75rem;
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+  padding-bottom: 1rem;
+}
+
+.sideTitle {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: rgba(var(--foreground-rgb), 0.55);
+}
+
+.sideTabs {
+  display: flex;
+  gap: 1.1rem;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.sideTab,
+.sideTabActive {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0 0.6rem;
+  margin-bottom: -1px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: rgba(var(--foreground-rgb), 0.62);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sideTabActive {
+  border-bottom-color: rgb(var(--accent-color));
+  color: rgb(var(--accent-color));
+}
+
+.tabCount {
+  min-width: 1.25rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--marker);
+  color: var(--marker-text);
+  font-size: 0.72rem;
+  text-align: center;
+}
+
+.margin {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.marginHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.marginTitle {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.marginMeta {
+  font-size: 0.8rem;
+  color: rgba(var(--foreground-rgb), 0.58);
+}
+
+.marginEmpty {
+  padding: 1rem;
+  border-radius: 10px;
+  border: 1px dashed var(--line-strong);
+  font-size: 0.86rem;
+  color: rgba(var(--foreground-rgb), 0.65);
+}
+
+.reviseAll {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(var(--accent-color), 0.35);
+  background: rgba(var(--accent-color), 0.08);
+  color: rgb(var(--accent-color));
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.noteList {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.note {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 10px;
+  border: 1px solid;
+  cursor: pointer;
+  transition: box-shadow 0.15s ease;
+}
+
+.noteInstructor {
+  background: var(--red-pen-soft);
+  border-color: rgba(226, 75, 74, 0.3);
+  color: var(--red-pen-text);
+}
+
+.noteLearner {
+  background: rgba(133, 183, 235, 0.14);
+  border-color: rgba(55, 138, 221, 0.3);
+  color: rgb(var(--foreground-rgb));
+}
+
+.noteActive {
+  box-shadow: 0 0 0 2px var(--marker), var(--card-shadow-raised);
+}
+
+.noteResolved {
+  opacity: 0.6;
+}
+
+.noteComposer {
+  cursor: default;
+}
+
+.noteHeader {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.25rem 0.5rem;
+}
+
+.noteKind {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.noteWho {
+  font-size: 0.75rem;
+  opacity: 0.75;
+}
+
+.notePassage {
+  margin: 0;
+  padding-left: 0.55rem;
+  border-left: 2px solid currentColor;
+  font-style: italic;
+  font-size: 0.82rem;
+  opacity: 0.8;
+}
+
+.noteBody {
+  font-size: 0.9rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.noteStatus {
+  justify-self: start;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: rgba(var(--foreground-rgb), 0.7);
+}
+
+.noteInput {
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid rgba(226, 75, 74, 0.35);
+  background: var(--card-bg);
+  color: rgb(var(--foreground-rgb));
+  font: inherit;
+  font-size: 0.9rem;
+  resize: vertical;
+}
+
+.noteInput:focus {
+  outline: none;
+  border-color: rgba(226, 75, 74, 0.7);
+}
+
+.noteActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.15rem;
+}
+
+.smallPrimary,
+.smallGhost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 30px;
+  padding: 0 0.65rem;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.smallPrimary {
+  border: 1px solid transparent;
+  background: rgb(var(--accent-color));
+  color: var(--on-accent);
+}
+
+.smallGhost {
+  border: 1px solid var(--line-strong);
+  background: var(--card-bg);
+  color: rgb(var(--foreground-rgb));
+}
+
+.smallPrimary:disabled,
+.smallGhost:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.fieldError {
+  font-size: 0.82rem;
+  color: var(--red-pen);
+}
+
+.aiLabel {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(var(--foreground-rgb), 0.75);
+}
+
+.aiInstruction {
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border-radius: 10px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface-1);
+  color: rgb(var(--foreground-rgb));
+  font: inherit;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.aiInstruction:focus {
+  outline: none;
+  border-color: rgba(var(--accent-color), 0.6);
+  box-shadow: 0 0 0 3px rgba(var(--accent-color), 0.14);
+}
+
+.aiNotes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.aiNoteChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  max-width: 100%;
+  padding: 0.2rem 0.3rem 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  background: rgba(133, 183, 235, 0.18);
+  color: rgb(var(--foreground-rgb));
+}
+
+.aiNoteChip button {
+  display: inline-flex;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0.1rem;
+  opacity: 0.7;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Details */
+.details {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem;
+  border-radius: 14px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+}
+
+.detailField {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.86rem;
+}
+
+.detailField > span {
+  font-weight: 600;
+}
+
+.detailField input {
+  min-height: 38px;
+  padding: 0 0.65rem;
+  border-radius: 9px;
+  border: 1px solid var(--line-strong);
+  background: var(--card-bg);
+  color: rgb(var(--foreground-rgb));
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.detailField small {
+  font-size: 0.78rem;
+  color: rgba(var(--foreground-rgb), 0.55);
+}
+
+@media (max-width: 1100px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Narrow screens: notes and AI above the page, so they're one glance away */
+  .side {
+    order: -1;
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+/* In a narrow box (a plan in Improve's column), the margin line and the text keep close to the edge. */
+@container (max-width: 520px) {
+  .editorSurface {
+    padding: 0.9rem 0.75rem 1.1rem 1.6rem;
+  }
+
+  .editorSurface::before {
+    left: 0.8rem;
+  }
+
+  .prose {
+    min-height: 8rem;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 760px) {
+  .editorSurface {
+    padding: 1.25rem 1rem 2rem 2rem;
+  }
+
+  .revisePopover {
+    right: auto;
+    left: 0;
+  }
+
+  .editorSurface::before,
+  .markdownPane::before {
+    left: 1.1rem;
+  }
+
+  .markdownPane {
+    padding-left: 2rem;
+  }
+
+  .toolbar {
+    position: static;
+  }
+
+  .toolGroupEnd {
+    margin-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spin {
+    animation: none;
+  }
+}
+
+/* ── Revise: the lesson's one AI control ──────────────────────────────────────────────────────
+ * In the toolbar: it starts the job (a popover), shows it running, and opens the draft. Quiet like
+ * the other toolbar buttons; marker yellow when something needs the person; accent when a draft
+ * is waiting. */
+
+.reviseWrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.reviseReady {
+  border: 1px solid rgba(var(--accent-color), 0.45);
+  background: rgba(var(--accent-color), 0.1);
+  color: rgb(var(--accent-color));
+}
+
+.reviseAttention {
+  border: 1px solid transparent;
+  background: var(--marker);
+  color: var(--marker-text);
+}
+
+.reviseDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgb(var(--accent-color));
+}
+
+.revisePopover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 30;
+  display: grid;
+  gap: 0.65rem;
+  width: min(360px, calc(100vw - 2rem));
+  padding: 1rem;
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow-raised);
+  font-size: 0.88rem;
+  text-align: left;
+}
+
+.popoverTitle {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.popoverText {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: rgba(var(--foreground-rgb), 0.8);
+}
+
+.popoverStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.popoverActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.popoverFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.popoverPlan {
+  max-height: 10rem;
+  overflow: auto;
+  margin: 0;
+  padding: 0.6rem 0.7rem;
+  border-radius: 10px;
+  background: var(--surface-1);
+  font-size: 0.82rem;
+  white-space: pre-wrap;
+}
+
+.popoverDrafts {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.popoverDrafts li {
+  display: grid;
+  gap: 0.35rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--line-subtle);
+}
+
+.popoverDrafts li:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.popoverMeta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.chipToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+/* A link-like action inside text: "Undo", "Show", "Edit plan". */
+.textButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: rgb(var(--accent-color));
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: rgba(var(--accent-color), 0.35);
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.textButton:hover {
+  text-decoration-color: currentColor;
+}
+
+/* After a decision, next to the save state: "Draft discarded · Undo". */
+.aiNotice {
+  color: rgba(var(--foreground-rgb), 0.75);
+}
+
+/* The reply under a note in the margin. */
+.noteReply {
+  margin: 0;
+  padding: 0.4rem 0.55rem;
+  border-radius: 8px;
+  background: rgba(var(--accent-color), 0.07);
+  font-size: 0.84rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+/* Open feedback on the groups' copies of this lesson, on the course's own lesson. */
+.copyFeedback {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0 0 0.75rem;
+  padding: 0.55rem 0.7rem;
+  list-style: none;
+  border-radius: 10px;
+  background: rgba(var(--accent-color), 0.06);
+  font-size: 0.84rem;
+}
+
+.copyFeedback a {
+  color: rgb(var(--accent-color));
+  font-weight: 600;
+}
+
+/* Which lessons you are editing: the course's own, or one group's copy. */
+.levelStrip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.6rem;
+  margin: 0 0 0.75rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: 10px;
+  font-size: 0.84rem;
+  line-height: 1.4;
+  background: rgba(var(--foreground-rgb), 0.045);
+  color: rgba(var(--foreground-rgb), 0.78);
+}
+
+.levelStripCopy {
+  background: rgba(196, 120, 32, 0.12);
+}
+
+.levelStrip strong {
+  color: rgb(var(--foreground-rgb));
+}
+
+.levelStrip a {
+  color: rgb(var(--accent-color));
+  font-weight: 600;
+}
+
+/* A breadcrumb the viewer can't open (a group's instructor and the course page). */
+.crumbs .crumbPlain {
+  font-weight: 400;
+  color: rgba(var(--foreground-rgb), 0.72);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 16rem;
+}
+
+/* ── Proposed changes: a sheet beside the lesson, one card per change ───────────────────────── */
+
+/* While a draft is reviewed, the margin column widens for the sheet. */
+.gridReviewing {
+  grid-template-columns: minmax(0, 1fr) 440px;
+}
+
+@media (max-width: 1100px) {
+  .gridReviewing {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Above the read-only lesson while a draft is reviewed. */
+.lessonNow {
+  margin: 0 0 0.5rem;
+  font-size: 0.82rem;
+  color: rgba(var(--foreground-rgb), 0.62);
+}
+
+.sheet {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem 1rem;
+  border-radius: 14px;
+  border: 1px solid var(--line-strong);
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
+}
+
+.sheetHeader {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.sheetTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sheetTitle {
+  margin: 0;
+  font-size: 1.02rem;
+  font-weight: 700;
+}
+
+.sheetTag {
+  padding: 0.12rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  background: rgba(var(--accent-color), 0.12);
+  color: rgb(var(--accent-color));
+}
+
+.sheetClose {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: rgba(var(--foreground-rgb), 0.65);
+  cursor: pointer;
+}
+
+.sheetClose:hover {
+  background: var(--surface-2);
+}
+
+.sheetMeta {
+  margin: 0;
+  font-size: 0.8rem;
+  color: rgba(var(--foreground-rgb), 0.6);
+}
+
+.sheetSummary {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* A check on the whole draft that failed: one line each. */
+.sheetWarning {
+  margin: 0;
+  padding-left: 0.6rem;
+  border-left: 3px solid var(--marker);
+  border-radius: 0;
+  font-size: 0.84rem;
+}
+
+.sheetEmpty {
+  margin: 0;
+  font-size: 0.88rem;
+  color: rgba(var(--foreground-rgb), 0.7);
+}
+
+.changeList {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.changeCard {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 11px;
+  border: 1px solid var(--card-border);
+  background: rgb(var(--background-rgb));
+  outline: none;
+}
+
+.changeCardFocused {
+  border-color: rgba(var(--accent-color), 0.6);
+  box-shadow: 0 0 0 3px rgba(var(--accent-color), 0.15);
+}
+
+/* Skipped: still there to change your mind, but quieter. */
+.changeCardSkipped .changeText {
+  opacity: 0.55;
+}
+
+.changeHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.76rem;
+  color: rgba(var(--foreground-rgb), 0.6);
+}
+
+.changeKind {
+  font-weight: 600;
+}
+
+.changeText {
+  margin: 0;
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+p.changeText {
+  display: block;
+}
+
+.wordRemoved {
+  background: var(--red-pen-soft);
+  color: rgb(var(--foreground-rgb));
+  text-decoration: line-through;
+  text-decoration-color: rgba(226, 75, 74, 0.75);
+  border-radius: 3px;
+}
+
+.wordAdded {
+  background: rgba(99, 153, 34, 0.16);
+  color: rgb(var(--foreground-rgb));
+  text-decoration: none;
+  border-radius: 3px;
+}
+
+/* A whole paragraph removed or added (or one too long to compare word by word). */
+.changeBlock {
+  display: block;
+  padding: 0.35rem 0.5rem;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.8rem;
+}
+
+.changePreview,
+.changePreviewRemoved {
+  min-height: 0;
+}
+
+.changePreview {
+  padding: 0.35rem 0.6rem;
+  border-radius: 8px;
+  box-shadow: inset 3px 0 0 #639922;
+  font-size: 0.92rem;
+}
+
+.changePreviewRemoved {
+  padding: 0.35rem 0.6rem;
+  border-radius: 8px;
+  box-shadow: inset 3px 0 0 #e24b4a;
+  background: var(--red-pen-soft);
+  text-decoration: line-through;
+  text-decoration-color: rgba(226, 75, 74, 0.7);
+  opacity: 0.85;
+  font-size: 0.92rem;
+}
+
+.changeNote {
+  margin: 0;
+  font-size: 0.82rem;
+  color: rgba(var(--foreground-rgb), 0.72);
+}
+
+.changeActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+/* Keep / Skip: a full-size target. */
+.changeActions .segment,
+.changeActions .segmentActive {
+  min-height: 40px;
+  min-width: 64px;
+}
+
+.sheetFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding-top: 0.25rem;
+  border-top: 1px solid var(--card-border);
+}
+
+.sheetApply {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+.sheetHint {
+  font-size: 0.8rem;
+  color: rgba(var(--foreground-rgb), 0.62);
+}
+
+.sheetKeys {
+  margin: 0;
+  font-size: 0.74rem;
+  color: rgba(var(--foreground-rgb), 0.5);
+}
+
+/* Quiet red text: Discard. */
+.dangerText {
+  min-height: max(34px, var(--touch-target, 0px));
+  padding: 0 0.25rem;
+  border: 0;
+  background: transparent;
+  color: var(--red-pen);
+  font: inherit;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.dangerText:hover {
+  text-decoration: underline;
+}
+
+/* Applied, not saved yet: above the lesson until Save. */
+.appliedStrip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.75rem;
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.8rem;
+  border-radius: 10px;
+  border: 1px solid rgba(var(--accent-color), 0.35);
+  background: rgba(var(--accent-color), 0.08);
+  font-size: 0.86rem;
+}
+
+.appliedStrip strong {
+  font-weight: 600;
+}
+
+/* In the lesson: where the change under review goes, and what went in (until Save). */
+.prose :global(.ws-change-outline) {
+  outline: 2px dashed rgba(var(--accent-color), 0.7);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.prose :global(.ws-change-applied) {
+  background: rgba(var(--accent-color), 0.1);
+  box-shadow: -10px 0 0 rgba(var(--accent-color), 0.1);
+  border-radius: 4px;
+}
+
+/* The margin's list of improvements on this lesson, each with where it is. */
+.marginImprovements {
+  margin: 0 0 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid var(--card-border);
+  background: rgba(var(--foreground-rgb), 0.025);
+  font-size: 0.86rem;
+}
+
+.marginImprovements a {
+  color: rgb(var(--accent-color));
+  font-weight: 600;
+}
+
+/* A count beside a toolbar item (improvements waiting on the lesson), like a badge on a toolbar button. */
+.toolbarCount {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: rgb(var(--accent-color));
+  color: var(--on-accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+}
