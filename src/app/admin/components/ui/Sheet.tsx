@@ -1,32 +1,135 @@
 'use client';
 
-import { useId, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 import { TbChevronRight } from 'react-icons/tb';
+import ConfirmDialog from '@/app/admin/courses/components/ConfirmDialog';
 import AccessLinkModalPortal from '@/app/admin/courses/groups/components/AccessLinkModalPortal';
 import modalStyles from '@/app/admin/courses/groups/components/MemberLinkModal.module.css';
 import AdminButton from './AdminButton';
 import styles from './Sheet.module.css';
 
+/** A sheet's form: its button (Save, Send, Create invite link) is the header's, on the right. */
+export type SheetForm = {
+  /** The `<form>`'s id: the header's button submits it. */
+  id: string;
+  /** The button's words, and its words while it works ("Saving…"). */
+  label: string;
+  pending?: boolean;
+  disabled?: boolean;
+  testId?: string;
+};
+
+const SheetContext = createContext<{ setForm: (form: SheetForm | null) => void; close: () => void } | null>(null);
+
+/**
+ * For a form shown in a sheet (`SheetRow`, `SheetButton`): its button goes in the sheet's header, so
+ * the form leaves its own out (`inSheet`) and closes the sheet once it has saved (`close`). Null when
+ * there is nothing left to send (an invite link made): the header says Done again. Outside a sheet
+ * it does nothing, and the form keeps its own button.
+ */
+export function useSheetForm(form: Omit<SheetForm, 'id'> | null) {
+  const sheet = useContext(SheetContext);
+  const id = useId();
+  const setForm = sheet?.setForm;
+  const shown = form !== null;
+  const label = form?.label ?? '';
+  const pending = form?.pending ?? false;
+  const disabled = form?.disabled ?? false;
+  const testId = form?.testId;
+  useEffect(() => {
+    setForm?.(shown ? { id, label, pending, disabled, testId } : null);
+  }, [setForm, shown, id, label, pending, disabled, testId]);
+  useEffect(() => () => setForm?.(null), [setForm]);
+  return { formId: id, inSheet: sheet !== null, close: sheet?.close ?? (() => {}) };
+}
+
+/** What the sheet's fields hold: changed since they were first touched means there is something to lose. */
+function fieldValues(root: HTMLElement) {
+  return Array.from(root.querySelectorAll<HTMLElement>('input, textarea, select, [aria-checked]'), (element) => {
+    if (element instanceof HTMLInputElement) {
+      if (element.type === 'checkbox' || element.type === 'radio') return String(element.checked);
+      if (element.type === 'file') return Array.from(element.files ?? [], (file) => `${file.name}:${file.size}`).join();
+      return element.value;
+    }
+    if (element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement) return element.value;
+    return element.getAttribute('aria-checked') ?? '';
+  }).join('\u0000');
+}
+
 /**
  * Apple's sheet: what's used now and then (a preview link, a version's name, a new version) opens
- * from a row or a button instead of folding out on the page. A title, Done to close it, and the
- * content. Every section on a page stays open and looks the same; set-up lives here.
+ * from a row or a button instead of folding out on the page. Every section on a page stays open and
+ * looks the same; set-up lives here.
+ *
+ * A sheet that edits something (`form`, or a form inside using `useSheetForm`) has Cancel on the
+ * left and its button on the right, which saves and closes. Cancel, Escape and a click outside close
+ * it, asking first when a field has changed. Any other sheet has Done alone, which closes it: what's
+ * in it saves as it goes, or only shows.
  */
-export function Sheet({ title, open, onClose, children }: { title: string; open: boolean; onClose: () => void; children: ReactNode }) {
+export function Sheet({ title, open, onClose, form: ownForm, children }: { title: string; open: boolean; onClose: () => void; form?: SheetForm; children: ReactNode }) {
   const t = useTranslations('app.ui');
   const titleId = useId();
+  const [innerForm, setInnerForm] = useState<SheetForm | null>(null);
+  const form = ownForm ?? innerForm;
+  const [asking, setAsking] = useState(false);
+  const body = useRef<HTMLDivElement | null>(null);
+  const before = useRef<string | null>(null);
+  // Mounted on every open: the fields start over.
+  const bodyRef = useCallback((node: HTMLDivElement | null) => {
+    body.current = node;
+    before.current = null;
+    if (!node) setAsking(false);
+  }, []);
+  const remember = () => {
+    if (before.current === null && body.current) before.current = fieldValues(body.current);
+  };
+  const cancel = () => {
+    if (form && before.current !== null && body.current && fieldValues(body.current) !== before.current) setAsking(true);
+    else onClose();
+  };
+  const context = useMemo(() => ({ setForm: setInnerForm, close: onClose }), [onClose]);
   return (
-    <AccessLinkModalPortal open={open} onClose={onClose} titleId={titleId} wide>
-      <div className={`${modalStyles.modalHeader} ${styles.header}`}>
-        <h2 id={titleId} className={modalStyles.modalTitle}>
-          {title}
-        </h2>
-        <button type="button" className={styles.done} onClick={onClose} data-autofocus>
-          {t('done')}
-        </button>
+    <AccessLinkModalPortal open={open} onClose={cancel} titleId={titleId} wide>
+      {form ? (
+        <div className={`${modalStyles.modalHeader} ${styles.header} ${styles.formHeader}`}>
+          <button type="button" className={styles.cancel} onClick={cancel}>
+            {t('cancel')}
+          </button>
+          <h2 id={titleId} className={`${modalStyles.modalTitle} ${styles.formTitle}`}>
+            {title}
+          </h2>
+          <button type="submit" form={form.id} className={styles.done} disabled={form.pending || form.disabled} data-testid={form.testId ?? 'sheet-save'}>
+            {form.label}
+          </button>
+        </div>
+      ) : (
+        <div className={`${modalStyles.modalHeader} ${styles.header}`}>
+          <h2 id={titleId} className={modalStyles.modalTitle}>
+            {title}
+          </h2>
+          <button type="button" className={styles.done} onClick={onClose} data-autofocus>
+            {t('done')}
+          </button>
+        </div>
+      )}
+      {/* The fields as they were when first touched: a keypress or a click comes before the change. */}
+      <div ref={bodyRef} className={modalStyles.modalBody} onFocusCapture={remember} onPointerDownCapture={remember} onKeyDownCapture={remember}>
+        <SheetContext.Provider value={context}>{children}</SheetContext.Provider>
       </div>
-      <div className={modalStyles.modalBody}>{children}</div>
+      <ConfirmDialog
+        open={asking}
+        tone="danger"
+        title={t('discard.title')}
+        description={t('discard.text')}
+        confirmLabel={t('discard.confirm')}
+        cancelLabel={t('discard.keep')}
+        onConfirm={() => {
+          setAsking(false);
+          onClose();
+        }}
+        onClose={() => setAsking(false)}
+      />
     </AccessLinkModalPortal>
   );
 }

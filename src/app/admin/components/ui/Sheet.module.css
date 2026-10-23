@@ -6,6 +6,44 @@
   gap: 1rem;
 }
 
+/* A sheet that edits: Cancel on the left, the title in the middle, its button (Save) on the right. */
+.formHeader {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 0.75rem;
+}
+
+.formTitle {
+  text-align: center;
+}
+
+.formHeader .done {
+  justify-self: end;
+}
+
+.cancel {
+  justify-self: start;
+  min-height: max(32px, var(--touch-target, 0px));
+  padding: 0 0.25rem;
+  border: 0;
+  background: none;
+  color: rgb(var(--accent-color));
+  font: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.cancel:focus-visible {
+  outline: 2px solid rgb(var(--accent-color));
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.done:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
 .done {
   min-height: max(32px, var(--touch-target, 0px));
   padding: 0 0.25rem;

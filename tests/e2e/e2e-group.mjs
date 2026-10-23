@@ -226,13 +226,14 @@ try {
     await page.locator(`[data-testid=${row}]:visible`).first().click();
     await sheet.waitFor();
   };
-  const saveSheet = async (says = 'Group updated.') => {
+  // Save is in the sheet's header, and closes it once saved; a refused save keeps it open, saying why.
+  const saveSheet = async () => {
+    await sheet.getByRole('button', { name: 'Save', exact: true }).click();
+    await sheet.waitFor({ state: 'detached' });
+  };
+  const refusedSheet = async (says) => {
     await sheet.getByRole('button', { name: 'Save', exact: true }).click();
     await sheet.getByText(says).waitFor();
-  };
-  const closeSheet = async () => {
-    await sheet.getByRole('button', { name: 'Done' }).click();
-    await sheet.waitFor({ state: 'detached' });
   };
   const groupRow = (columns) => sql(`select ${columns} from courses.course_groups where id = ${quote(groupId)}`);
   const learnerCount = () => sql(`select count(*) from courses.course_group_members where group_id = ${quote(groupId)}`);
@@ -251,7 +252,6 @@ try {
   await openSheet('group-name-row');
   await sheet.locator('#group-name').fill(`Weekend group ${run}`);
   await saveSheet();
-  await closeSheet();
   check('the Name sheet renames the group, its short name following', groupRow(`name || '|' || slug`) === `Weekend group ${run}|weekend-group-${run}`, groupRow(`name || '|' || slug`));
   check('…its row shows the new name', (await page.locator('[data-testid=group-name-row]:visible').first().innerText()).includes(`Weekend group ${run}`));
   check('…and so does its copy of the lessons', sql(`select label from courses.curriculum_versions where owner_group_id = ${quote(groupId)}`) === `Weekend group ${run}`);
@@ -260,14 +260,12 @@ try {
   await openSheet('group-description-row');
   await sheet.locator('#group-description').fill(`Saturdays ${run}`);
   await saveSheet();
-  await closeSheet();
   check('the Description sheet saves the description only', groupRow(`description || '|' || name`) === `Saturdays ${run}|Weekend group ${run}`);
 
   await openSheet('group-starts-row');
   check('a group without a start date opens with the date off', (await sheet.locator('[data-testid=group-starts-at-switch]').getAttribute('aria-checked')) === 'false');
   await sheet.locator('[data-testid=group-starts-at-switch]').click();
   await saveSheet();
-  await closeSheet();
   check('turning the date on and saving sets when it starts', groupRow(`(starts_at is not null)::text || '|' || (ends_at is null)::text`) === 'true|true');
   // The row follows once the page has refreshed after the save.
   await page.locator('[data-testid=group-starts-row]:visible', { hasNotText: 'None' }).first().waitFor({ timeout: 10000 }).catch(() => {});
@@ -277,14 +275,19 @@ try {
   await sheet.locator('[data-testid=group-ends-at-switch]').click();
   await sheet.getByRole('button', { name: 'Previous month' }).click();
   await sheet.getByRole('button', { name: '1', exact: true }).click();
-  await saveSheet('End date must be on or after the start date.');
+  await refusedSheet('End date must be on or after the start date.');
   check('an end before the start is refused, in the sheet', groupRow(`(ends_at is null)::text`) === 'true');
-  await closeSheet();
+  // Cancel with a change asks first; Discard closes it as it was.
+  await sheet.first().getByRole('button', { name: 'Cancel', exact: true }).click();
+  const discard = page.getByRole('dialog', { name: 'Discard your changes?' });
+  await discard.waitFor();
+  check('Cancel after a change asks before discarding it', (await discard.innerText()).includes('Keep editing'));
+  await discard.getByRole('button', { name: 'Discard changes' }).click();
+  await sheet.first().waitFor({ state: 'detached' });
 
   await openSheet('group-roster-row');
   await sheet.locator('#group-roster').fill('Ana Learner\nBor Learner\nCene Learner');
   await saveSheet();
-  await closeSheet();
   check('the Learners sheet saves the roster', learnerCount() === '3', learnerCount());
   check('…and its row counts them', (await page.locator('[data-testid=group-roster-row]:visible').first().innerText()).includes('3 learners'));
 

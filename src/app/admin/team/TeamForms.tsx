@@ -11,6 +11,7 @@ import AdminButton from '../components/ui/AdminButton';
 import AdminField from '../components/ui/AdminField';
 import AdminNotice from '../components/ui/AdminNotice';
 import AdminSearchableSelectField from '../components/ui/AdminSearchableSelectField';
+import { useSheetForm } from '../components/ui/Sheet';
 import { useFormAction } from '../components/useFormAction';
 import AdminMenu from '../components/ui/AdminMenu';
 import ConfirmDialog from '../courses/components/ConfirmDialog';
@@ -51,47 +52,58 @@ export function InviteForm({ roles, accessOptions }: { roles: RoleChoice[]; acce
   const [role, setRole] = useState<string>(roles[0]?.value ?? 'MEMBER');
   const [access, setAccess] = useState<AccessInput>({ kind: 'full' });
   const [delivery, setDelivery] = useState<'link' | 'email'>('link');
+  const label = pending ? (delivery === 'email' ? t('sending') : t('creating')) : delivery === 'email' ? t('send') : t('create');
+  // Made (the link to copy) or sent: nothing left to send, so the sheet shows what happened and Done.
+  const made = !state.error && Boolean(state.link || state.message);
+  const sheet = useSheetForm(made ? null : { label, pending });
+  const fieldsShown = !(sheet.inSheet && made);
 
   return (
-    <form onSubmit={onSubmit} style={{ display: 'grid', gap: '0.75rem' }}>
-      <input type="hidden" name="access" value={JSON.stringify(access)} />
-      <input type="hidden" name="delivery" value={delivery} />
-      {roles.length > 1 ? (
-        <div style={{ display: 'grid', gap: '0.75rem', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)' }}>
-          <AdminField id="invite-label" name="label" label={t('label')} placeholder={t('placeholder')} />
-          <Dropdown
-            id="invite-role"
-            name="role"
-            label={t('role')}
-            defaultValue={roles[0].value}
-            options={roles.map((choice) => ({ value: choice.value, label: choice.label, hint: choice.hint }))}
-            onValueChange={setRole}
-          />
-        </div>
-      ) : (
+    <form id={sheet.formId} onSubmit={onSubmit} style={{ display: 'grid', gap: '0.75rem' }}>
+      {fieldsShown ? (
         <>
-          <AdminField
-            id="invite-label"
-            name="label"
-            label={t('label')}
-            placeholder={t('placeholder')}
-            hint={roles[0] ? t('joinsAs', { role: roles[0].inSentence ?? roles[0].label, hint: roles[0].hint ?? '' }) : undefined}
-          />
-          <input type="hidden" name="role" value={roles[0]?.value ?? 'MEMBER'} />
+          <input type="hidden" name="access" value={JSON.stringify(access)} />
+          <input type="hidden" name="delivery" value={delivery} />
+          {roles.length > 1 ? (
+            <div style={{ display: 'grid', gap: '0.75rem', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)' }}>
+              <AdminField id="invite-label" name="label" label={t('label')} placeholder={t('placeholder')} />
+              <Dropdown
+                id="invite-role"
+                name="role"
+                label={t('role')}
+                defaultValue={roles[0].value}
+                options={roles.map((choice) => ({ value: choice.value, label: choice.label, hint: choice.hint }))}
+                onValueChange={setRole}
+              />
+            </div>
+          ) : (
+            <>
+              <AdminField
+                id="invite-label"
+                name="label"
+                label={t('label')}
+                placeholder={t('placeholder')}
+                hint={roles[0] ? t('joinsAs', { role: roles[0].inSentence ?? roles[0].label, hint: roles[0].hint ?? '' }) : undefined}
+              />
+              <input type="hidden" name="role" value={roles[0]?.value ?? 'MEMBER'} />
+            </>
+          )}
+          {role === 'MEMBER' ? (
+            <div style={{ display: 'grid', gap: '0.4rem' }}>
+              <span className={styles.inputLabel}>{t('access')}</span>
+              <AccessEditor idPrefix="invite-access" value={access} onChange={setAccess} options={accessOptions} />
+            </div>
+          ) : null}
+          <InviteDelivery idPrefix="invite" delivery={delivery} onChange={setDelivery} />
         </>
-      )}
-      {role === 'MEMBER' ? (
-        <div style={{ display: 'grid', gap: '0.4rem' }}>
-          <span className={styles.inputLabel}>{t('access')}</span>
-          <AccessEditor idPrefix="invite-access" value={access} onChange={setAccess} options={accessOptions} />
-        </div>
       ) : null}
-      <InviteDelivery idPrefix="invite" delivery={delivery} onChange={setDelivery} />
-      <div>
-        <AdminButton type="submit" disabled={pending}>
-          {pending ? (delivery === 'email' ? t('sending') : t('creating')) : delivery === 'email' ? t('send') : t('create')}
-        </AdminButton>
-      </div>
+      {sheet.inSheet ? null : (
+        <div>
+          <AdminButton type="submit" disabled={pending}>
+            {label}
+          </AdminButton>
+        </div>
+      )}
       <Feedback state={state} />
       {state.link ? (
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>

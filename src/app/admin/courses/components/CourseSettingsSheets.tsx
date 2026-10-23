@@ -6,6 +6,7 @@ import ActionNotice from '../../components/ui/ActionNotice';
 import AdminButton from '../../components/ui/AdminButton';
 import AdminField from '../../components/ui/AdminField';
 import AdminSelectField from '../../components/ui/AdminSelectField';
+import { useSheetForm } from '../../components/ui/Sheet';
 import Switch from '../../components/ui/Switch';
 import { useActionNotice } from '../../components/ui/useActionNotice';
 import { createSlugCandidate } from '@/lib/slugs';
@@ -14,29 +15,32 @@ import type { PartnerOption } from './PartnerListField';
 import styles from '../../admin.module.css';
 
 /**
- * One part of a course's settings, in its sheet: the part's fields, what saving said, and Save.
- * Only the fields inside change (`saveCourseSettingsAction`).
+ * One part of a course's settings, in its sheet: the part's fields and what saving said. Save is the
+ * sheet's, and closes it once saved. Only the fields inside change (`saveCourseSettingsAction`).
  */
 export function CourseSettingsForm({ courseId, children, testId }: { courseId: string; children: ReactNode; testId?: string }) {
   const t = useTranslations('courses.edit');
   const { notice, isPending, run } = useActionNotice();
+  const sheet = useSheetForm({ label: isPending ? t('saving') : t('save'), pending: isPending });
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    run(() => saveCourseSettingsAction(formData));
+    run(() => saveCourseSettingsAction(formData), { onSuccess: sheet.close });
   }
 
   return (
-    <form className={styles.formStack} onSubmit={handleSubmit} data-testid={testId}>
+    <form id={sheet.formId} className={styles.formStack} onSubmit={handleSubmit} data-testid={testId}>
       <input type="hidden" name="courseId" value={courseId} />
       <ActionNotice notice={notice} />
       {children}
-      <div className={styles.inlineActions}>
-        <AdminButton type="submit" disabled={isPending}>
-          {isPending ? t('saving') : t('save')}
-        </AdminButton>
-      </div>
+      {sheet.inSheet ? null : (
+        <div className={styles.inlineActions}>
+          <AdminButton type="submit" disabled={isPending}>
+            {isPending ? t('saving') : t('save')}
+          </AdminButton>
+        </div>
+      )}
     </form>
   );
 }

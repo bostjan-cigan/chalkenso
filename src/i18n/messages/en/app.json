@@ -121,6 +121,13 @@
     "moreActions": "More actions",
     "close": "Close",
     "done": "Done",
+    "cancel": "Cancel",
+    "discard": {
+      "title": "Discard your changes?",
+      "text": "What you changed here isn’t saved yet.",
+      "confirm": "Discard changes",
+      "keep": "Keep editing"
+    },
     "loading": "Loading",
     "previewEmpty": "Preview updates as you type.",
     "failed": "Something went wrong. Try again."

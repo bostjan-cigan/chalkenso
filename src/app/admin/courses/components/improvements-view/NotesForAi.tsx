@@ -6,7 +6,6 @@ import { useId, useState, useTransition } from 'react';
 import { excerpt } from '@/lib/improvement-label';
 import { updateImprovementNotesAction } from '../../../tasks/actions';
 import { Sheet, SheetOpenRow } from '../../../components/ui/Sheet';
-import workspace from '../workspace/workspace.module.css';
 import styles from './improvements-view.module.css';
 
 /**
@@ -18,6 +17,7 @@ export default function NotesForAi({ taskId, notes, planned, canEdit }: { taskId
   const t = useTranslations('editor.improvements.notes');
   const router = useRouter();
   const fieldId = useId();
+  const formId = useId();
   const [open, setOpen] = useState(false);
   const [text, setText] = useState(notes);
   const [error, setError] = useState<string | null>(null);
@@ -44,8 +44,21 @@ export default function NotesForAi({ taskId, notes, planned, canEdit }: { taskId
         }}
         testId="notes-for-ai"
       />
-      <Sheet title={t('title')} open={open} onClose={() => setOpen(false)}>
-        <div className={styles.notesSheet}>
+      {/* Editable: Cancel and Save, which keeps the notes. Read only: Done. */}
+      <Sheet
+        title={t('title')}
+        open={open}
+        onClose={() => setOpen(false)}
+        form={canEdit ? { id: formId, label: pending ? t('saving') : t('save'), pending, testId: 'notes-for-ai-save' } : undefined}
+      >
+        <form
+          id={formId}
+          className={styles.notesSheet}
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (canEdit) save();
+          }}
+        >
           <label className={styles.quiet} htmlFor={fieldId}>
             {t('hint')}
           </label>
@@ -64,15 +77,7 @@ export default function NotesForAi({ taskId, notes, planned, canEdit }: { taskId
           />
           {planned ? <p className={styles.quiet}>{t('planned')}</p> : null}
           {error ? <p className={styles.error}>{error}</p> : null}
-          {canEdit ? (
-            // Done (the sheet's) closes; Save keeps the notes, as the app's other sheets do.
-            <div className={styles.actionsEnd}>
-              <button type="button" className={workspace.primaryButton} disabled={pending} onClick={save} data-testid="notes-for-ai-save">
-                {pending ? t('saving') : t('save')}
-              </button>
-            </div>
-          ) : null}
-        </div>
+        </form>
       </Sheet>
     </>
   );

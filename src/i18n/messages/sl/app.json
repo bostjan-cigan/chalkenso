@@ -121,6 +121,13 @@
     "moreActions": "Več dejanj",
     "close": "Zapri",
     "done": "Končano",
+    "cancel": "Prekliči",
+    "discard": {
+      "title": "Zavreči spremembe?",
+      "text": "Tega, kar ste tukaj spremenili, še niste shranili.",
+      "confirm": "Zavrzi spremembe",
+      "keep": "Nadaljuj z urejanjem"
+    },
     "loading": "Nalaganje",
     "previewEmpty": "Predogled se posodablja med tipkanjem.",
     "failed": "Nekaj je šlo narobe. Poskusite znova."

@@ -715,7 +715,7 @@
     "obsidian": {
       "kicker": "Obsidian",
       "title": "Povežite svoj trezor Obsidian",
-      "lead": "Lekcije so v vašem trezorju kot Markdown in se sinhronizirajo v obe smeri, ko to želite.",
+      "lead": "Obsidian je brezplačna aplikacija za zapiske, ki zapiske hrani kot navadne datoteke v mapi na vašem računalniku (v trezorju). Z vtičnikom so tam tudi vaše lekcije in se sinhronizirajo v obe smeri, ko to želite.",
       "download": "Prenesite vtičnik",
       "install": {
         "title": "Namestite vtičnik",

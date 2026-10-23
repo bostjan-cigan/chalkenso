@@ -715,7 +715,7 @@
     "obsidian": {
       "kicker": "Obsidian",
       "title": "Connect your Obsidian vault",
-      "lead": "Your lessons live in your vault as Markdown, and sync both ways when you say so.",
+      "lead": "Obsidian is a free notes app that keeps your notes as plain files in a folder on your computer (a vault). With the plugin your lessons live there too, and sync both ways when you say so.",
       "download": "Download the plugin",
       "install": {
         "title": "Install the plugin",

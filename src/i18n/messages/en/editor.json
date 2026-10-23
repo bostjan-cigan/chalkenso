@@ -30,7 +30,7 @@
     "statusDraftKeeps": "Draft: learners keep the version published on {date}.",
     "statusDraftKeepsUnpublished": "Draft: learners keep the version published on {date} (your edits aren’t published yet).",
     "statusDraftHidden": "Draft: learners don’t see this lesson until you publish it.",
-    "fidelity": "This lesson uses Markdown the visual editor can’t keep exactly (for example raw HTML), so it opened here. Switching to Visual may change its formatting.",
+    "fidelity": "This lesson has formatting the visual editor can’t show exactly (raw HTML, for example), so it opened as source text. Switching to Visual may change how it looks.",
     "markdownPlaceholder": "## Lesson heading",
     "markdownLabel": "Lesson Markdown",
     "markdownHint": "Markdown, with Obsidian links like [[Other lesson]], images like ![[image.png]] and callouts like > [!tip].",
@@ -249,7 +249,7 @@
     "proposed": "Proposed changes · not in the lesson yet",
     "editSection": "Edit section",
     "editLesson": "Edit the lesson",
-    "editHint": "Markdown. Saving puts it into the lesson.",
+    "editHint": "Saving puts your text into the lesson.",
     "working": {
       "elapsed": "{time} so far",
       "stop": "Stop",

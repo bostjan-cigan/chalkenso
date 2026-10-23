@@ -30,7 +30,7 @@
     "statusDraftKeeps": "Osnutek: udeleženci še naprej vidijo različico, objavljeno {date}.",
     "statusDraftKeepsUnpublished": "Osnutek: udeleženci še naprej vidijo različico, objavljeno {date} (vaše spremembe še niso objavljene).",
     "statusDraftHidden": "Osnutek: udeleženci te lekcije ne vidijo, dokler je ne objavite.",
-    "fidelity": "Ta lekcija uporablja Markdown, ki ga vizualni urejevalnik ne more natančno ohraniti (na primer surov HTML), zato se je odprla tukaj. Preklop na vizualni način lahko spremeni njeno oblikovanje.",
+    "fidelity": "Ta lekcija ima oblikovanje, ki ga vizualni urejevalnik ne more natančno prikazati (na primer surov HTML), zato se je odprla kot izvorno besedilo. Preklop na vizualni način lahko spremeni njen videz.",
     "markdownPlaceholder": "## Naslov razdelka",
     "markdownLabel": "Markdown lekcije",
     "markdownHint": "Markdown z Obsidianovimi povezavami, kot je [[Druga lekcija]], slikami, kot je ![[slika.png]], in callouti, kot je > [!tip].",
@@ -249,7 +249,7 @@
     "proposed": "Predlagane spremembe · še niso v lekciji",
     "editSection": "Uredi razdelek",
     "editLesson": "Uredi lekcijo",
-    "editHint": "Markdown. Shranjevanje ga vstavi v lekcijo.",
+    "editHint": "Shranjevanje vstavi vaše besedilo v lekcijo.",
     "working": {
       "elapsed": "{time} doslej",
       "stop": "Ustavi",

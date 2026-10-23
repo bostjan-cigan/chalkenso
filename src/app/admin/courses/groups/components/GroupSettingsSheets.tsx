@@ -8,7 +8,7 @@ import AdminButton from '@/app/admin/components/ui/AdminButton';
 import AdminField from '@/app/admin/components/ui/AdminField';
 import AdminSelectField from '@/app/admin/components/ui/AdminSelectField';
 import AdminTextareaField from '@/app/admin/components/ui/AdminTextareaField';
-import { SheetControlRow, SheetRows } from '@/app/admin/components/ui/Sheet';
+import { SheetControlRow, SheetRows, useSheetForm } from '@/app/admin/components/ui/Sheet';
 import Switch from '@/app/admin/components/ui/Switch';
 import { useActionNotice } from '@/app/admin/components/ui/useActionNotice';
 import { formatDateTimeLocalValue } from '@/lib/access-links';
@@ -19,29 +19,32 @@ import { saveGroupSettingsAction } from '../actions';
 import AccessExpiryPicker from './AccessExpiryPicker';
 
 /**
- * One part of a group's settings, in its sheet: the part's fields, what saving said, and Save.
- * Only the fields inside change (`saveGroupSettingsAction`).
+ * One part of a group's settings, in its sheet: the part's fields and what saving said. Save is the
+ * sheet's, and closes it once saved. Only the fields inside change (`saveGroupSettingsAction`).
  */
 export function GroupSettingsForm({ groupId, children, testId }: { groupId: string; children: ReactNode; testId?: string }) {
   const t = useTranslations('groups.detail.settings');
   const { notice, isPending, run } = useActionNotice();
+  const sheet = useSheetForm({ label: isPending ? t('saving') : t('save'), pending: isPending });
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    run(() => saveGroupSettingsAction(formData));
+    run(() => saveGroupSettingsAction(formData), { onSuccess: sheet.close });
   }
 
   return (
-    <form className={styles.formStack} onSubmit={handleSubmit} data-testid={testId}>
+    <form id={sheet.formId} className={styles.formStack} onSubmit={handleSubmit} data-testid={testId}>
       <input type="hidden" name="groupId" value={groupId} />
       <ActionNotice notice={notice} />
       {children}
-      <div className={styles.inlineActions}>
-        <AdminButton type="submit" disabled={isPending}>
-          {isPending ? t('saving') : t('save')}
-        </AdminButton>
-      </div>
+      {sheet.inSheet ? null : (
+        <div className={styles.inlineActions}>
+          <AdminButton type="submit" disabled={isPending}>
+            {isPending ? t('saving') : t('save')}
+          </AdminButton>
+        </div>
+      )}
     </form>
   );
 }

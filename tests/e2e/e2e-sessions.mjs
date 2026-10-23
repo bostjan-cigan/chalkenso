@@ -149,9 +149,9 @@ try {
   await kept.locator('[data-testid=profile-name-row]:visible').first().click();
   const nameSheet = kept.locator('[role=dialog]');
   await nameSheet.locator('#profile-first-name').fill(`Kept ${run}`);
+  // Save is the sheet's, and closes it once saved.
   await nameSheet.getByRole('button', { name: 'Save', exact: true }).click();
-  await nameSheet.getByText('Profile details saved.').waitFor();
-  await nameSheet.getByRole('button', { name: 'Done' }).click();
+  await nameSheet.waitFor({ state: 'detached' });
   check(
     'the Name sheet saves the name and keeps the email',
     sql(`select first_name || '|' || email from public.users where id = ${quote(memberUserId)}`) === `Kept ${run}|${memberEmail}`,
