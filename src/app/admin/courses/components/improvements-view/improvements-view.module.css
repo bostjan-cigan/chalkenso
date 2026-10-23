@@ -28,6 +28,20 @@
   flex: 1;
 }
 
+/* Back to where the person came from (the course map). */
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  color: rgb(var(--action-rgb));
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.back:hover {
+  text-decoration: underline;
+}
+
 /* The toolbar's lesson name, quiet beside the mode switch. */
 .lessonName {
   max-width: 20rem;

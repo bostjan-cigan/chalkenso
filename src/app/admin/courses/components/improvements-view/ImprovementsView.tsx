@@ -120,6 +120,7 @@ export default function ImprovementsView({
   aiSlots,
   initial,
   initialWhy = '',
+  back,
 }: {
   lesson: {
     id: string;
@@ -154,6 +155,8 @@ export default function ImprovementsView({
   initial: Selection | null;
   /** Something else to change, when a link starts one (Insights). */
   initialWhy?: string;
+  /** Where the person came from, to go back to (the course map's lesson). */
+  back?: { href: string; label: string };
 }) {
   const t = useTranslations('editor.improvements');
   const tc = useTranslations('editor.improvements.column');
@@ -1484,6 +1487,11 @@ export default function ImprovementsView({
   return (
     <div ref={viewRef} className={styles.view} data-testid="improvements-view">
       <header className={styles.toolbar}>
+        {back ? (
+          <Link href={back.href} className={styles.back} data-testid="improvements-back">
+            <TbChevronLeft aria-hidden size={16} /> {back.label}
+          </Link>
+        ) : null}
         <span className={styles.lessonName}>{lesson.title}</span>
         <span className={styles.level}>{levelLabel}</span>
         {/* Nothing waits unsaved here (saving is the review's last step), but a hand edit being written. */}

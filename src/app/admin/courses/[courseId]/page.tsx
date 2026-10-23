@@ -9,6 +9,7 @@ import { SheetButton } from '../../components/ui/Sheet';
 import CourseManagementFrame from '../components/CourseManagementFrame';
 import CourseVersionsSection from '../components/CourseVersionsSection';
 import CreateVersionForm from '../components/CreateVersionForm';
+import LessonViews from '../components/LessonViews';
 import VersionLessons from '../components/VersionLessons';
 import VersionPicker from '../components/VersionPicker';
 import { getCourseHeader } from '../data';
@@ -35,7 +36,8 @@ type SearchParams = Promise<{
 
 /**
  * A course's Lessons: the published version's lessons straight away (others a pick away), to edit
- * in place; its versions, and making the next one, below.
+ * in place; its versions, and making the next one, below. Where the edition adds views of the
+ * lessons (the cloud's curriculum analysis), subtabs under the version lead to them.
  */
 export default async function CourseDetailPage({ params, searchParams }: { params: PageParams; searchParams: SearchParams }) {
   const { courseId } = await params;
@@ -102,6 +104,7 @@ export default async function CourseDetailPage({ params, searchParams }: { param
             </span>
           </div>
         ) : null}
+        {picked ? <LessonViews courseId={courseId} versionId={picked.id} /> : null}
 
         {detail ? (
           <VersionLessons

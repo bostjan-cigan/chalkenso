@@ -157,6 +157,30 @@ export async function copyVersionContent(
     await transaction.lessonPublication.createMany({ data: publications });
   }
 
+  // The course map's corrections to each lesson come along (taught here, used here, only mentioned).
+  const overrides = await transaction.lessonConceptOverride.findMany({
+    where: { lessonId: { in: Array.from(newLessonIdBySourceLessonId.keys()) } },
+    select: { lessonId: true, conceptId: true, role: true, createdById: true },
+  });
+  if (overrides.length) {
+    await transaction.lessonConceptOverride.createMany({
+      data: overrides.map((override) => ({ ...override, lessonId: newLessonIdBySourceLessonId.get(override.lessonId)! })),
+      skipDuplicates: true,
+    });
+  }
+  // And what was dismissed on its map stays dismissed. Its improvement notes stay with the old
+  // version's notes.
+  const dismissals = await transaction.courseMapDismissal.findMany({
+    where: { lessonId: { in: Array.from(newLessonIdBySourceLessonId.keys()) } },
+    select: { lessonId: true, issueKey: true, createdById: true },
+  });
+  if (dismissals.length) {
+    await transaction.courseMapDismissal.createMany({
+      data: dismissals.map((dismissal) => ({ ...dismissal, lessonId: newLessonIdBySourceLessonId.get(dismissal.lessonId)! })),
+      skipDuplicates: true,
+    });
+  }
+
   return newLessonIdBySourceLessonId;
 }
 

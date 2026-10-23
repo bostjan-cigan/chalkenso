@@ -20,7 +20,7 @@ export async function noteOnSelectionAction(input: {
   context: string | null;
   body: string;
   improve: boolean;
-}): Promise<{ ok: true; taskId: string | null } | { ok: false; message: string }> {
+}): Promise<{ ok: true; taskId: string | null; commentId: string } | { ok: false; message: string }> {
   const t = await getTranslations('editor.selection');
   const lesson = await prisma.lesson.findUnique({ where: { id: input.lessonId }, select: { curriculumVersionId: true } });
   const versionRef = lesson ? await loadVersionRef(lesson.curriculumVersionId) : null;
@@ -48,7 +48,7 @@ export async function noteOnSelectionAction(input: {
     if (made.ok) taskId = made.taskId;
   }
   revalidatePath('/admin', 'layout');
-  return { ok: true, taskId };
+  return { ok: true, taskId, commentId: note.comment.id };
 }
 
 /**
@@ -56,7 +56,7 @@ export async function noteOnSelectionAction(input: {
  * feedback about, said in a sentence or two. It's saved as the person's note on the lesson and used
  * in the lesson's improvement, like feedback. For whoever edits the lesson and works on its feedback.
  */
-export async function addToImprovementAction(lessonId: string, why: string): Promise<{ ok: true; taskId: string } | { ok: false; message: string }> {
+export async function addToImprovementAction(lessonId: string, why: string): Promise<{ ok: true; taskId: string; commentId: string } | { ok: false; message: string }> {
   const t = await getTranslations('editor.improvements');
   const lesson = await prisma.lesson.findUnique({
     where: { id: lessonId },
@@ -85,5 +85,5 @@ export async function addToImprovementAction(lessonId: string, why: string): Pro
   const used = await takeUpFeedback({ commentId: note.comment.id, createdById: viewer.id });
   if (!used.ok) return { ok: false, message: t('failed') };
   revalidatePath('/admin', 'layout');
-  return { ok: true, taskId: used.taskId };
+  return { ok: true, taskId: used.taskId, commentId: note.comment.id };
 }

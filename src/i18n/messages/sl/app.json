@@ -49,6 +49,13 @@
         "insights": "Vpogledi",
         "learnerFeedback": "Odzivi udeležencev",
         "settings": "Nastavitve"
+      },
+      "viewsLabel": "Pogledi lekcij",
+      "views": {
+        "lessons": "Lekcije",
+        "grid": "Pojmi po lekcijah",
+        "buildup": "Predznanje",
+        "check": "Za pregled"
       }
     }
   },

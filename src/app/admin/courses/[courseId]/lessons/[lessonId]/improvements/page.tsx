@@ -19,8 +19,8 @@ import { loadImprovementsView } from '../../../../components/improvements-view/d
 export const maxDuration = 300;
 
 type PageParams = Promise<{ courseId: string; lessonId: string }>;
-/** `why`: something else to change, to start the form with. */
-type SearchParams = Promise<{ i?: string; note?: string; draft?: string; new?: string; why?: string }>;
+/** `why`: something else to change, to start the form with; `from=map`: back to the course map. */
+type SearchParams = Promise<{ i?: string; note?: string; draft?: string; new?: string; why?: string; from?: string }>;
 
 /**
  * A lesson's Improve mode: the lesson, with its to-do in a column beside it (the feedback to tick,
@@ -111,6 +111,7 @@ export default async function LessonImprovementsPage({ params, searchParams }: {
         aiSlots={aiSlots}
         initial={initial}
         initialWhy={initial?.kind === 'new' ? (search.why ?? '').slice(0, 2000) : ''}
+        back={search.from === 'map' ? { href: `/admin/courses/${courseId}/map?lesson=${lesson.id}`, label: t('backToMap') } : undefined}
       />
     </AdminFrame>
   );

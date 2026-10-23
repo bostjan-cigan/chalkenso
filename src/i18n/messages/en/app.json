@@ -49,6 +49,13 @@
         "insights": "Insights",
         "learnerFeedback": "Learner feedback",
         "settings": "Settings"
+      },
+      "viewsLabel": "Views of the lessons",
+      "views": {
+        "lessons": "Lessons",
+        "grid": "Curriculum map",
+        "buildup": "Prerequisites",
+        "check": "To look at"
       }
     }
   },

@@ -38,7 +38,7 @@ export type { AiFeature };
 
 /**
  * The model per task: lesson rewrites on Sonnet (long output, priced for it), the judgement work
- * (plans, check questions, themes, summaries, wording) on Opus. `AI_MODEL` overrides all of them,
+ * (plans, check questions, themes, summaries, wording, course map analyses) on Opus. `AI_MODEL` overrides all of them,
  * `AI_MODEL_<TASK>` (e.g. `AI_MODEL_REVISE`) one.
  */
 export const DEFAULT_MODELS: Record<AiFeature, string> = {
@@ -48,6 +48,7 @@ export const DEFAULT_MODELS: Record<AiFeature, string> = {
   themes: 'claude-opus-5-5',
   report: 'claude-opus-5-5',
   wording: 'claude-opus-5-5',
+  courseMap: 'claude-opus-5-5',
 };
 
 export function modelFor(feature: AiFeature) {

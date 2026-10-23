@@ -122,6 +122,8 @@ model User {
   /// The language the person picked in the language menu while signed in (src/i18n/config.ts LOCALES): the
   /// app follows it on a browser without its own pick, and emails to them use it. Null: never picked.
   locale               String?
+  /// Prompts the person asked never to see again ("Don't show this again"), by key (src/lib/prompts.ts).
+  dismissedPrompts     String[]                @default([]) @map("dismissed_prompts")
   /**
    * R2 (Cloudflare) object key for the admin's profile image; null uses the default icon.
    */
@@ -362,46 +364,46 @@ model Partner {
 }
 
 model Course {
-  id                  String              @id @default(cuid())
-  organizationId      String              @map("organization_id")
-  organization        Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  id                  String                 @id @default(cuid())
+  organizationId      String                 @map("organization_id")
+  organization        Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   title               String
   slug                String
-  summary             String?             @db.Text
+  summary             String?                @db.Text
   /**
    * Optional repo or org link shown on the public course access page.
    */
-  githubUrl           String?             @map("github_url")
+  githubUrl           String?                @map("github_url")
   /**
    * Listed on the public `/courses` page, which shows the latest published core version.
    */
-  publicListed        Boolean             @default(false) @map("public_listed")
+  publicListed        Boolean                @default(false) @map("public_listed")
   /**
    * How many of the first published lessons anyone can read on `/courses`. Ignored when
    * `allLessonsFree` is set.
    */
-  freeLessonCount     Int                 @default(2) @map("free_lesson_count")
+  freeLessonCount     Int                    @default(2) @map("free_lesson_count")
   /**
    * Every lesson is free to read on `/courses` (a fully free course).
    */
-  allLessonsFree      Boolean             @default(false) @map("all_lessons_free")
+  allLessonsFree      Boolean                @default(false) @map("all_lessons_free")
   /**
    * Shown first on `/courses` (pinned courses by title, then the rest by title).
    */
-  pinned              Boolean             @default(false)
+  pinned              Boolean                @default(false)
   /**
    * Where the "Join" button after the free lessons leads: the site's default, `joinPartner`'s
    * website, or `enrolUrl`.
    */
-  joinTarget          CourseJoinTarget    @default(LINKEDIN) @map("join_target")
-  joinPartnerId       String?             @map("join_partner_id")
-  joinPartner         Partner?            @relation("CourseJoinPartner", fields: [joinPartnerId], references: [id], onDelete: SetNull)
+  joinTarget          CourseJoinTarget       @default(LINKEDIN) @map("join_target")
+  joinPartnerId       String?                @map("join_partner_id")
+  joinPartner         Partner?               @relation("CourseJoinPartner", fields: [joinPartnerId], references: [id], onDelete: SetNull)
   /**
    * Cover image on the `/courses` card and course page (a screenshot or GIF of what learners
    * build). Without one, the generated share card is shown.
    */
-  coverAssetId        String?             @map("cover_asset_id")
-  coverAsset          MediaAsset?         @relation("CourseCover", fields: [coverAssetId], references: [id], onDelete: SetNull)
+  coverAssetId        String?                @map("cover_asset_id")
+  coverAsset          MediaAsset?            @relation("CourseCover", fields: [coverAssetId], references: [id], onDelete: SetNull)
   /**
    * "You build: …" on the `/courses` card, e.g. "a Recipe Keeper app".
    */
@@ -409,31 +411,32 @@ model Course {
   /**
    * Short tech/level tags after the lesson count on the `/courses` card, e.g. Docker, React, Beginner.
    */
-  tags                String[]            @default([])
+  tags                String[]               @default([])
   /**
    * The custom join link (`joinTarget` LINK), e.g. a course's own enrolment page.
    */
-  enrolUrl            String?             @map("enrol_url")
+  enrolUrl            String?                @map("enrol_url")
   /**
    * Learner feedback switches for the whole course: `{ lessonQuestion, checks, surveys, reading }`,
    * each true/false (missing = on). A group can override them (`CourseGroup.feedbackSettings`).
    */
-  feedbackSettings    Json?               @map("feedback_settings")
+  feedbackSettings    Json?                  @map("feedback_settings")
   /**
    * The course's one optional extra survey question: `{ text, kind: 'text' | 'scale' | 'yesno' }`.
    */
-  surveyExtraQuestion Json?               @map("survey_extra_question")
+  surveyExtraQuestion Json?                  @map("survey_extra_question")
   /**
    * The language of its learner pages and learner script: a locale of src/i18n/config.ts (`en`,
    * `sl`). A learner's own pick in the language menu wins over it.
    */
-  language            String              @default("en")
+  language            String                 @default("en")
   lessons             Lesson[]
   groups              CourseGroup[]
   partners            CoursePartner[]
   versions            CurriculumVersion[]
-  createdAt           DateTime            @default(now()) @map("created_at")
-  updatedAt           DateTime            @updatedAt @map("updated_at")
+  assumedConcepts     CourseAssumedConcept[]
+  createdAt           DateTime               @default(now()) @map("created_at")
+  updatedAt           DateTime               @updatedAt @map("updated_at")
 
   @@unique([organizationId, slug])
   @@index([organizationId])
@@ -482,6 +485,7 @@ model CurriculumVersion {
   groups        CourseGroup[]           @relation("GroupAssignedVersion")
   accessLinks   AccessLink[]
   comments      CurriculumComment[]
+  mapAnalyses   CourseMapAnalysis[]
   createdAt     DateTime                @default(now()) @map("created_at")
   updatedAt     DateTime                @updatedAt @map("updated_at")
 
@@ -492,71 +496,71 @@ model CurriculumVersion {
 }
 
 model Lesson {
-  id                        String                 @id @default(cuid())
-  courseId                  String                 @map("course_id")
-  course                    Course                 @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  id                        String                  @id @default(cuid())
+  courseId                  String                  @map("course_id")
+  course                    Course                  @relation(fields: [courseId], references: [id], onDelete: Cascade)
   /**
    * Owning curriculum version; always belongs to `course`.
    */
-  curriculumVersionId       String                 @map("curriculum_version_id")
-  curriculumVersion         CurriculumVersion      @relation(fields: [curriculumVersionId], references: [id], onDelete: Cascade)
+  curriculumVersionId       String                  @map("curriculum_version_id")
+  curriculumVersion         CurriculumVersion       @relation(fields: [curriculumVersionId], references: [id], onDelete: Cascade)
   /**
    * Optional owning arc (section) within the version; null lessons render as an ungrouped flat list.
    */
-  arcId                     String?                @map("arc_id")
-  arc                       LessonArc?             @relation(fields: [arcId], references: [id], onDelete: SetNull)
+  arcId                     String?                 @map("arc_id")
+  arc                       LessonArc?              @relation(fields: [arcId], references: [id], onDelete: SetNull)
   title                     String
   slug                      String
   /**
    * Optional one-line summary shown under the lesson title on the course page; falls back to
    * "Lesson <position>" when empty.
    */
-  shortDescription          String?                @map("short_description") @db.Text
-  status                    LessonStatus           @default(DRAFT)
+  shortDescription          String?                 @map("short_description") @db.Text
+  status                    LessonStatus            @default(DRAFT)
   position                  Int
-  markdownContent           String                 @map("markdown_content") @db.Text
+  markdownContent           String                  @map("markdown_content") @db.Text
   /**
    * Content revision, bumped on every change to the lesson's content (title, body, arc, status,
    * summary, slug) from sync or the admin editor. Sync clients send the revision they last saw
    * (`baseRevision`) so concurrent edits are reported as conflicts instead of overwritten.
    */
-  revision                  Int                    @default(1)
+  revision                  Int                     @default(1)
   /**
    * Group curricula only: the core lesson this one was copied from (no FK; null for lessons added
    * to the group copy). Used to compare against and propose changes back to the core.
    */
-  baseLessonId              String?                @map("base_lesson_id")
+  baseLessonId              String?                 @map("base_lesson_id")
   /**
    * What learners see: a snapshot of the lesson taken when it was last published (saved as
    * PUBLISHED, or its version was published). Editing afterwards changes only the working copy
    * above; learners keep this text until the lesson is published again. Null = never published
    * (hidden from learners). Preview links and the admin preview show the working copy instead.
    */
-  publishedAt               DateTime?              @map("published_at")
+  publishedAt               DateTime?               @map("published_at")
   /**
    * `revision` of the working copy at publish time; lower than `revision` = unpublished changes.
    */
-  publishedRevision         Int?                   @map("published_revision")
-  publishedTitle            String?                @map("published_title")
-  publishedShortDescription String?                @map("published_short_description") @db.Text
-  publishedMarkdownContent  String?                @map("published_markdown_content") @db.Text
+  publishedRevision         Int?                    @map("published_revision")
+  publishedTitle            String?                 @map("published_title")
+  publishedShortDescription String?                 @map("published_short_description") @db.Text
+  publishedMarkdownContent  String?                 @map("published_markdown_content") @db.Text
   /**
    * Image bindings of the published text: `[{ sourcePath, assetId }]`.
    */
-  publishedAssetBindings    Json?                  @map("published_asset_bindings")
+  publishedAssetBindings    Json?                   @map("published_asset_bindings")
   /**
    * Render cache for the published text (same scheme as `accessRenderedHtml`).
    */
-  publishedRenderedHtml     String?                @map("published_rendered_html") @db.Text
-  publishedHtmlSourceHash   String?                @map("published_html_source_hash") @db.VarChar(64)
+  publishedRenderedHtml     String?                 @map("published_rendered_html") @db.Text
+  publishedHtmlSourceHash   String?                 @map("published_html_source_hash") @db.VarChar(64)
   /**
    * Pre-rendered HTML with stable placeholder asset URLs (hydrated per group at read time).
    */
-  accessRenderedHtml        String?                @map("access_rendered_html") @db.Text
+  accessRenderedHtml        String?                 @map("access_rendered_html") @db.Text
   /**
    * SHA-256 of markdown + asset reference bindings; must match live lesson for `accessRenderedHtml` to apply.
    */
-  accessHtmlSourceHash      String?                @map("access_html_source_hash") @db.VarChar(64)
+  accessHtmlSourceHash      String?                 @map("access_html_source_hash") @db.VarChar(64)
   assetReferences           LessonAssetReference[]
   comments                  CurriculumComment[]
   notes                     LessonNote[]
@@ -566,8 +570,11 @@ model Lesson {
   check                     LessonCheck?
   readingSessions           LessonReadingSession[]
   taught                    LessonTaught[]
-  createdAt                 DateTime               @default(now()) @map("created_at")
-  updatedAt                 DateTime               @updatedAt @map("updated_at")
+  conceptOverrides          LessonConceptOverride[]
+  mapNotes                  CourseMapNote[]
+  mapDismissals             CourseMapDismissal[]
+  createdAt                 DateTime                @default(now()) @map("created_at")
+  updatedAt                 DateTime                @updatedAt @map("updated_at")
 
   @@unique([curriculumVersionId, slug])
   @@unique([curriculumVersionId, position])
@@ -929,6 +936,8 @@ model CurriculumComment {
    * When it was last resolved (null while open).
    */
   resolvedAt          DateTime?               @map("resolved_at")
+  /// Added from a gap on the course map ("Add to the lesson's improvement").
+  mapNote             CourseMapNote?
   createdAt           DateTime                @default(now()) @map("created_at")
   updatedAt           DateTime                @updatedAt @map("updated_at")
 
@@ -1285,6 +1294,8 @@ model Organization {
   oauthCodes                OAuthCode[]
   invites                   UserInvite[]
   sessions                  UserSession[]
+  concepts                  Concept[]
+  conceptDismissals         ConceptDismissal[]
   createdAt                 DateTime                @default(now()) @map("created_at")
   updatedAt                 DateTime                @updatedAt @map("updated_at")
 
@@ -2172,4 +2183,173 @@ model AuthRateLimit {
 
   @@map("auth_rate_limits")
   @@schema("public")
+}
+
+// ---------------------------------------------------------------------------------------------
+// Concepts and corrections for the course map. Shared schema; tables an edition doesn't use stay
+// empty.
+// ---------------------------------------------------------------------------------------------
+
+/// A concept the organisation's courses teach (Docker, REST API, CSRF), shared by all of them. Where
+/// each is taught and used isn't stored: it's read from the lessons' text when the map is opened.
+model Concept {
+  id             String                  @id @default(cuid())
+  organizationId String                  @map("organization_id")
+  organization   Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  /// Other names the text uses for it ("Postgres" for PostgreSQL).
+  aliases        String[]                @default([])
+  /// One sentence on what it is.
+  definition     String?                 @db.Text
+  /// Phrases that aren't this concept ("logging in" for Logging): "Not this meaning".
+  ignorePhrases  String[]                @default([]) @map("ignore_phrases")
+  /// Match in capitals only (React, not "react to users"); null works it out from the text.
+  matchCase      Boolean?                @map("match_case")
+  needs          ConceptRequirement[]    @relation("ConceptNeeds")
+  neededBy       ConceptRequirement[]    @relation("ConceptNeededBy")
+  assumedIn      CourseAssumedConcept[]
+  overrides      LessonConceptOverride[]
+  createdAt      DateTime                @default(now()) @map("created_at")
+  updatedAt      DateTime                @updatedAt @map("updated_at")
+
+  @@unique([organizationId, name])
+  @@map("concepts")
+  @@schema("courses")
+}
+
+/// "CSRF needs Session cookies": a concept a learner must understand first. Set by hand; the text
+/// can't say it reliably.
+model ConceptRequirement {
+  conceptId  String  @map("concept_id")
+  concept    Concept @relation("ConceptNeeds", fields: [conceptId], references: [id], onDelete: Cascade)
+  requiresId String  @map("requires_id")
+  requires   Concept @relation("ConceptNeededBy", fields: [requiresId], references: [id], onDelete: Cascade)
+
+  @@id([conceptId, requiresId])
+  @@index([requiresId])
+  @@map("concept_requirements")
+  @@schema("courses")
+}
+
+/// A suggested concept someone dismissed, so the suggestions don't offer it again.
+model ConceptDismissal {
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  /// In lower case.
+  term           String
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  @@id([organizationId, term])
+  @@map("concept_dismissals")
+  @@schema("courses")
+}
+
+/// A concept a course takes as known (from an earlier course): never new in it, never a gap.
+model CourseAssumedConcept {
+  courseId  String  @map("course_id")
+  course    Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  conceptId String  @map("concept_id")
+  concept   Concept @relation(fields: [conceptId], references: [id], onDelete: Cascade)
+
+  @@id([courseId, conceptId])
+  @@index([conceptId])
+  @@map("course_assumed_concepts")
+  @@schema("courses")
+}
+
+enum ConceptRole {
+  TEACHES
+  USES
+  /// Only mentioned here: the scan leaves this lesson out for this concept.
+  IGNORE
+
+  @@schema("courses")
+}
+
+/// A person's correction to the scan for one lesson, which wins over it: taught here, used here, or
+/// only mentioned. Copied with the lesson to new versions and group copies.
+model LessonConceptOverride {
+  lessonId    String      @map("lesson_id")
+  lesson      Lesson      @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  conceptId   String      @map("concept_id")
+  concept     Concept     @relation(fields: [conceptId], references: [id], onDelete: Cascade)
+  role        ConceptRole
+  createdById String?     @map("created_by_id")
+  createdAt   DateTime    @default(now()) @map("created_at")
+
+  @@id([lessonId, conceptId])
+  @@index([conceptId])
+  @@map("lesson_concept_overrides")
+  @@schema("courses")
+}
+
+/// The note "Add to the lesson's improvement" made from an issue on the map: while it's open, the
+/// map shows the issue as being fixed. `issueKey` names the issue on its lesson: `early:<conceptId>`,
+/// `needs:<conceptId>:<needsId>`, `heavy` or `nothingLater` (the same whoever found it: the text
+/// scan or AI).
+model CourseMapNote {
+  lessonId  String            @map("lesson_id")
+  lesson    Lesson            @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  issueKey  String            @map("issue_key")
+  commentId String            @unique @map("comment_id")
+  comment   CurriculumComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  createdAt DateTime          @default(now()) @map("created_at")
+
+  @@id([lessonId, issueKey])
+  @@map("course_map_notes")
+  @@schema("courses")
+}
+
+/// An issue someone dismissed on the map ("Dismiss"): it leaves To look at until it's restored. It
+/// changes nothing in the scan (the corrections do that).
+model CourseMapDismissal {
+  lessonId    String   @map("lesson_id")
+  lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  issueKey    String   @map("issue_key")
+  createdById String?  @map("created_by_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@id([lessonId, issueKey])
+  @@map("course_map_dismissals")
+  @@schema("courses")
+}
+
+enum CourseMapSource {
+  /// The text scan, without AI.
+  CODE
+  AI
+
+  @@schema("courses")
+}
+
+enum CourseMapAnalysisStatus {
+  RUNNING
+  DONE
+  FAILED
+  STOPPED
+
+  @@schema("courses")
+}
+
+/// A saved analysis of a version's lessons: an AI one run on demand ("Analyse with AI"), kept with
+/// what it was based on so the map can say when the lessons changed since. `result` is the map's
+/// analysis (`CourseAnalysis`, schema version 1).
+model CourseMapAnalysis {
+  id                  String                  @id @default(cuid())
+  curriculumVersionId String                  @map("curriculum_version_id")
+  curriculumVersion   CurriculumVersion       @relation(fields: [curriculumVersionId], references: [id], onDelete: Cascade)
+  source              CourseMapSource
+  status              CourseMapAnalysisStatus @default(RUNNING)
+  result              Json?
+  /// What it was based on: each lesson's revision and the concept list's hash.
+  inputs              Json
+  model               String?
+  createdById         String?                 @map("created_by_id")
+  error               String?                 @db.Text
+  createdAt           DateTime                @default(now()) @map("created_at")
+  finishedAt          DateTime?               @map("finished_at")
+
+  @@index([curriculumVersionId, source, createdAt])
+  @@map("course_map_analyses")
+  @@schema("courses")
 }

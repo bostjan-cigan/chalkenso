@@ -18,6 +18,7 @@ export const localUi: UiExtensions = {
   HowItWorksParts: LocalHowItWorksParts,
   SettingsGeneralPanels: null,
   courseTabs: [],
+  lessonViews: [],
   SignupNote: null,
   GettingStartedCallButton: null,
 };

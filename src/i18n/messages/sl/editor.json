@@ -216,7 +216,8 @@
       "check": "Vprašanja za preverjanje",
       "themes": "Teme povratnih informacij",
       "report": "Povzetki poročil",
-      "wording": "Preverjanje besedila"
+      "wording": "Preverjanje besedila",
+      "courseMap": "Analize učnega načrta"
     }
   },
   "teamApi": {
@@ -496,7 +497,8 @@
       "save": "Shrani",
       "saving": "Shranjujem …",
       "failed": "Opombe niso bile shranjene. Poskusite znova."
-    }
+    },
+    "backToMap": "Pojmi po lekcijah"
   },
   "mode": {
     "label": "Način lekcije",

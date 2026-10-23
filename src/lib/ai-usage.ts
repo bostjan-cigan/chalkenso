@@ -12,7 +12,7 @@ import type { AiKeySource } from './ai-key';
  * recorded under AI_MOCK.
  */
 
-export type AiFeature = 'revise' | 'plan' | 'check' | 'themes' | 'report' | 'wording';
+export type AiFeature = 'revise' | 'plan' | 'check' | 'themes' | 'report' | 'wording' | 'courseMap';
 
 /** In English; pages say them in the person's language with `editor.ai.features.<feature>`. */
 export const AI_FEATURE_LABELS: Record<AiFeature, string> = {
@@ -22,6 +22,7 @@ export const AI_FEATURE_LABELS: Record<AiFeature, string> = {
   themes: 'Feedback themes',
   report: 'Report summaries',
   wording: 'Wording checks',
+  courseMap: 'Course map analyses',
 };
 
 export async function recordAiUsage(input: {

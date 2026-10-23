@@ -200,6 +200,8 @@ export type PlatformNavHeading = keyof NavWords['platform']['headings'];
 export type SettingsTabLabel = keyof NavWords['settings']['tabs'];
 /** A course tab's name: its key in `app.nav.course.tabs`. */
 export type CourseTabLabel = keyof NavWords['course']['tabs'];
+/** A view's name on a course's Lessons tab: its key in `app.nav.course.views`. */
+export type LessonViewLabel = keyof NavWords['course']['views'];
 
 export type AdminNavExtra = {
   key: string;
@@ -231,6 +233,14 @@ export type SettingsTabExtra = {
   icon: IconType;
   /** Every member has it (their own part of it), not only owners and admins. */
   members?: boolean;
+};
+
+export type LessonViewExtra = {
+  key: string;
+  label: LessonViewLabel;
+  /** Under the course: `/admin/courses/<id>/<segment>?view=<view>`, with the version picked. */
+  segment: string;
+  view: string;
 };
 
 export type CourseTabExtra = {
@@ -298,6 +308,11 @@ export type UiExtensions = {
   SettingsGeneralPanels: ComponentType<{ organizationId: string; isOwner: boolean }> | null;
   /** Course tabs this edition adds between Feedback and Settings. */
   courseTabs: CourseTabExtra[];
+  /**
+   * Views of a course's lessons this edition adds to its Lessons tab, after the lessons themselves:
+   * one row of subtabs over the same version (the cloud's curriculum analysis). None: no row.
+   */
+  lessonViews: LessonViewExtra[];
   /** Under the sign-up form (server component; e.g. an edition's terms). */
   SignupNote: ComponentType | null;
   /** The "Schedule a call…" of Getting started's call (server component). */

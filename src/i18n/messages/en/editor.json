@@ -216,7 +216,8 @@
       "check": "Check questions",
       "themes": "Feedback themes",
       "report": "Report summaries",
-      "wording": "Wording checks"
+      "wording": "Wording checks",
+      "courseMap": "Curriculum analyses"
     }
   },
   "teamApi": {
@@ -496,7 +497,8 @@
       "save": "Save",
       "saving": "Saving…",
       "failed": "The notes weren’t saved. Try again."
-    }
+    },
+    "backToMap": "Curriculum map"
   },
   "mode": {
     "label": "Lesson mode",
