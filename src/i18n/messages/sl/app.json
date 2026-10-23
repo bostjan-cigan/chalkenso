@@ -245,6 +245,7 @@
     "close": "Zapri",
     "markDone": "Označi kot opravljeno",
     "markNotDone": "Označi kot neopravljeno",
+    "notForMe": "Ni zame",
     "doneByItself": "Opravljeno",
     "footer": "Kljukice se postavljajo sproti.",
     "hide": "Skrij prve korake",
@@ -279,6 +280,11 @@
       "invite": {
         "title": "Povabite sodelavca",
         "hint": "Da tečaj oblikujeta skupaj."
+      },
+      "obsidian": {
+        "section": "Če pišete v Obsidianu",
+        "title": "Povežite svoj trezor",
+        "hint": "Namestite vtičnik Chalkenso in lekcije se sinhronizirajo v obe smeri."
       }
     }
   },

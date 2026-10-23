@@ -8,7 +8,7 @@ import { existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { BASE, serverEdition } from './helpers.mjs';
 
-const SHARED = ['e2e.mjs', 'e2e-demo.mjs', 'e2e-group.mjs', 'e2e-access.mjs', 'e2e-instructor-links.mjs', 'e2e-group-instructors.mjs', 'e2e-accounts.mjs', 'e2e-sessions.mjs', 'e2e-export.mjs', 'unit-access-rules.mjs', 'unit-callouts.mjs', 'unit-merge-blocks.mjs', 'unit-ai-drafts.mjs', 'unit-proposed-changes.mjs', 'unit-revision-path.mjs', 'unit-plan-scope.mjs', 'unit-lesson-sections.mjs', 'unit-draft-diagrams.mjs', 'unit-feedback-rounds.mjs', 'e2e-improve.mjs', 'e2e-vault-feedback.mjs'];
+const SHARED = ['e2e.mjs', 'e2e-demo.mjs', 'e2e-group.mjs', 'e2e-access.mjs', 'e2e-instructor-links.mjs', 'e2e-group-instructors.mjs', 'e2e-accounts.mjs', 'e2e-sessions.mjs', 'e2e-export.mjs', 'unit-access-rules.mjs', 'unit-callouts.mjs', 'unit-merge-blocks.mjs', 'unit-ai-drafts.mjs', 'unit-proposed-changes.mjs', 'unit-revision-path.mjs', 'unit-plan-scope.mjs', 'unit-lesson-sections.mjs', 'unit-draft-diagrams.mjs', 'unit-feedback-rounds.mjs', 'e2e-improve.mjs', 'e2e-vault-feedback.mjs', 'e2e-obsidian-connect.mjs'];
 const here = path.dirname(new URL(import.meta.url).pathname);
 /** The cloud edition's own suites, in the private repository only. */
 const CLOUD = existsSync(path.join(here, 'cloud'))

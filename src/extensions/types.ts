@@ -77,6 +77,11 @@ export type ServerExtensions = {
   /** Whether people can connect their own Claude to the app. */
   claudeConnector: boolean;
   /**
+   * Where the guides are for Settings → Tokens' Obsidian card: the plugin's (installing it, connecting
+   * a vault) and Claude Code's in a vault. Null: no such guide.
+   */
+  obsidianGuides: { plugin: string | null; claude: string | null };
+  /**
    * What learners struggled with in a lesson, for the signed-in person's in-app AI; null when there
    * is none, or the edition gathers none.
    */

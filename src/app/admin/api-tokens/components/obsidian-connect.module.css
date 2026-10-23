@@ -1,0 +1,161 @@
+/* Settings → Tokens' Obsidian card: a heading with the app's mark, three numbered steps, and the guides. */
+
+.gem {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 11px;
+  /* Obsidian's purple, on a tint of itself in either theme. */
+  color: #7c5cff;
+  background: color-mix(in srgb, #7c5cff 14%, var(--card-bg));
+  font-size: 1.2rem;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.head h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.head p {
+  margin: 0.1rem 0 0;
+  font-size: 0.86rem;
+  color: var(--text-muted);
+}
+
+.steps {
+  display: grid;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.steps li {
+  display: grid;
+  grid-template-columns: 1.75rem minmax(0, 1fr) auto;
+  gap: 0.25rem 0.75rem;
+  align-items: start;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--line-subtle);
+  counter-increment: step;
+}
+
+.steps li::before {
+  content: counter(step);
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-top: 1px;
+  border-radius: 50%;
+  background: rgba(var(--accent-color), 0.12);
+  color: var(--accent-color-hex);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.steps strong {
+  display: block;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.steps span {
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.steps code,
+.copy code {
+  padding: 0.05rem 0.35rem;
+  border-radius: 5px;
+  background: var(--surface-2);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.82rem;
+  color: rgb(var(--foreground-rgb));
+}
+
+/* The address with its own Copy, under its step. */
+.copy {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.35rem;
+}
+
+.copy button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: max(1.75rem, var(--touch-target, 0px));
+  padding: 0 0.45rem;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: var(--accent-color-hex);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.copy button:hover {
+  background: var(--surface-1);
+}
+
+.steps a,
+.foot a {
+  color: var(--accent-color-hex);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.steps a:hover,
+.foot a:hover {
+  text-decoration: underline;
+}
+
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  margin: 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--line-subtle);
+  font-size: 0.86rem;
+  color: var(--text-muted);
+}
+
+.connected {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.connected .gem {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9px;
+  font-size: 1rem;
+}
+
+@media (max-width: 640px) {
+  .steps li {
+    grid-template-columns: 1.75rem minmax(0, 1fr);
+  }
+
+  .steps li > :last-child:not(div) {
+    grid-column: 2;
+    justify-self: start;
+  }
+}

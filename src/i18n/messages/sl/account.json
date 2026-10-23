@@ -711,6 +711,32 @@
       "revoked": "Žeton je preklican.",
       "onlyRevoked": "Izbrisati je mogoče samo preklicane žetone.",
       "deleted": "Žeton je izbrisan."
+    },
+    "obsidian": {
+      "kicker": "Obsidian",
+      "title": "Povežite svoj trezor Obsidian",
+      "lead": "Lekcije so v vašem trezorju kot Markdown in se sinhronizirajo v obe smeri, ko to želite.",
+      "download": "Prenesite vtičnik",
+      "install": {
+        "title": "Namestite vtičnik",
+        "text": "Razširite ga v mapo <code>.obsidian/plugins</code> svojega trezorja, nato v Obsidianu v Settings → Community plugins vklopite Chalkenso."
+      },
+      "token": {
+        "title": "Ustvarite žeton",
+        "text": "Spodaj, pod <link>Ustvari žeton</link>. Prikaže se samo enkrat, zato ga kopirajte."
+      },
+      "add": {
+        "title": "Dodajte ga v Obsidianu",
+        "text": "V Obsidianu v Settings → Chalkenso nastavite strežnik na ta naslov, nato z Add your organisation dodajte organizacijo in prilepite žeton."
+      },
+      "copy": "Kopiraj",
+      "copied": "Kopirano",
+      "then": "Nato označite, kaj naj se sinhronizira, in zaženite sinhronizacijo.",
+      "pluginGuide": "Vodič za vtičnik",
+      "claudeGuide": "Claude Code v vašem trezorju",
+      "connected": "Vaš trezor je povezan",
+      "connectedDetail": "Zadnja sinhronizacija {date} · {name}",
+      "guide": "Vodič"
     }
   }
 }

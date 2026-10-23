@@ -65,7 +65,11 @@ export function absoluteUrl(path: string) {
  */
 export const PUBLIC_REPOSITORIES: { app: string | null; obsidian: string | null } = publicRepositories;
 
+const obsidianDownload = (file: string) =>
+  PUBLIC_REPOSITORIES.obsidian ? `${PUBLIC_REPOSITORIES.obsidian.replace(/\/+$/, '')}/releases/latest/download/${file}` : null;
+
 /** The Claude Code kits as one zip, from the plugin's latest release (null until it's published). */
-export const OBSIDIAN_KIT_URL = PUBLIC_REPOSITORIES.obsidian
-  ? `${PUBLIC_REPOSITORIES.obsidian.replace(/\/+$/, '')}/releases/latest/download/chalkenso-obsidian-kit.zip`
-  : null;
+export const OBSIDIAN_KIT_URL = obsidianDownload('chalkenso-obsidian-kit.zip');
+
+/** The Obsidian plugin as one zip (a `chalkenso/` folder for `.obsidian/plugins`), from its latest release. */
+export const OBSIDIAN_PLUGIN_URL = obsidianDownload('chalkenso-plugin.zip');

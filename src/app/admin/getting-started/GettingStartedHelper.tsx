@@ -55,9 +55,11 @@ export default function GettingStartedHelper({
 
   // What happened can't be unticked; the rest follows the latest tick by hand.
   const isDone = (step: GettingStartedStep) => step.auto || (ticks[step.id as TickableStep] ?? step.done);
-  const doneCount = steps.filter(isDone).length;
-  const allDone = doneCount === steps.length;
-  const left = steps.length - doneCount;
+  // Optional steps are listed last and left out of the count.
+  const counted = steps.filter((step) => !step.optional);
+  const doneCount = counted.filter(isDone).length;
+  const allDone = doneCount === counted.length;
+  const left = counted.length - doneCount;
 
   // Closed by Escape or a click elsewhere, but not while a sheet it opened is over the page.
   useEffect(() => {
@@ -134,13 +136,13 @@ export default function GettingStartedHelper({
               </button>
             </div>
             <div className={styles.bar} aria-hidden>
-              <span style={{ width: `${(doneCount / steps.length) * 100}%` }} />
+              <span style={{ width: `${(doneCount / counted.length) * 100}%` }} />
             </div>
-            <p className={styles.barText}>{t('progress', { done: doneCount, total: steps.length })}</p>
+            <p className={styles.barText}>{t('progress', { done: doneCount, total: counted.length })}</p>
           </div>
 
           <ul className={styles.list}>
-            {steps.map((step) => {
+            {[...counted, ...steps.filter((step) => step.optional)].map((step) => {
               const done = isDone(step);
               const label = title(step);
               const tickable = step.id !== 'account' && !(step.auto && done);
@@ -169,14 +171,15 @@ export default function GettingStartedHelper({
                   {sub ? <span className={styles.stepHint}>{sub}</span> : null}
                 </>
               );
-              return (
-                <li key={step.id} className={done ? `${styles.step} ${styles.done}` : styles.step} data-testid={`getting-started-${step.id}`} data-done={done}>
+              const className = [styles.step, done ? styles.done : null, step.optional ? styles.optional : null].filter(Boolean).join(' ');
+              const row = (
+                <li key={step.id} className={className} data-testid={`getting-started-${step.id}`} data-done={done}>
                   <button
                     type="button"
                     role="checkbox"
                     aria-checked={done}
                     aria-label={label}
-                    title={tickable ? (done ? t('markNotDone') : t('markDone')) : t('doneByItself')}
+                    title={tickable ? (done ? t('markNotDone') : step.optional ? t('notForMe') : t('markDone')) : t('doneByItself')}
                     className={styles.tick}
                     disabled={!tickable}
                     onClick={() => tick(step.id as TickableStep, !done)}
@@ -197,6 +200,14 @@ export default function GettingStartedHelper({
                   {!done && (step.href || step.id === 'how') ? <TbChevronRight aria-hidden className={styles.chevron} /> : <span />}
                 </li>
               );
+              // An optional step under its own heading ("If you write in Obsidian").
+              if (!step.optional) return row;
+              return [
+                <li key={`${step.id}-section`} className={styles.section}>
+                  {t(`steps.${step.id}.section` as 'steps.obsidian.section')}
+                </li>,
+                row,
+              ];
             })}
           </ul>
 
@@ -215,16 +226,16 @@ export default function GettingStartedHelper({
         className={allDone ? `${styles.ring} ${styles.ringDone}` : styles.ring}
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
-        aria-label={t('open', { done: doneCount, total: steps.length })}
+        aria-label={t('open', { done: doneCount, total: counted.length })}
         onClick={toggle}
         data-testid="getting-started"
       >
         <span className={styles.ringBox} aria-hidden>
           <svg viewBox="0 0 36 36">
             <circle className={styles.track} cx="18" cy="18" r="15" />
-            <circle className={styles.fill} cx="18" cy="18" r="15" strokeDasharray={RING} strokeDashoffset={RING * (1 - doneCount / steps.length)} />
+            <circle className={styles.fill} cx="18" cy="18" r="15" strokeDasharray={RING} strokeDashoffset={RING * (1 - doneCount / counted.length)} />
           </svg>
-          <b>{allDone ? <TbCheck size={16} strokeWidth={3} /> : `${doneCount}/${steps.length}`}</b>
+          <b>{allDone ? <TbCheck size={16} strokeWidth={3} /> : `${doneCount}/${counted.length}`}</b>
         </span>
         <span className={styles.label} aria-hidden>
           {t('title')}

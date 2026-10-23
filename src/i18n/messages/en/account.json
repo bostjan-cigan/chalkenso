@@ -711,6 +711,32 @@
       "revoked": "Token revoked.",
       "onlyRevoked": "Only revoked tokens can be deleted.",
       "deleted": "Token deleted."
+    },
+    "obsidian": {
+      "kicker": "Obsidian",
+      "title": "Connect your Obsidian vault",
+      "lead": "Your lessons live in your vault as Markdown, and sync both ways when you say so.",
+      "download": "Download the plugin",
+      "install": {
+        "title": "Install the plugin",
+        "text": "Unzip it into your vault’s <code>.obsidian/plugins</code> folder, then turn on Chalkenso in Obsidian’s Settings → Community plugins."
+      },
+      "token": {
+        "title": "Create a token",
+        "text": "Under <link>Create token</link> below. It’s shown once, so copy it."
+      },
+      "add": {
+        "title": "Add it in Obsidian",
+        "text": "In Obsidian’s Settings → Chalkenso, set the server to this address, then Add your organisation and paste the token."
+      },
+      "copy": "Copy",
+      "copied": "Copied",
+      "then": "Then tick what to sync and run Sync.",
+      "pluginGuide": "The plugin guide",
+      "claudeGuide": "Claude Code in your vault",
+      "connected": "Your vault is connected",
+      "connectedDetail": "Last synced {date} · {name}",
+      "guide": "Guide"
     }
   }
 }

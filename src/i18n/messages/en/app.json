@@ -245,6 +245,7 @@
     "close": "Close",
     "markDone": "Mark as done",
     "markNotDone": "Mark as not done",
+    "notForMe": "Not for me",
     "doneByItself": "Done",
     "footer": "Ticks itself as you go.",
     "hide": "Hide getting started",
@@ -279,6 +280,11 @@
       "invite": {
         "title": "Invite a colleague",
         "hint": "To design the course with you."
+      },
+      "obsidian": {
+        "section": "If you write in Obsidian",
+        "title": "Connect your vault",
+        "hint": "Install the Chalkenso plugin and your lessons sync both ways."
       }
     }
   },

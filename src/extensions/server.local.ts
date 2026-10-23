@@ -3,6 +3,7 @@ import 'server-only';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { prisma } from '@/lib/prisma';
+import { PUBLIC_REPOSITORIES } from '@/lib/site';
 import type { ServerExtensions } from './types';
 
 /**
@@ -47,6 +48,11 @@ export const localServer: ServerExtensions = {
   aiAllowance: async () => null,
   // Free AI here is Claude Code with the Obsidian vault, not a connector.
   claudeConnector: false,
+  // The plugin's README has both: installing it, and its Claude Code kit.
+  obsidianGuides: {
+    plugin: PUBLIC_REPOSITORIES.obsidian && `${PUBLIC_REPOSITORIES.obsidian}#install`,
+    claude: PUBLIC_REPOSITORIES.obsidian && `${PUBLIC_REPOSITORIES.obsidian}#claude-code`,
+  },
   // Nothing gathered from learners here: the in-app AI works from the request and notes.
   lessonEvidence: async () => null,
   // One manager (who set the installation up) and the instructors they invite. Roles never change,

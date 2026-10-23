@@ -54,3 +54,12 @@ export async function listApiTokens(viewer: {
     ownerName: [owner.firstName, owner.lastName].filter(Boolean).join(' ') || owner.identifier,
   }));
 }
+
+/** The viewer's sync token that synced last in this organisation (the Obsidian plugin is connected), or null. */
+export async function lastSyncedToken(userId: string, organizationId: string) {
+  return prisma.apiToken.findFirst({
+    where: { ownerId: userId, organizationId, scopes: { has: 'sync' }, revokedAt: null, lastUsedAt: { not: null } },
+    orderBy: { lastUsedAt: 'desc' },
+    select: { name: true, lastUsedAt: true },
+  });
+}

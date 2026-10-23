@@ -164,7 +164,7 @@ try {
   check(
     edition === 'local' ? 'local: invites make instructors, no role to choose' : 'cloud: invites offer member or admin',
     edition === 'local'
-      ? (await a.locator('#invite-role').count()) === 0 && (await a.locator('main:visible').innerText()).includes('They join as an instructor')
+      ? (await a.locator('#invite-role').count()) === 0 && (await a.locator('[aria-modal=true]:visible').innerText()).includes('They join as an instructor')
       : await (async () => {
           // Our own dropdown: the options exist only while it is open.
           await a.click('#invite-role:visible');

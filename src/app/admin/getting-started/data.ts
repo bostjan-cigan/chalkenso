@@ -15,11 +15,13 @@ import { howItWorksKey, NEW_FOR_DAYS } from '../how-it-works/data';
  * of every page (it never opens by itself). Each step ticks itself when it's done (a course, a lesson, a
  * group, a colleague, their name, a booked call); any open step can be ticked by hand, and ticked
  * again to bring it back. Hidden, or with every step done, it's gone; Home can bring a hidden one back.
- * Kept per person and organisation, like Getting started's Hide and How it works' "done" always were.
+ * Optional steps (connecting an Obsidian vault) come after the others and don't count: ticking one by
+ * hand says "not for me". Kept per person and organisation, like Getting started's Hide and How it
+ * works' "done" always were.
  */
 
 /** The steps one can tick by hand ("Create your account" is always done). */
-export const TICKABLE = ['how', 'profile', 'course', 'lesson', 'group', 'invite', 'call'] as const;
+export const TICKABLE = ['how', 'profile', 'course', 'lesson', 'group', 'invite', 'call', 'obsidian'] as const;
 export type TickableStep = (typeof TICKABLE)[number];
 export type GettingStartedStepId = 'account' | TickableStep;
 
@@ -30,6 +32,8 @@ export type GettingStartedStep = {
   auto: boolean;
   /** Where the step is done (null: it opens here, How it works and the call). */
   href: string | null;
+  /** Not one of the steps that count: listed after them, for those it suits. */
+  optional?: boolean;
 };
 
 /** Getting started's call, as the edition offers and words it (`gettingStartedCall`). */
@@ -63,10 +67,14 @@ export const loadGettingStarted = cache(async (): Promise<GettingStarted | null>
   const setsUp = canAccessSection(viewer, 'courses', [Permission.WRITE]);
   const courseWhere = courseScopeWhere(accessScope(viewer, 'courses'));
   const groupWhere = groupScopeWhere(accessScope(viewer, 'groups'));
-  const [remembered, membership, call, counts] = await Promise.all([
+  const [remembered, membership, call, synced, counts] = await Promise.all([
     rememberedKeys(organizationId, [hiddenKey(viewer.id), openedKey(viewer.id), ...TICKABLE.map((id) => tickKey(id, viewer.id))]),
     prisma.organizationMember.findFirst({ where: { userId: viewer.id, organizationId }, select: { createdAt: true } }),
     serverExtensions.gettingStartedCall(viewer),
+    // The Obsidian plugin has synced with one of their tokens here.
+    prisma.apiToken.count({
+      where: { ownerId: viewer.id, organizationId, scopes: { has: 'sync' }, revokedAt: null, lastUsedAt: { not: null } },
+    }),
     setsUp
       ? Promise.all([
           prisma.course.count({ where: courseWhere }),
@@ -97,7 +105,8 @@ export const loadGettingStarted = cache(async (): Promise<GettingStarted | null>
     if (isOrgAdmin(viewer)) steps.push(step('invite', memberCount > 1, '/admin/team'));
   }
   if (call) steps.push(step('call', Boolean(call.bookedAt), null));
+  steps.push({ ...step('obsidian', synced > 0, '/admin/api-tokens'), optional: true });
 
-  if (steps.every((entry) => entry.done)) return null;
+  if (steps.every((entry) => entry.done || entry.optional)) return null;
   return { steps, call, hidden: remembered.has(hiddenKey(viewer.id)), opened: remembered.has(openedKey(viewer.id)) };
 });
