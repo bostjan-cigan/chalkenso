@@ -23,7 +23,7 @@ function Glyph() {
 }
 
 /** The clock, once a second. */
-function useNow() {
+export function useNow() {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
