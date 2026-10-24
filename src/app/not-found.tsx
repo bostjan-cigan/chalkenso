@@ -1,21 +1,31 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
-import { getLocale, getTranslations } from 'next-intl/server';
-import { type Locale, homePath } from '@/i18n/config';
+import { createTranslator } from 'next-intl';
+import NotFoundText, { type NotFoundWords } from '@/components/NotFoundText';
+import { LOCALES, type Locale, homePath } from '@/i18n/config';
+import { loadMessages } from '@/i18n/messages';
 import { EDITION, PRODUCT_NAME } from '@/lib/site';
 
-export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations('common.notFound');
-  return { title: t('metaTitle') };
+/**
+ * The 404's words in every language, ahead of time. Next renders this page along with every other
+ * one, so it reads nothing from the request: asking for the visitor's language here (a cookie) made
+ * every page render per request, the website's included. The browser picks the language; the tab's
+ * title needs none.
+ */
+function wordsIn(locale: Locale): NotFoundWords {
+  const t = createTranslator({ locale, messages: loadMessages(locale), namespace: 'common.notFound' });
+  return {
+    text: t('text'),
+    back: t('back', { product: PRODUCT_NAME }),
+    // Back to the landing page in that language (the local edition has none: its `/` is signing in)
+    home: EDITION === 'cloud' ? homePath(locale) : '/',
+  };
 }
 
-/**
- * In the visitor's language, and back to the landing page in it (the local edition has none: its `/`
- * is signing in).
- */
-export default async function NotFound() {
-  const t = await getTranslations('common.notFound');
-  const home = EDITION === 'cloud' ? homePath((await getLocale()) as Locale) : '/';
+const WORDS = Object.fromEntries(LOCALES.map((locale) => [locale, wordsIn(locale)])) as Record<Locale, NotFoundWords>;
+
+export const metadata: Metadata = { title: { absolute: `404 | ${PRODUCT_NAME}` } };
+
+export default function NotFound() {
   return (
     <main
       style={{
@@ -31,10 +41,7 @@ export default async function NotFound() {
     >
       <div>
         <p style={{ fontSize: '4rem', fontWeight: 700, margin: 0, color: 'var(--accent-color-hex)' }}>404</p>
-        <p style={{ fontSize: '1.25rem', margin: '0.5rem 0 1.5rem' }}>{t('text')}</p>
-        <Link href={home} style={{ color: 'var(--accent-color-hex)' }}>
-          {t('back', { product: PRODUCT_NAME })}
-        </Link>
+        <NotFoundText words={WORDS} />
       </div>
     </main>
   );

@@ -9,9 +9,8 @@ import {
   LOCALE_COOKIE,
   LOCALE_COOKIE_MAX_AGE,
   type Locale,
-  homePath,
-  isHomePath,
   isLocale,
+  languageAddress,
 } from '@/i18n/config';
 import { rememberLocale } from '@/i18n/actions';
 import { cn } from '@/utils/cn';
@@ -20,8 +19,8 @@ import styles from './LanguageMenu.module.css';
 
 /**
  * Remembers a language (a cookie, for a year, and on the account of someone signed in) and shows the
- * page in it: the landing page goes to its address in that language (`/`, `/sl`); any other page
- * keeps its address and loads again.
+ * page in it: a page with an address per language (`hasLanguageAddress`) goes to that language's;
+ * any other page keeps its address and loads again.
  */
 export async function chooseLocale(next: Locale) {
   const secure = window.location.protocol === 'https:' ? '; secure' : '';
@@ -29,8 +28,9 @@ export async function chooseLocale(next: Locale) {
   // Saving it on the account is a nicety: the page changes language whether or not it worked.
   await rememberLocale(next).catch(() => undefined);
   const { pathname, search, hash } = window.location;
-  if (isHomePath(pathname)) {
-    window.location.assign(`${homePath(next)}${search}${hash}`);
+  const address = languageAddress(pathname, next);
+  if (address) {
+    window.location.assign(`${address}${search}${hash}`);
   } else {
     window.location.reload();
   }

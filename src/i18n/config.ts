@@ -1,6 +1,6 @@
 /**
  * The languages the app speaks. Client-safe. English is the default: what anyone sees until they
- * pick another language (in the language menu) or open the Slovenian landing page (`/sl`).
+ * pick another language (in the language menu) or open a Slovenian address (`/sl`, `/sl/…`).
  */
 export const LOCALES = ['en', 'sl'] as const;
 
@@ -10,7 +10,7 @@ export const DEFAULT_LOCALE: Locale = 'en';
 
 /**
  * Remembers someone's pick for a year: set in the browser by the language menu, and by the proxy
- * when someone opens `/sl`. Present only after a choice, so "no cookie" means "never picked".
+ * when someone opens a Slovenian address. Present only after a choice, so "no cookie" means "never picked".
  */
 export const LOCALE_COOKIE = 'chalkenso_locale';
 export const LOCALE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
@@ -35,14 +35,36 @@ export const INTL_LOCALES: Record<Locale, string> = {
 };
 
 /**
- * The landing page in each language: the only page whose address says its language (`/`, `/sl`).
- * Every other page keeps one address and follows the remembered pick.
+ * The landing page in each language: `/`, `/sl`.
  */
 export function homePath(locale: Locale) {
   return locale === DEFAULT_LOCALE ? '/' : `/${locale}`;
 }
 
-/** Whether a path is one of the landing pages (`/`, `/sl`). */
-export function isHomePath(pathname: string) {
-  return LOCALES.some((locale) => pathname === homePath(locale));
+/**
+ * Whether a page has an address in each language: English without a prefix, another language under
+ * its code. Every other page keeps one address and follows the remembered pick. `path` is without a
+ * language.
+ */
+export function hasLanguageAddress(path: string) {
+  return path === '/' || path === '/pricing' || path === '/tools' || (path.startsWith('/tools/') && !path.startsWith('/tools/og/'));
 }
+
+/**
+ * A link in `locale`: a page with an address per language gets that language's (`/sl/…`, keeping
+ * `?…` and `#…`), any other keeps its one address.
+ */
+export function localePath(href: string, locale: Locale) {
+  const end = href.search(/[?#]/);
+  const path = end === -1 ? href : href.slice(0, end);
+  if (locale === DEFAULT_LOCALE || !hasLanguageAddress(path)) return href;
+  return `${homePath(locale)}${path === '/' ? '' : path}${end === -1 ? '' : href.slice(end)}`;
+}
+
+/** The page at `pathname` in another language when its address says the language (`/sl/…` → `/…`), else null. */
+export function languageAddress(pathname: string, locale: Locale) {
+  const [, first = '', ...rest] = pathname.split('/');
+  const path = isLocale(first) ? `/${rest.join('/')}` : pathname;
+  return hasLanguageAddress(path) ? localePath(path, locale) : null;
+}
+

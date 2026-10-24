@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 import AuthShell from '@/app/admin/components/AuthShell';
-import type { Locale } from '@/i18n/config';
+import { type Locale, localePath } from '@/i18n/config';
 import { redirectAuthenticatedAdmin } from '@/lib/admin-auth';
 import { isSignupOpen, MIN_PASSWORD_LENGTH } from '@/lib/organizations';
 import { EDITION, PRODUCT_NAME } from '@/lib/site';
@@ -52,7 +52,7 @@ export default async function SignupPage({ searchParams }: { searchParams: Promi
   ]);
   // Where the edition has plans, registering starts with picking one, on its pricing page.
   if (plan === 'missing') {
-    redirect('/pricing');
+    redirect(localePath('/pricing', locale));
   }
   return (
     <AuthShell kicker={intro.kicker} title={t('signup.title')} intro={intro.intro} footer={signIn}>
