@@ -6,7 +6,7 @@ import { prisma } from './prisma';
  * "Don't show this again": prompts a person can turn off for themself. Kept on their account
  * (`User.dismissedPrompts`), so it holds on every device, and only ever their own row changes.
  * Each key is one prompt:
- * - `courseMapAi`: the course map's "Analyse all lessons with AI?" before an AI analysis runs.
+ * - `courseMapAi`: the course map's "Check all lessons with AI?" before its first check with AI.
  */
 export const PROMPTS = ['courseMapAi'] as const;
 export type PromptKey = (typeof PROMPTS)[number];
