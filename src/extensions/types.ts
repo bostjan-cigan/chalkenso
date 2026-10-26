@@ -18,7 +18,7 @@ import type { ExportPart, ExportScope } from '@/lib/export/types';
  */
 export type ServerExtensions = {
   robots(): MetadataRoute.Robots;
-  sitemap(): MetadataRoute.Sitemap;
+  sitemap(): MetadataRoute.Sitemap | Promise<MetadataRoute.Sitemap>;
   /** Whether /signup may create a new account with its own organisation. */
   isSignupOpen(): Promise<boolean>;
   /**

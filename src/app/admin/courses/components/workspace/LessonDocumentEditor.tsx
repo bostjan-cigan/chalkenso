@@ -39,6 +39,7 @@ import {
   type CalloutType,
 } from './editor-extensions';
 import AdminSearchableSelectField from '@/app/admin/components/ui/AdminSearchableSelectField';
+import { imageFiles, useImageWords } from './ImageWordsDialog';
 import styles from './workspace.module.css';
 
 export type SelectionInfo = { text: string; context: string };
@@ -53,8 +54,14 @@ type Props = {
   onAddNote?: (selection: SelectionInfo) => void;
   /** "Improve with AI…": the passage becomes a note and an improvement (saved lessons, for whoever works on its feedback). */
   onImproveSelection?: (selection: SelectionInfo) => void;
-  /** Absent where images can't be added (a passage edited in Improve): no image button. */
+  /** Absent where images can't be added (a passage edited in Improve): no image button, and pictures dropped or pasted aren't taken. */
   onUploadImage?: (file: File) => Promise<string | null>;
+  /**
+   * Ask for a picture's words and caption when it's added, and put it on a line of its own as
+   * `![words](src "caption")`: a figure with its alt text and caption. Without it, an Obsidian
+   * embed `![[src]]`, as lessons keep their pictures.
+   */
+  describeImages?: boolean;
   /** While proposed changes are reviewed: the lesson is shown, not edited (no formatting toolbar). */
   readOnly?: boolean;
   /** Inside a card (a passage edited in Improve): the toolbar stays at the top of the card, not the page. */
@@ -83,6 +90,7 @@ export default function LessonDocumentEditor({
   onAddNote,
   onImproveSelection,
   onUploadImage,
+  describeImages = false,
   readOnly = false,
   compact = false,
 }: Props) {
@@ -90,9 +98,15 @@ export default function LessonDocumentEditor({
   const t = useTranslations('editor.document');
   const tx = useTranslations('editor.extensions');
   const fileInput = useRef<HTMLInputElement>(null);
+  const imageWords = useImageWords();
   // Callbacks change between renders; the editor is created once, so read them through refs.
-  const handlers = useRef({ onChange, onActivateNote, resolveAsset });
-  handlers.current = { onChange, onActivateNote, resolveAsset };
+  const handlers = useRef<{
+    onChange: () => void;
+    onActivateNote: (id: string) => void;
+    resolveAsset: AssetResolver;
+    addImages?: (files: File[], at: number | null) => Promise<void>;
+  }>({ onChange, onActivateNote, resolveAsset });
+  handlers.current = { ...handlers.current, onChange, onActivateNote, resolveAsset };
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -118,11 +132,52 @@ export default function LessonDocumentEditor({
     content: initialMarkdown,
     editorProps: {
       attributes: { class: styles.prose, 'aria-label': t('label'), 'data-testid': 'lesson-document' },
+      // Pictures dragged in land where they're dropped; pasted ones at the cursor
+      handleDrop: (view, event, _slice, moved) => {
+        const files = imageFiles(event.dataTransfer);
+        const add = handlers.current.addImages;
+        if (moved || !files.length || !add) return false;
+        event.preventDefault();
+        void add(files, view.posAtCoords({ left: event.clientX, top: event.clientY })?.pos ?? null);
+        return true;
+      },
+      handlePaste: (_view, event) => {
+        const files = imageFiles(event.clipboardData);
+        const add = handlers.current.addImages;
+        if (!files.length || !add) return false;
+        event.preventDefault();
+        void add(files, null);
+        return true;
+      },
     },
     onUpdate: ({ transaction }) => {
       if (transaction.docChanged) handlers.current.onChange();
     },
   });
+
+  /**
+   * Pictures picked, dropped or pasted: each uploaded, then put where it was dropped (the first) or
+   * at the cursor, asking for its words and caption first with `describeImages`.
+   */
+  async function addImages(files: File[], at: number | null) {
+    if (!editor || !onUploadImage) return;
+    let position = at;
+    for (const file of files) {
+      const src = await onUploadImage(file);
+      if (!src) continue;
+      let content;
+      if (describeImages) {
+        const words = await imageWords.ask(src.startsWith('/') ? src : (resolveAsset(src) ?? src));
+        content = { type: 'paragraph', content: [{ type: 'image', attrs: { src, alt: words.alt || null, title: words.caption || null } }] };
+      } else {
+        content = { type: 'obsidianEmbed', attrs: { target: src, size: '' } };
+      }
+      const chain = editor.chain().focus();
+      (position === null ? chain.insertContent(content) : chain.insertContentAt(position, content)).run();
+      position = null;
+    }
+  }
+  handlers.current.addImages = onUploadImage && !readOnly ? addImages : undefined;
 
   useEffect(() => {
     if (editor) onReady(editor);
@@ -186,13 +241,6 @@ export default function LessonDocumentEditor({
     else chain().wrapIn('callout', { type: 'tip' }).run();
   }
 
-  async function insertImage(file: File) {
-    if (!onUploadImage) return;
-    const sourcePath = await onUploadImage(file);
-    if (sourcePath) {
-      chain().insertContent({ type: 'obsidianEmbed', attrs: { target: sourcePath, size: '' } }).run();
-    }
-  }
 
   const tool = (active: boolean, label: string, onClick: () => void, icon: ReactElement, disabled = false) => (
     <button
@@ -262,7 +310,7 @@ export default function LessonDocumentEditor({
           onChange={(event) => {
             const file = event.target.files?.[0];
             event.target.value = '';
-            if (file) void insertImage(file);
+            if (file) void addImages([file], null);
           }}
         />
       </div>
@@ -313,6 +361,7 @@ export default function LessonDocumentEditor({
       </BubbleMenu>
 
       <EditorContent editor={editor} className={styles.editorSurface} />
+      {describeImages ? imageWords.dialog : null}
     </div>
   );
 }

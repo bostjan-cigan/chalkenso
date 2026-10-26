@@ -1406,6 +1406,43 @@ model CallBooking {
   @@schema("public")
 }
 
+/// A brief: one idea, a minute's read, in Markdown, with its own address, state and public date.
+model WebsitePost {
+  id          String            @id @default(cuid())
+  /// The address after /briefs/.
+  slug        String
+  /// The language it's written in (en for now).
+  locale      String            @default("en")
+  /// The page's title and H1.
+  title       String
+  /// The search result's text and the line under the title.
+  description String            @db.Text
+  /// The text, in Markdown, without the title.
+  markdown    String            @db.Text
+  /// Free tools it uses (their slugs); their pages link back to it.
+  tools       String[]          @default([])
+  /// The call to action at the end, written for this post's reader; the site's own when empty.
+  ctaTitle    String?           @map("cta_title")
+  ctaText     String?           @map("cta_text") @db.Text
+  status      WebsitePostStatus @default(DRAFT)
+  /// Its public date: when it appears on the website (a later one schedules it); set on publishing.
+  publishedAt DateTime?         @map("published_at")
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
+
+  @@unique([slug, locale])
+  @@index([status, publishedAt])
+  @@map("website_posts")
+  @@schema("public")
+}
+
+enum WebsitePostStatus {
+  DRAFT
+  PUBLISHED
+
+  @@schema("public")
+}
+
 /// The hours for one week (Monday), replacing the usual weekly hours for that week only:
 /// `days` is seven lists of ranges, Monday first ({ from: "09:00", to: "12:00" }; empty: not that day).
 model BookingWeekHours {

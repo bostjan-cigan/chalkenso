@@ -83,6 +83,14 @@ check('scripts, handlers, frames and outside links go', !/<script|onload|foreign
 check('its own style stays, minus imports and outside urls', /<style>/.test(file ?? '') && /url\(#g\)/.test(file ?? '') && !/@import/.test(file ?? ''), file);
 check('links inside the file and embedded images stay', /<use href="#m"/.test(file ?? '') && /href="data:image\/png/.test(file ?? ''), file);
 check('empty elements close, as XML wants', /<path d="M0 0L2 1Z"\/>/.test(file ?? ''), file);
+const strokes = sanitizeSvg(
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><path d="M0 0L10 10" stroke="red" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4 2" stroke-dashoffset="1" stroke-miterlimit="4"/></svg>'
+);
+check(
+  'dashed lines keep their dashes, caps and joins',
+  /stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4 2" stroke-dashoffset="1" stroke-miterlimit="4"/.test(strokes ?? ''),
+  strokes
+);
 check('not an SVG: null', sanitizeSvg('<html><body>hi</body></html>') === null && sanitizeSvg('plain text') === null);
 check('nothing left to draw: null', sanitizeSvg('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>') === null);
 check('SVG uploads are told apart', isSvgUpload('image/svg+xml') && isSvgUpload('', 'flow.svg') && !isSvgUpload('image/png', 'flow.png') && !isSvgUpload('image/png', 'x.svg'));

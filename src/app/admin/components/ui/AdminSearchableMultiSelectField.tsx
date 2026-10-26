@@ -1,9 +1,11 @@
 'use client';
 
+import { autoUpdate, computePosition, flip, offset, shift, size } from '@floating-ui/dom';
 import {
   type ReactNode,
   useEffect,
   useId,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -56,6 +58,8 @@ export default function AdminSearchableMultiSelectField({
   const listId = useId();
   const searchId = `${id}-search`;
   const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -100,6 +104,38 @@ export default function AdminSearchableMultiSelectField({
     };
     document.addEventListener('mousedown', onDoc);
     return () => document.removeEventListener('mousedown', onDoc);
+  }, [open]);
+
+  // Keep the list (fixed, so a card or sheet doesn't clip it) against the trigger: below it, or
+  // above when there's no room, as AdminSearchableSelectField does.
+  useLayoutEffect(() => {
+    const trigger = triggerRef.current;
+    const popup = popupRef.current;
+    if (!open || !trigger || !popup) {
+      return;
+    }
+    return autoUpdate(trigger, popup, () => {
+      void computePosition(trigger, popup, {
+        placement: 'bottom-start',
+        strategy: 'fixed',
+        middleware: [
+          offset(4),
+          flip({ padding: 8 }),
+          shift({ padding: 8 }),
+          size({
+            padding: 8,
+            apply({ rects, availableHeight, elements }) {
+              Object.assign(elements.floating.style, {
+                minWidth: `${rects.reference.width}px`,
+                maxHeight: `${Math.max(160, Math.min(availableHeight, 360))}px`,
+              });
+            },
+          }),
+        ],
+      }).then(({ x, y }) => {
+        Object.assign(popup.style, { left: `${x}px`, top: `${y}px`, visibility: 'visible' });
+      });
+    });
   }, [open]);
 
   useEffect(() => {
@@ -178,6 +214,7 @@ export default function AdminSearchableMultiSelectField({
           <input key={value} type="hidden" name={name} value={value} />
         ))}
         <button
+          ref={triggerRef}
           id={id}
           type="button"
           className={cn(styles.trigger, open && styles.triggerOpen)}
@@ -204,7 +241,7 @@ export default function AdminSearchableMultiSelectField({
         </button>
 
         {open ? (
-          <div className={styles.dropdown} role="presentation">
+          <div ref={popupRef} className={styles.dropdown} role="presentation" style={{ visibility: 'hidden' }}>
             <input
               ref={searchInputRef}
               id={searchId}
