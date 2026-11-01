@@ -1,7 +1,7 @@
 // Accounts and email (both editions): an invite emailed from the Team page arrives and works; signing up
 // from it takes a handle; "Forgot your password?" emails a link (the same answer for an unknown email),
-// the link sets a new password once, ends every session and the old password stops working. Needs email
-// to Mailpit (SMTP_HOST set; `yarn mail:up`), the demo seed and a server (yarn dev, or BASE_URL).
+// the link sets a new password once, ends every session and the old password stops working; a new email
+// from Profile, typed with capitals, signs in. Needs email to Mailpit (SMTP_HOST set; `yarn mail:up`), the demo seed and a server (yarn dev, or BASE_URL).
 // node tests/e2e/e2e-accounts.mjs
 import { chromium } from 'playwright-core';
 import { BASE, env, latestEmail, linkIn, mailOn, skipSuite, sql } from './helpers.mjs';
@@ -18,6 +18,7 @@ const check = (name, ok, detail = '') => {
 const quote = (value) => `'${String(value).replace(/'/g, "''")}'`;
 const run = Date.now().toString(36);
 const email = `acct-${run}@example.com`;
+const newEmail = `acct-${run}-new@example.com`;
 const name = `Iva Invited ${run}`;
 const handle = `iva-${run}`;
 const firstPassword = `First-${run}-password`;
@@ -115,11 +116,26 @@ try {
   const again = await newPage();
   await again.goto(resetLink.replace(/^https?:\/\/[^/]+/, BASE));
   check('the reset link works once', (await again.locator('body').innerText()).includes('This link no longer works'));
+
+  // 3. A new email from Profile, typed with capitals: signing in looks addresses up in lowercase.
+  step = 'changing the email';
+  const changing = await newPage();
+  await signIn(changing, email, secondPassword);
+  await changing.goto(`${BASE}/admin/profile`);
+  await changing.locator('[data-testid=profile-email-row]:visible').first().click();
+  const emailSheet = changing.locator('[role=dialog]');
+  await emailSheet.locator('#profile-email').fill(`Acct-${run}-New@Example.com`);
+  await emailSheet.getByRole('button', { name: 'Save', exact: true }).click();
+  await emailSheet.waitFor({ state: 'detached' });
+  check('Profile saves a new email in lowercase', sql(`select count(*) from public.users where email = ${quote(newEmail)}`) === '1');
+  check('signing in works with it, typed as it was', await signIn(await newPage(), `Acct-${run}-New@Example.com`, secondPassword));
+  check('and in lowercase', await signIn(await newPage(), newEmail, secondPassword));
+  check('the old address no longer signs in', !(await signIn(await newPage(), email, secondPassword)));
 } catch (error) {
   check(`unexpected error (at: ${step})`, false, error instanceof Error ? error.message.split('\n')[0] : String(error));
   for (const [index, page] of pages.entries()) await page.screenshot({ path: `tests/e2e/.shots/accounts-fail-${index}.png` }).catch(() => {});
 } finally {
-  sql(`delete from public.users where email = ${quote(email)}`);
+  sql(`delete from public.users where email in (${quote(email)}, ${quote(newEmail)})`);
   sql(`delete from public.user_invites where email = ${quote(email)} or label = ${quote(name)}`);
   await browser.close();
   console.log(`\n${failed ? `${failed} failed` : 'all passed'}`);

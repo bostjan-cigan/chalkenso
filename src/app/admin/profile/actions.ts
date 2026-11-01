@@ -51,7 +51,8 @@ export async function updateProfileDetailsAction(
   const current = await prisma.user.findUnique({ where: { id: session.id }, select: { firstName: true, lastName: true } });
   const firstName = formData.has('firstName') ? String(formData.get('firstName') ?? '').trim() : (current?.firstName ?? '');
   const lastName = formData.has('lastName') ? String(formData.get('lastName') ?? '').trim() : (current?.lastName ?? '');
-  const email = String(formData.get('email') ?? '').trim();
+  // In lowercase, as on signing up: signing in looks the address up in lowercase.
+  const email = String(formData.get('email') ?? '').trim().toLowerCase();
 
   if (formData.has('email') && email && !EMAIL_PATTERN.test(email)) {
     return { ok: false, message: t('emailInvalid') };
