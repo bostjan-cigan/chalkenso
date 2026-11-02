@@ -266,7 +266,9 @@
       "stages": {
         "reading": "Getting the feedback ready…",
         "thinking": "Claude is thinking…",
-        "writing": "Claude is writing changes…"
+        "writing": "Claude is writing changes…",
+        "thinkingAbout": "{count, plural, one {Reading # piece of feedback…} other {Reading # pieces of feedback…}}",
+        "finishing": "Checking the result…"
       },
       "claude": {
         "waiting": "Waiting for your Claude…",
@@ -277,7 +279,10 @@
       "leave": "You can leave this page. The changes wait here when they’re ready.",
       "inClaude": "In your Claude. The changes appear here when it sends them.",
       "send": "Send the message in the Claude tab that opened. The changes appear here when Claude sends them.",
-      "notStarted": "Claude hasn’t started yet. In that chat, turn on the Chalkenso connector (＋ → Connectors) and send the message again."
+      "notStarted": "Claude hasn’t started yet. In that chat, turn on the Chalkenso connector (＋ → Connectors) and send the message again.",
+      "opening": "Opening",
+      "same": "same",
+      "changes": "{count, plural, one {# change} other {# changes}}"
     },
     "stop": "Stop",
     "discard": "Discard",
@@ -430,17 +435,20 @@
       "keepText": "The main course’s lesson stays as it is, and the improvement is done.",
       "keepTextWaiting": "The main course’s lesson stays as it is, the changes waiting there go, and the improvement is done.",
       "kept": "Kept to this group.",
-      "keptDone": "Kept to this group: the improvement is done."
+      "keptDone": "Kept to this group: the improvement is done.",
+      "openSuggestion": "Open the suggestion"
     },
     "addsDiagrams": "{count, plural, one {Adds a diagram} other {Adds # diagrams}}",
     "didntFit": {
-      "row": "Didn’t fit",
+      "row": "Couldn’t be placed",
       "value": "{count, plural, one {# change} other {# changes}} from {group}’s copy",
-      "note": "{count, plural, one {# change} other {# changes}} from {group}’s copy didn’t fit here: this lesson’s text differs there. Make them by hand with Edit section; Didn’t fit shows each one.",
+      "note": "{count, plural, one {# change} other {# changes}} from {group}’s copy couldn’t be placed: this lesson’s text differs there.",
       "before": "In {group}’s copy, before",
       "after": "In {group}’s copy, after",
       "copy": "Copy the new text",
-      "copied": "Copied"
+      "copied": "Copied",
+      "fit": "Fit it with AI",
+      "see": "See them"
     },
     "savedPublished": "Published: learners see the changes",
     "savedDraft": "Saved: learners see the changes when you publish the lesson",
@@ -472,7 +480,7 @@
       "plan": "Plan the changes",
       "ticked": "{count} ticked",
       "writePlan": "Write the plan yourself",
-      "draft": "Draft the changes",
+      "draft": "Write these changes",
       "keepPlan": "Keep the plan as it is",
       "toFix": "{count} to fix",
       "newCount": "{count} new",
@@ -491,7 +499,22 @@
       "otherLesson": "On another lesson",
       "openOtherLesson": "Open that lesson",
       "wholeLesson": "The whole lesson",
-      "finished": "Finished on this lesson"
+      "finished": "Finished on this lesson",
+      "steps": {
+        "label": "Steps of this improvement",
+        "feedback": "Feedback",
+        "plan": "Plan",
+        "changes": "Changes",
+        "publish": "Publish"
+      },
+      "forGroup": "Answers: “{quote}”, in {group}",
+      "changeName": {
+        "reworded": "“{from}” → “{to}”",
+        "added": "New: “{text}”",
+        "removed": "Removed: “{text}”",
+        "rewritten": "Rewritten: “{text}”",
+        "image": "New image"
+      }
     },
     "notes": {
       "row": "Notes for AI",
@@ -505,7 +528,40 @@
       "saving": "Saving…",
       "failed": "The notes weren’t saved. Try again."
     },
-    "backToMap": "Curriculum map"
+    "backToMap": "Curriculum map",
+    "readyTitle": "✓ {count, plural, one {# change ready} other {# changes ready}} · {lesson}",
+    "tryAgain": "Try again",
+    "undoneWithCourse": "Undone: the lesson is as it was. Also taken back from the main course.",
+    "review": {
+      "label": "Review the changes",
+      "position": "{index} of {total}",
+      "sideBySide": "Side by side",
+      "looked": "{count} of {total} looked at",
+      "said": "Change {index} of {total}: {decision, select, keep {kept} other {skipped}}"
+    },
+    "views": {
+      "label": "How the lesson reads",
+      "markup": "Markup",
+      "original": "Original",
+      "final": "Final",
+      "notInOriginal": "Not in the original.",
+      "leftOut": "Left out."
+    },
+    "nearby": {
+      "tag": "Check the place",
+      "note": "This lesson’s text differs a little here, so it went to the nearest match. Skipped until you keep it."
+    },
+    "path": {
+      "label": "Where this improvement goes",
+      "mainCourse": "Main course",
+      "saved": "saved"
+    },
+    "toCourse": {
+      "label": "Also to the main course",
+      "review": "On the main course they wait for your review, and nothing changes there until you publish.",
+      "suggest": "It goes to the main course’s editors as a suggestion.",
+      "only": "Only this group’s copy changes. The main course stays as it is."
+    }
   },
   "mode": {
     "label": "Lesson mode",

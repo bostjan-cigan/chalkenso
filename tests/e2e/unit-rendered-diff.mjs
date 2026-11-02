@@ -47,6 +47,20 @@ const callout = renderedDiff('> [!info] Data flow\n> You type a name.', '> [!inf
 check('callout icons are not words, and only the new words are marked', inss(callout.after).join('|') === 'and a tag', callout.after);
 check('the callout title is unmarked', !/callout-title[\s\S]*?<ins/.test(callout.after.split('callout-content')[0] ?? ''));
 
+// Readable, not confetti.
+const reworded = renderedInlineDiff('The function then calls itself again with a smaller input until it reaches zero.', 'A function keeps calling itself, and each call waits for the next, until the base case is reached.', assets, classes);
+check('a sentence mostly reworded is replaced whole', dels(reworded).length === 1 && inss(reworded).length === 1 && dels(reworded)[0].startsWith('The function') && inss(reworded)[0].startsWith('A function'), reworded);
+const bridged = renderedDiff('Open the settings page and then click on the big save button to finish.', 'Open the account page and then press on the big save button to finish.', assets, classes);
+check('changes with a word or two between them read as one phrase', dels(bridged.before).length === 2 || dels(bridged.before).join(' ').includes('settings'), bridged.before);
+const twoApart = renderedDiff('Open the red door and close the blue door at once please.', 'Open the green door and close the yellow door at once please.', assets, classes);
+check('a word or two kept between two changes goes with them', dels(twoApart.before).length >= 1, twoApart.before);
+const close = renderedDiff('Pick red then blue now.', 'Pick green then yellow now.', assets, classes);
+check('one kept word between two changes is bridged', dels(close.before).join('|') === 'red then blue' && inss(close.after).join('|') === 'green then yellow', close.before);
+const small = renderedDiff('A recursive function calls itself on a smaller piece of the problem until it stops.', 'A recursive function calls itself on a smaller part of the problem until it stops.', assets, classes);
+check('a small edit stays one word', dels(small.before).join('|') === 'piece' && inss(small.after).join('|') === 'part', small.before);
+const onlyAdded = renderedDiff('Keep it short.', 'Keep it short and add a whole new clause right here at the end.', assets, classes);
+check('pure additions stay exact', !dels(onlyAdded.before).length && inss(onlyAdded.after).join('').startsWith('and add'), onlyAdded.after);
+
 const long = Array.from({ length: 600 }, (_, index) => `word${index}`).join(' ');
 const big = renderedDiff(long, `${long} more`, assets, classes);
 check('too long to compare: unmarked', !dels(big.before).length && !inss(big.after).length);

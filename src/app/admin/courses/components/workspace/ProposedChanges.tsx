@@ -20,7 +20,7 @@ const when = (iso: string, locale: Locale) =>
   new Date(iso).toLocaleString(INTL_LOCALES[locale], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
 /** Changes that still need a decision: ones already in the text, or with nowhere to go, don't. */
-export const actionable = (state: ChangeState | undefined) => state === 'clean' || state === 'conflict';
+export const actionable = (state: ChangeState | undefined) => state === 'clean' || state === 'conflict' || state === 'nearby';
 
 /** Paragraphs as learners see them (the learner pages' renderer, so callouts and code look right): new, or struck out. */
 export function Preview({ blocks, assets, removed = false }: { blocks: string[]; assets: Map<string, string>; removed?: boolean }) {

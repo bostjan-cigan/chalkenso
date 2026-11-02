@@ -4,19 +4,19 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useMemo, useRef, useState, useTransition, type ReactNode } from 'react';
-import { TbChevronLeft, TbChevronRight, TbCircleCheck, TbPlus, TbSparkles } from 'react-icons/tb';
+import { TbCheck, TbChevronLeft, TbChevronRight, TbCircleCheck, TbPlus, TbSparkles } from 'react-icons/tb';
 import { AiProposalKind } from '@prisma/client';
 import { INTL_LOCALES, type Locale } from '@/i18n/config';
 import { getPendingImageReferences } from '@/lib/course-markdown';
-import { POLL_MS, QUIET_MS } from '@/lib/ai-draft-progress';
+import { QUIET_MS } from '@/lib/ai-draft-progress';
 import type { LessonDraftView } from '@/lib/ai-drafts';
 import { excerpt } from '@/lib/improvement-label';
 import { feedbackOrder, focusSections, lessonSections, passageHeading, sectionSpan, spliceSpan } from '@/lib/lesson-sections';
 import type { SavedLessonChange } from '@/lib/lesson-changes';
+import { withPlanScope } from '@/lib/plan-scope';
 import {
   discardLessonDraftAction,
   lessonDraftIdsAction,
-  lessonRevisionDraftAction,
   reopenLessonDraftAction,
   startLessonRevisionAction,
   stopLessonRevisionAction,
@@ -25,23 +25,41 @@ import { updateLessonInlineAction } from '../../actions';
 import { undoLessonChangeAction } from '../../lesson-change-actions';
 import { stopUsingFeedbackAction, takeUpFeedbackAction } from '../../comments/actions';
 import { addToImprovementAction } from '../../improvement-actions';
-import { leaveCourseAsItIsAction, workHereAction } from '../../../tasks/actions';
+import { leaveCourseAsItIsAction, updateTaskPlanAction, workHereAction } from '../../../tasks/actions';
 import AdminMenu, { type AdminMenuItem } from '../../../components/ui/AdminMenu';
-import AiWorking from '../../../components/ui/AiWorking';
+import AiWorking, { AiSpinner } from '../../../components/ui/AiWorking';
 import { SheetOpenRow, SheetRow, SheetRows } from '../../../components/ui/Sheet';
+import Switch from '../../../components/ui/Switch';
 import ConfirmDialog from '../ConfirmDialog';
 import LessonModeSwitch from '../LessonModeSwitch';
-import { applyChanges, applyOnto, changeSteps, changesNotIn, placeChanges, plainText, proposeChanges, splitBlocks, stepKind, type ChangeState, type ProposedChange } from '../workspace/revision';
+import {
+  applyChanges,
+  applyOnto,
+  changeSteps,
+  changesNotIn,
+  nameOfChange,
+  normalise,
+  placeChanges,
+  placeInstruction,
+  plainText,
+  proposeChanges,
+  splitBlocks,
+  stepKind,
+  type ChangeState,
+  type ProposedChange,
+} from '../workspace/revision';
 import CompareSheet, { editableOf } from '../workspace/CompareSheet';
 import { actionable, type ChangeDecision } from '../workspace/ProposedChanges';
 import { HANDOFF_STARTED_EVENT, handoffDraft, type HandoffStartedDetail } from '../workspace/events';
+import { useDraftProgress } from '../workspace/useDraftProgress';
 import { useHandoffStarted } from '../workspace/useHandoffStarted';
 import type { UploadedLessonAsset } from '../../types';
 import WhatChanged from '../../../components/improvements/WhatChanged';
-import { ChangeRow, FeedbackCard, NavRow } from './Column';
+import { ChangeRow, FeedbackCard, NavRow, StepLine } from './Column';
 import type { DoneImprovement, ViewFeedback, ViewImprovement } from './data';
 import FeedbackDetail from './FeedbackDetail';
-import LessonPart, { normalBlock, type PassageMark } from './LessonPart';
+import ImprovementPath, { type PathStop } from './ImprovementPath';
+import LessonPart, { normalBlock, type PassageMark, type ReviewView } from './LessonPart';
 import NotesForAi from './NotesForAi';
 import { PlanText, usePlanStep } from './PlanStep';
 import TextEditor, { type TextEditorHandle } from './TextEditor';
@@ -103,6 +121,12 @@ type RowState = { text: string; tone: 'next' | 'working' | 'you' | 'done' | 'qui
 
 /** How often the page asks whether a draft arrived meanwhile. */
 const ARRIVALS_MS = 5000;
+
+/** A draft just asked for, shown at once: the server's answer fills in which one it is. */
+const pendingDraft = (): LessonDraftView => {
+  const now = new Date().toISOString();
+  return { id: '', state: 'working', stage: 'reading', text: '', live: null, error: null, startedAt: now, by: null, source: 'app', markdown: '', base: '', diagrams: [], summary: '', at: now, taskId: null, noteIds: null, fromGroup: null, check: [] };
+};
 
 export default function ImprovementsView({
   lesson,
@@ -219,6 +243,12 @@ export default function ImprovementsView({
   const [decisions, setDecisions] = useState<Record<string, ChangeDecision>>({});
   // Suggestions rewritten by hand (`<draft>:<change>`): labelled as the person's own.
   const [edited, setEdited] = useState<Set<string>>(new Set());
+  // Changes the person has decided on (`<draft>:<change>`), in the lesson or from their rows.
+  const [looked, setLooked] = useState<Set<string>>(new Set());
+  const [reviewView, setReviewView] = useState<ReviewView>('markup');
+  const [goToStep, setGoToStep] = useState<{ index: number; at: number } | null>(null);
+  // Where it goes, as just chosen at Publish, until the page brings it back.
+  const [scopeChosen, setScopeChosen] = useState<Record<string, boolean>>({});
   // After a save the page reloads its improvements: start again from the saved lesson.
   useEffect(() => {
     setCurrent(lesson.markdown);
@@ -243,7 +273,13 @@ export default function ImprovementsView({
       if (!draft || draft.state !== 'ready') continue;
       const base = draft.base || current;
       const changes = proposeChanges(base, draft.markdown);
-      map.set(key, { draft, base, changes, states: placeChanges(base, current, changes) });
+      const states = placeChanges(base, current, changes);
+      // Carried from a group's copy to where the text differs a little: to look at before keeping.
+      const check = new Set(draft.check);
+      for (const change of changes) {
+        if (states[change.id] === 'clean' && [...change.after, ...(change.kind === 'remove' ? change.before : [])].some((block) => check.has(normalise(block)))) states[change.id] = 'nearby';
+      }
+      map.set(key, { draft, base, changes, states });
     }
     return map;
     // draftOf reads the overrides and the drafts the page brought.
@@ -264,30 +300,55 @@ export default function ImprovementsView({
   const decisionOf = (review: Review, change: ProposedChange): ChangeDecision =>
     decisions[`${review.draft.id}:${change.id}`] ?? (review.states[change.id] === 'clean' ? 'keep' : 'skip');
 
-  // While AI writes changes: how far each draft is, about once a second.
-  const workingKeys = improvements.map((candidate) => `improvement:${candidate.id}`).filter((key) => draftOf(key)?.state === 'working');
-  const workingKey = workingKeys.map((key) => `${key}=${draftOf(key)?.id}`).join(',');
+  // A draft going on from one that waits (what couldn't be placed, fitted with AI): what comes back
+  // if it's stopped or fails. And how to start each again.
+  const restores = useRef(new Map<string, LessonDraftView>());
+  const starts = useRef(new Map<string, () => void>());
+  const settleWorking = (key: string) => {
+    const restored = restores.current.get(key) ?? null;
+    restores.current.delete(key);
+    setOverrides((all) => ({ ...all, [key]: restored }));
+  };
+
+  // With the page in another tab, its title says when the changes are ready.
+  const titleBefore = useRef<string | null>(null);
   useEffect(() => {
-    if (!workingKey) return;
-    let cancelled = false;
-    const poll = async () => {
-      if (document.visibilityState !== 'visible') return;
-      for (const pair of workingKey.split(',')) {
-        const [key, id] = pair.split('=');
-        const next = await lessonRevisionDraftAction(id);
-        if (cancelled) return;
-        setOverrides((all) => ({ ...all, [key]: next && next.state !== 'failed' ? next : null }));
-        if (next?.state === 'failed') setNotice({ text: next.error ?? t('failed') });
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible' || titleBefore.current === null) return;
+      document.title = titleBefore.current;
+      titleBefore.current = null;
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, []);
+  const sayReady = (ready: LessonDraftView) => {
+    if (document.visibilityState === 'visible') return;
+    titleBefore.current ??= document.title;
+    document.title = t('readyTitle', { count: changeSteps(proposeChanges(ready.base || current, ready.markdown)).length, lesson: lesson.title });
+  };
+
+  // While AI writes changes: how far each draft is, about once a second.
+  const workingDrafts = [...improvements.map((candidate) => `improvement:${candidate.id}`), ...looseDrafts.map((draft) => `draft:${draft.id}`)].flatMap((key) => {
+    const draft = draftOf(key);
+    return draft?.state === 'working' && draft.id ? [{ key, id: draft.id }] : [];
+  });
+  useDraftProgress<LessonDraftView>(
+    workingDrafts.map((one) => one.id),
+    (id, next) => {
+      const key = workingDrafts.find((one) => one.id === id)?.key;
+      if (!key) return;
+      if (next?.state === 'failed') {
+        settleWorking(key);
+        setNotice({ text: next.error ?? t('failed'), retry: starts.current.get(key) });
+        return;
       }
-    };
-    const timer = window.setInterval(() => void poll(), POLL_MS);
-    return () => {
-      cancelled = true;
-      window.clearInterval(timer);
-    };
-    // Following other drafts restarts the polling.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workingKey]);
+      if (next?.state === 'ready') {
+        restores.current.delete(key);
+        sayReady(next);
+      }
+      setOverrides((all) => ({ ...all, [key]: next }));
+    }
+  );
 
   // Changes handed to the person's own Claude ("Apply the plan in your Claude ↗"): followed here like
   // changes drafted here, and Claude's draft is reviewed in place when it arrives (an earlier hand-off
@@ -299,7 +360,7 @@ export default function ImprovementsView({
     if (earlier?.state === 'working' && earlier.id !== detail.pending.id) void stopLessonRevisionAction(earlier.id);
     setOverrides((all) => ({
       ...all,
-      [key]: { ...handoffDraft(detail), markdown: '', base: '', diagrams: [], summary: '', at: detail.pending.createdAt, taskId: detail.taskId, noteIds: null },
+      [key]: { ...handoffDraft(detail), markdown: '', base: '', diagrams: [], summary: '', at: detail.pending.createdAt, taskId: detail.taskId, noteIds: null, fromGroup: null, check: [] },
     }));
   });
 
@@ -366,7 +427,14 @@ export default function ImprovementsView({
   }, [lesson.id, taskKey, router]);
 
   // --- A line under the actions, sometimes with Undo ------------------------------------------
-  const [notice, setNotice] = useState<{ text: string; undo?: () => void; see?: () => void; open?: { href: string; label: string } } | null>(null);
+  const [notice, setNotice] = useState<{
+    text: string;
+    undo?: () => void;
+    see?: () => void;
+    retry?: () => void;
+    /** What a save did for the main course, when the column doesn't say it itself. */
+    course?: { text: string; open?: { href: string; label: string } };
+  } | null>(null);
   const [pending, startTransition] = useTransition();
 
   // --- Each row's state, in a few words, as a pill whose colour says what it asks of you --------
@@ -420,9 +488,14 @@ export default function ImprovementsView({
   const [editing, setEditing] = useState<{ key: string; span: { start: number; end: number }; text: string } | null>(null);
   const sectionEditor = useRef<TextEditorHandle>(null);
 
-  const draftChanges = (target: ViewImprovement) =>
+  const draftChanges = (target: ViewImprovement) => {
+    const key = `improvement:${target.id}`;
+    restores.current.delete(key);
+    starts.current.set(key, () => draftChanges(target));
+    setNotice(null);
+    // Shown at once, outside the transition: its updates only show once it's over.
+    setOverrides((all) => ({ ...all, [key]: pendingDraft() }));
     startTransition(async () => {
-      setNotice(null);
       const result = await startLessonRevisionAction({
         curriculumVersionId: lesson.curriculumVersionId,
         lessonId: lesson.id,
@@ -434,11 +507,48 @@ export default function ImprovementsView({
         baseRevision: revision,
       });
       if (!result.ok) {
+        setOverrides((all) => ({ ...all, [key]: null }));
         setNotice({ text: result.message });
         return;
       }
-      setOverrides((all) => ({ ...all, [`improvement:${target.id}`]: result.draft }));
+      setOverrides((all) => ({ ...all, [key]: result.draft }));
     });
+  };
+
+  /**
+   * What couldn't be placed from a group's copy goes to AI: the whole lesson, from the changes waiting
+   * here if there are any (they stay reviewable, and wait on if this is stopped or fails).
+   */
+  const fitWithAi = (target: ViewImprovement, left: { group: string; steps: ProposedChange[][] }) => {
+    const key = `improvement:${target.id}`;
+    const waiting = draftOf(key);
+    const previous = waiting?.state === 'ready' ? waiting : null;
+    if (previous) restores.current.set(key, previous);
+    else restores.current.delete(key);
+    starts.current.set(key, () => fitWithAi(target, left));
+    setNotice(null);
+    setOverrides((all) => ({ ...all, [key]: pendingDraft() }));
+    startTransition(async () => {
+      const result = await startLessonRevisionAction({
+        curriculumVersionId: lesson.curriculumVersionId,
+        lessonId: lesson.id,
+        title: lesson.title,
+        markdown: current,
+        instruction: placeInstruction(left.steps, left.group),
+        noteIds: target.noteIds,
+        taskId: target.id,
+        baseRevision: revision,
+        whole: true,
+        continues: previous?.id ?? null,
+      });
+      if (!result.ok) {
+        settleWorking(key);
+        setNotice({ text: result.message });
+        return;
+      }
+      setOverrides((all) => ({ ...all, [key]: result.draft }));
+    });
+  };
 
   /** "Draft again with it": the changes waiting go, and AI drafts them for all the feedback used now. */
   const draftAgain = (target: ViewImprovement, draft: LessonDraftView) => {
@@ -461,7 +571,10 @@ export default function ImprovementsView({
     const markdown = applyChanges(found.base, rewritten, () => true);
     const written = blocks.join('\n\n');
     const mine = proposeChanges(found.base, markdown).find((candidate) => candidate.after.join('\n\n') === written);
-    if (mine) setEdited((all) => new Set(all).add(`${found.draft.id}:${mine.id}`));
+    if (mine) {
+      setEdited((all) => new Set(all).add(`${found.draft.id}:${mine.id}`));
+      setLooked((all) => new Set(all).add(`${found.draft.id}:${mine.id}`));
+    }
     setOverrides((all) => ({ ...all, [key]: { ...found.draft, markdown, base: found.base } }));
   };
 
@@ -546,7 +659,6 @@ export default function ImprovementsView({
         lesson.status === 'PUBLISHED' ? t('savedPublished') : t('savedDraft'),
         resolved ? t('feedbackDone', { count: resolved }) : waits ? t('feedbackWaits') : '',
         result.next ? t('savedNext', { count: result.next.count }) : '',
-        course?.kind === 'drafted' ? t('courseWaits', { count: course.placed }) : course?.kind === 'suggested' ? t('courseSuggested') : course?.kind === 'differs' ? t('courseDiffers') : '',
       ]
         .filter(Boolean)
         .join(' · '),
@@ -557,8 +669,13 @@ export default function ImprovementsView({
             show(changes.some((change) => change.task?.id === firstSaved) ? { kind: 'finished', id: firstSaved } : { kind: 'improvement', id: firstSaved });
           }
         : undefined,
-      // Where the main course's part goes on: its lesson, with the changes waiting there (or to do there).
-      open: course && course.kind !== 'suggested' ? { href: course.href, label: t('courseLeft.open') } : undefined,
+      // Where the main course's part goes on: its lesson, with the changes waiting there (or to do
+      // there), or the suggestion made for those who can edit it.
+      course: !course
+        ? undefined
+        : course.kind === 'suggested'
+          ? { text: t('courseSuggested'), open: { href: `/admin/tasks/${course.taskId}`, label: t('courseLeft.openSuggestion') } }
+          : { text: course.kind === 'drafted' ? t('courseWaits', { count: course.placed }) : t('courseDiffers'), open: { href: course.href, label: t('courseLeft.open') } },
     });
     router.refresh();
     return true;
@@ -570,10 +687,10 @@ export default function ImprovementsView({
       setNotice(null);
       const result = await saveLesson(before, null, savedRevision);
       if (!result) return;
-      await Promise.all(changes.map((change) => undoLessonChangeAction(change.id, change.task?.from ?? null)));
+      const undone = await Promise.all(changes.map((change) => undoLessonChangeAction(change.id, change.task?.from ?? null)));
       setCurrent(before);
       setRevision(result.revision ?? savedRevision + 1);
-      setNotice({ text: t('undone') });
+      setNotice({ text: undone.some((one) => one.tookBack) ? t('undoneWithCourse') : t('undone') });
       router.refresh();
     });
 
@@ -650,6 +767,26 @@ export default function ImprovementsView({
       setNotice({ text: moved ? t('courseLeft.keptDone') : t('courseLeft.kept') });
       router.refresh();
     });
+  /** "Also to the main course" at Publish: the plan's choice, changed here. Changes already waiting there ask first. */
+  const goesToCourse = (target: ViewImprovement) => scopeChosen[target.id] ?? target.scope === 'group and core';
+  const chooseCourse = (target: ViewImprovement) => {
+    const on = !goesToCourse(target);
+    const course = target.others.find((other) => other.course);
+    if (!on && course && course.phase !== 'toChange') {
+      setConfirmKeep({ target, waiting: true });
+      return;
+    }
+    setScopeChosen((all) => ({ ...all, [target.id]: on }));
+    startTransition(async () => {
+      const result = await updateTaskPlanAction(target.id, withPlanScope(target.plan, on ? 'group and core' : 'group only'));
+      if (!result.ok) {
+        setScopeChosen((all) => ({ ...all, [target.id]: !on }));
+        setNotice({ text: result.message });
+        return;
+      }
+      router.refresh();
+    });
+  };
   const workHere = (target: ViewImprovement) =>
     startTransition(async () => {
       await workHereAction(target.id);
@@ -774,14 +911,53 @@ export default function ImprovementsView({
   };
 
   // --- Pieces of the column -----------------------------------------------------------------------
+  /** A group's improvement that goes on to the main course: its two places, where each stands. */
+  const pathOf = (target: ViewImprovement): [PathStop, PathStop] | null => {
+    if (target.group === null) return null;
+    const groupName = t('copyOf', { group: target.group });
+    if (target.choosesScope) {
+      const course = target.others.find((other) => other.course);
+      if (!course || !goesToCourse(target)) return null;
+      return [
+        { name: groupName, state: stateOf(target).text, here: true },
+        { name: t('path.mainCourse'), state: course.state, href: course.href, done: course.done },
+      ];
+    }
+    const copy = target.others.find((other) => !other.course);
+    return [
+      { name: groupName, state: copy?.state ?? t('path.saved'), href: copy?.href, done: copy?.done ?? Boolean(target.fromCopy) },
+      { name: t('path.mainCourse'), state: stateOf(target).text, here: true },
+    ];
+  };
   const published = lesson.status === 'PUBLISHED';
   /** The foot's end while reviewing: Save (Publish, on a published lesson) the changes kept, with why it can't yet. */
-  const reviewActions = (found: Review, onApply: () => void) => {
+  const reviewActions = (found: Review, onApply: () => void, target?: ViewImprovement) => {
     const open = found.changes.filter((change) => actionable(found.states[change.id]));
     const kept = open.filter((change) => decisionOf(found, change) === 'keep').length;
     if (!open.length) return <p className={styles.footHint}>{t('nothingToApply')}</p>;
+    // A group's copy: where they go from here, said where it's decided.
+    const going = target ? goesToCourse(target) : false;
+    const courseChoice =
+      target?.choosesScope && target.courseReachable && target.canWork ? (
+        <>
+          <div className={styles.courseChoice}>
+            <span>{t('toCourse.label')}</span>
+            <Switch on={going} label={t('toCourse.label')} onChange={() => chooseCourse(target)} disabled={pending} testId="also-course" />
+          </div>
+          <p className={styles.footHint} data-testid="course-hint">
+            {!going ? t('toCourse.only') : target.canEditCourse ? t('toCourse.review') : t('toCourse.suggest')}
+          </p>
+        </>
+      ) : null;
     // Nothing kept: what to do instead of a button that does nothing.
-    if (!kept) return <p className={styles.footHint}>{t('keepOne')}</p>;
+    if (!kept) {
+      return (
+        <>
+          <p className={styles.footHint}>{t('keepOne')}</p>
+          {courseChoice}
+        </>
+      );
+    }
     return (
       <>
         <button
@@ -798,12 +974,18 @@ export default function ImprovementsView({
               ? t(published ? 'publishAll' : 'saveAll', { count: kept })
               : t(published ? 'publishSome' : 'saveSome', { count: kept, total: open.length })}
         </button>
-        <p className={styles.footHint}>{published ? t('publishHint') : t('saveHint')}</p>
+        {/* The foot stays short: where they go from here says what matters at this step. */}
+        {courseChoice ?? <p className={styles.footHint}>{published ? t('publishHint') : t('saveHint')}</p>}
       </>
     );
   };
 
   /** The changes as rows, numbered as their pins in the lesson: a tick to keep each, › to open it side by side. */
+  const nameOfStep = (step: ProposedChange[]) => {
+    const name = nameOfChange(step);
+    return name.kind === 'reworded' ? tc('changeName.reworded', { from: name.from, to: name.to }) : tc(`changeName.${name.kind}`, { text: name.text });
+  };
+  const lookedAt = (found: Review, change: ProposedChange) => looked.has(`${found.draft.id}:${change.id}`);
   const changesSection = (found: Review) => (
     <section className={styles.group} aria-label={tc('changesTitle')} data-testid="step-changes">
       <h3 className={styles.groupTitle}>{tc('changesTitle')}</h3>
@@ -820,54 +1002,92 @@ export default function ImprovementsView({
             <ChangeRow
               key={step[0].id}
               number={index + 1}
-              label={step[0].section ? `${kind} · ${step[0].section}` : kind}
-              state={states[0] === 'gone' ? t('gone') : states[0] === 'done' ? t('alreadyIn') : states.includes('conflict') ? t('conflict') : null}
+              label={mine ? kind : nameOfStep(step)}
+              section={step[0].section}
+              state={states[0] === 'gone' ? t('gone') : states[0] === 'done' ? t('alreadyIn') : states.includes('conflict') ? t('conflict') : states.includes('nearby') ? t('nearby.tag') : null}
               keep={keep}
               current={reading === index}
               keepLabel={tc('keepChange')}
               openLabel={t('pinLabel', { index: index + 1, total: reviewSteps.length, kind })}
-              onToggle={() => setDecisions((all) => ({ ...all, ...Object.fromEntries(choosable.map((change) => [`${found.draft.id}:${change.id}`, keep ? 'skip' : 'keep'])) }))}
-              onOpen={() => setComparing(index)}
+              onToggle={() => {
+                setDecisions((all) => ({ ...all, ...Object.fromEntries(choosable.map((change) => [`${found.draft.id}:${change.id}`, keep ? 'skip' : 'keep'])) }));
+                setLooked((all) => new Set(Array.from(all).concat(choosable.map((change) => `${found.draft.id}:${change.id}`))));
+              }}
+              onOpen={() => {
+                setGoToStep({ index, at: Date.now() });
+                setShowColumn(false);
+              }}
             />
           );
         })}
       </ul>
+      {(() => {
+        const open = reviewSteps.filter((step) => step.some((change) => actionable(found.states[change.id])));
+        const seen = open.filter((step) => step.filter((change) => actionable(found.states[change.id])).every((change) => lookedAt(found, change))).length;
+        return open.length > 1 ? (
+          <p className={styles.lookedAt} data-testid="looked-at">
+            {t('review.looked', { count: seen, total: open.length })}
+          </p>
+        ) : null;
+      })()}
     </section>
   );
 
   /** AI writing the changes, here or in someone's own Claude: what it's doing, for how long, how much is written. */
   const workingBlock = (key: string, draft: LessonDraftView) => {
     const claude = draft.source === 'claude';
+    const feedbackCount = improvements.find((candidate) => `improvement:${candidate.id}` === key)?.feedback.length ?? 0;
     const label = claude
       ? draft.stage === 'waiting'
         ? t(draft.by ? 'working.claude.waitingOther' : 'working.claude.waiting')
         : t(draft.stage === 'reading' ? 'working.claude.reading' : 'working.claude.writing')
-      : t(`working.stages.${draft.stage === 'waiting' ? 'reading' : draft.stage}`);
-    const share = draft.stage === 'writing' ? draft.share : null;
+      : draft.stage === 'thinking' && feedbackCount
+        ? t('working.stages.thinkingAbout', { count: feedbackCount })
+        : t(`working.stages.${draft.stage === 'waiting' ? 'reading' : draft.stage}`);
     const quiet = Date.now() - new Date(draft.startedAt).getTime() > QUIET_MS;
+    const live = !claude ? draft.live : null;
+    const writing = live?.sections.some((section) => section.state === 'writing');
     return (
       <div className={styles.working}>
         <AiWorking
           label={label}
           startedAt={draft.startedAt}
           timeLabel={(time) => t('working.elapsed', { time })}
-          meta={[draft.by ? t('working.startedBy', { name: draft.by }) : null, share !== null ? t('working.share', { percent: Math.round(share * 100) }) : null]}
-          share={share}
+          meta={[draft.by ? t('working.startedBy', { name: draft.by }) : null]}
+          still={writing}
           detail={!claude ? t('working.leave') : draft.stage === 'waiting' ? (quiet ? t('working.notStarted') : t('working.send')) : t('working.inClaude')}
           actions={
-            <button
-              type="button"
-              className={workspace.ghostButton}
-              onClick={() => {
-                void stopLessonRevisionAction(draft.id);
-                setOverrides((all) => ({ ...all, [key]: null }));
-              }}
-            >
-              {t('working.stop')}
-            </button>
+            draft.id ? (
+              <button
+                type="button"
+                className={workspace.ghostButton}
+                onClick={() => {
+                  void stopLessonRevisionAction(draft.id);
+                  settleWorking(key);
+                }}
+              >
+                {t('working.stop')}
+              </button>
+            ) : null
           }
           testId="changes-working"
-        />
+          stageTestId="changes-stage"
+        >
+          {live?.summary ? <p className={styles.liveSummary} data-testid="live-summary">{live.summary}</p> : null}
+          {live?.sections.length ? (
+            <ul className={styles.liveSections} data-testid="live-sections">
+              {live.sections.map((section, index) => (
+                <li key={`${section.heading}${index}`} className={styles.liveSection} data-state={section.state} data-testid="live-section">
+                  <span className={styles.liveMark}>
+                    {section.state === 'done' ? <TbCheck aria-hidden size={14} strokeWidth={3} /> : section.state === 'writing' ? <AiSpinner /> : <span className={styles.liveTodo} />}
+                  </span>
+                  <span className={styles.liveName}>{section.heading ?? t('working.opening')}</span>
+                  {section.state === 'done' ? <span className={styles.liveCount}>{section.changes ? t('working.changes', { count: section.changes }) : t('working.same')}</span> : null}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </AiWorking>
       </div>
     );
   };
@@ -992,6 +1212,27 @@ export default function ImprovementsView({
       target.feedback.length && (step === 'decide' || step === 'planning' || step === 'planned' || step === 'stale') ? (
         <NotesForAi key={`${target.id}:${target.notes}`} taskId={target.id} notes={target.notes} planned={Boolean(target.plan)} canEdit={target.canWork} />
       ) : null;
+    // The group's copy and the main course's lesson are on the path; any others are listed.
+    const otherPlaces = pathOf(target) ? target.others.filter((other) => !other.course && (target.choosesScope || other !== target.others.find((one) => !one.course))) : target.others;
+    // What couldn't be placed from a group's copy: to AI, or by hand.
+    const leftBlock = left ? (
+      <section className={styles.leftBlock} aria-label={t('didntFit.row')} data-testid="didnt-fit-block">
+        <h3 className={styles.groupTitle}>{t('didntFit.row')}</h3>
+        <p className={styles.quiet} data-testid="didnt-fit-note">
+          {t('didntFit.note', { count: left.steps.length, group: left.group })}
+        </p>
+        <div className={styles.leftActions}>
+          {aiEnabled && target.canWork ? (
+            <button type="button" className={step === 'review' ? workspace.ghostButton : workspace.primaryButton} disabled={pending} onClick={() => fitWithAi(target, left)} data-testid="fit-with-ai">
+              <TbSparkles aria-hidden size={16} /> {t('didntFit.fit')}
+            </button>
+          ) : null}
+          <button type="button" className={workspace.ghostButton} onClick={() => setComparingLeft({ taskId: target.id, index: 0 })} data-testid="didnt-fit">
+            {t('didntFit.see')}
+          </button>
+        </div>
+      </section>
+    ) : null;
     const rows = (
       <SheetRows testId="context-rows">
         {step === 'review' || step === 'drafting' || step === 'handEdit' || step === 'course' || step === 'vault' ? (
@@ -1001,23 +1242,15 @@ export default function ImprovementsView({
         ) : null}
         <SheetOpenRow label={tc('feedback')} value={feedbackValue} onClick={() => show({ kind: 'used', of: own ? null : target.id })} testId="step-why" />
         {notesRow}
-        {left ? (
-          <SheetOpenRow
-            label={t('didntFit.row')}
-            value={t('didntFit.value', { count: left.steps.length, group: left.group })}
-            onClick={() => setComparingLeft({ taskId: target.id, index: 0 })}
-            testId="didnt-fit"
-          />
-        ) : null}
         {target.savedHere && target.record?.saved.length && step !== 'review' ? (
           <SheetRow label={tr('savedSoFar')} value={t('changeCount', { count: target.record.saved.reduce((sum, saved) => sum + (saved.changes?.length ?? 0), 0) })} testId="saved-so-far">
             <WhatChanged taskId={target.id} record={target.record} hereLessonId={lesson.id} assets={assets} />
           </SheetRow>
         ) : null}
-        {target.others.length ? (
-          <SheetRow label={t('otherLessons')} value={target.others.length > 1 ? t('otherCount', { count: target.others.length }) : `${target.others[0].label} · ${target.others[0].state}`}>
+        {otherPlaces.length ? (
+          <SheetRow label={t('otherLessons')} value={otherPlaces.length > 1 ? t('otherCount', { count: otherPlaces.length }) : `${otherPlaces[0].label} · ${otherPlaces[0].state}`}>
             <ul className={styles.others}>
-              {target.others.map((other, index) => (
+              {otherPlaces.map((other, index) => (
                 <li key={`${other.label}${index}`}>
                   {other.href ? <Link href={other.href}>{other.label}</Link> : other.label} <span className={styles.quiet}>· {other.state}</span>
                 </li>
@@ -1067,9 +1300,10 @@ export default function ImprovementsView({
             {rows}
             {laterNote}
             {found ? changesSection(found) : null}
+            {leftBlock}
           </>
         );
-        foot = found ? reviewActions(found, () => apply(found, target.id, found.draft.noteIds ?? target.noteIds)) : null;
+        foot = found ? reviewActions(found, () => apply(found, target.id, found.draft.noteIds ?? target.noteIds), target) : null;
         break;
       case 'drafting':
         body = (
@@ -1179,11 +1413,7 @@ export default function ImprovementsView({
           <>
             {planSection}
             {rows}
-            {left ? (
-              <p className={styles.didntFitNote} data-testid="didnt-fit-note">
-                {t('didntFit.note', { count: left.steps.length, group: left.group })}
-              </p>
-            ) : null}
+            {leftBlock}
             {own ? otherWork : null}
           </>
         );
@@ -1218,23 +1448,20 @@ export default function ImprovementsView({
           );
           break;
         }
-        // What a group's copy did, left to do here by hand: Edit section leads, AI is the other way.
-        const drafts = aiEnabled ? (
-          <button type="button" className={byHand ? workspace.textButton : workspace.primaryButton} disabled={pending} onClick={() => draftChanges(target)} data-testid="draft-changes">
-            {byHand ? null : <TbSparkles aria-hidden size={16} />} {tc('draft')}
+        // What a group's copy did, left to do here: Fit it with AI leads (above), Edit section is the other way.
+        const drafts = aiEnabled && !byHand ? (
+          <button type="button" className={workspace.primaryButton} disabled={pending} onClick={() => draftChanges(target)} data-testid="draft-changes">
+            <TbSparkles aria-hidden size={16} /> {tc('draft')}
           </button>
         ) : null;
         const handEdit = (
-          <button type="button" className={byHand || !aiEnabled ? workspace.primaryButton : workspace.textButton} onClick={startHandEdit} data-testid="edit-yourself">
+          <button type="button" className={!aiEnabled ? workspace.primaryButton : workspace.textButton} onClick={startHandEdit} data-testid="edit-yourself">
             {editLabel}
           </button>
         );
         foot =
-          byHand || !aiEnabled ? (
-            <>
-              {handEdit}
-              {drafts ? <p className={styles.footHint}>{drafts}</p> : null}
-            </>
+          !aiEnabled || !drafts ? (
+            <p className={styles.footHint}>{handEdit}</p>
           ) : (
             <>
               {drafts}
@@ -1267,7 +1494,7 @@ export default function ImprovementsView({
         <>
           <div className={styles.paneHead}>
             <h2 className={styles.itemTitle}>{subject.label}</h2>
-            <p className={styles.subtitle}>{[subject.whereLabel, inVault(subject) ? t('inVault') : ''].filter(Boolean).join(' · ')}</p>
+            <p className={styles.subtitle}>{[pathOf(subject) ? '' : subject.whereLabel, inVault(subject) ? t('inVault') : ''].filter(Boolean).join(' · ')}</p>
           </div>
           {parts.body}
         </>
@@ -1400,17 +1627,30 @@ export default function ImprovementsView({
   /** Under a change opened side by side: the feedback whose passage is in its section. */
   const answers = (step: ProposedChange[]) => {
     if (!review || !subject) return null;
-    const matching = subject.feedback.filter((one) => one.passage && !one.lessonHref && passageHeading(review.base, one.passage) === step[0].section);
+    // Changes carried from a group's copy answer the feedback given there.
+    const group = review.draft.fromGroup ?? subject.fromCopy?.group ?? null;
+    const matching = subject.feedback.filter((one) => one.passage && (group !== null || !one.lessonHref) && passageHeading(review.base, one.passage) === step[0].section);
     if (!matching.length) return null;
     const quote = excerpt(matching[0].body || matching[0].passage, 90);
+    if (group !== null) return tc('forGroup', { quote, group });
     return matching.length > 1 ? tc('forMore', { quote, count: matching.length - 1 }) : tc('for', { quote });
   };
   const working = draftOf(subjectKey)?.state === 'working';
+  const writingSection = working ? draftOf(subjectKey)?.live?.sections.find((section) => section.state === 'writing') : undefined;
   const lessonPart = (
     <div className={styles.part} data-testid="lesson-part" data-working={working ? 'true' : undefined}>
       {reviewing || editing ? (
         <div className={styles.partHead}>
           <span className={styles.label}>{reviewing ? t('proposed') : focus.length ? t('editSection') : t('editLesson')}</span>
+          {reviewing && !editing ? (
+            <div className={workspace.segmented} role="group" aria-label={t('views.label')} data-testid="review-view">
+              {(['markup', 'original', 'final'] as const).map((view) => (
+                <button key={view} type="button" aria-pressed={reviewView === view} className={reviewView === view ? workspace.segmentActive : workspace.segment} onClick={() => setReviewView(view)}>
+                  {t(`views.${view}`)}
+                </button>
+              ))}
+            </div>
+          ) : null}
         </div>
       ) : null}
       {editing && editing.key === subjectKey ? (
@@ -1419,15 +1659,27 @@ export default function ImprovementsView({
         <LessonPart
           text={shownText}
           focus={deciding ? [] : focus}
+          writing={writingSection ? writingSection.heading : undefined}
+          view={reviewView}
+          goToStep={goToStep}
           changes={
             reviewing && review
               ? {
                   list: review.changes,
                   states: review.states,
                   decisionOf: (change) => decisionOf(review, change),
-                  onDecide: (change, value) => setDecisions((all) => ({ ...all, [`${review.draft.id}:${change.id}`]: value })),
+                  onDecide: (change, value) => {
+                    setDecisions((all) => ({ ...all, [`${review.draft.id}:${change.id}`]: value }));
+                    setLooked((all) => new Set(all).add(`${review.draft.id}:${change.id}`));
+                  },
                   onEdit: (change, text) => editChange(subjectKey, review, change, text),
                   isEdited: (change) => edited.has(`${review.draft.id}:${change.id}`),
+                  isLooked: (change) => lookedAt(review, change),
+                  // Every change decided: on to Publish.
+                  onAllLooked: () => {
+                    setShowColumn(true);
+                    requestAnimationFrame(() => columnsRef.current?.querySelector<HTMLElement>('[data-testid=apply-improvement]')?.focus());
+                  },
                 }
               : null
           }
@@ -1455,6 +1707,11 @@ export default function ImprovementsView({
           : working
             ? t('state.writing')
             : t('planLabel');
+
+  // Where the improvement shown is, at the column's head.
+  const STEP_OF: Partial<Record<typeof phase, number>> = { decide: 0, planning: 1, planned: 1, stale: 1, drafting: 2, handEdit: 2, review: 2, course: 3 };
+  const stepNow = subject && onSteps ? (STEP_OF[phase] ?? null) : null;
+  const shownPath = subject && onSteps ? pathOf(subject) : null;
 
   // --- Layout ----------------------------------------------------------------------------------
   // The column fills the window from where the view starts (all of it once scrolled past) to where
@@ -1532,15 +1789,30 @@ export default function ImprovementsView({
             {menu.length ? <AdminMenu items={menu} /> : null}
           </div>
           <div className={styles.columnBody}>
+            {stepNow !== null ? <StepLine steps={[tc('steps.feedback'), tc('steps.plan'), tc('steps.changes'), tc('steps.publish')]} now={stepNow} label={tc('steps.label')} /> : null}
+            {shownPath ? <ImprovementPath stops={shownPath} label={t('path.label')} /> : null}
             {notice ? (
               <p className={styles.notice} role="status" data-testid="improvements-notice">
                 {notice.text}
-                {notice.open ? (
+                {notice.course && phase !== 'course' ? (
+                  <>
+                    {` · ${notice.course.text}`}
+                    {notice.course.open ? (
+                      <>
+                        {' '}
+                        <Link href={notice.course.open.href} className={workspace.textButton} data-testid="notice-open-course">
+                          {notice.course.open.label}
+                        </Link>
+                      </>
+                    ) : null}
+                  </>
+                ) : null}
+                {notice.retry ? (
                   <>
                     {' '}
-                    <Link href={notice.open.href} className={workspace.textButton} data-testid="notice-open-course">
-                      {notice.open.label}
-                    </Link>
+                    <button type="button" className={workspace.textButton} onClick={notice.retry} data-testid="notice-retry">
+                      {t('tryAgain')}
+                    </button>
                   </>
                 ) : null}
                 {notice.see ? (

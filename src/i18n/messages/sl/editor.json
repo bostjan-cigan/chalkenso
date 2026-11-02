@@ -266,7 +266,9 @@
       "stages": {
         "reading": "Pripravljanje povratnih informacij …",
         "thinking": "Claude razmišlja …",
-        "writing": "Claude piše spremembe …"
+        "writing": "Claude piše spremembe …",
+        "thinkingAbout": "{count, plural, one {Berem # povratno informacijo…} two {Berem # povratni informaciji…} few {Berem # povratne informacije…} other {Berem # povratnih informacij…}}",
+        "finishing": "Preverjam rezultat…"
       },
       "claude": {
         "waiting": "Čakam na vaš Claude …",
@@ -277,7 +279,10 @@
       "leave": "To stran lahko zapustite. Spremembe vas počakajo tukaj, ko bodo pripravljene.",
       "inClaude": "V vašem Claudu. Spremembe se prikažejo tukaj, ko jih pošlje.",
       "send": "Pošljite sporočilo v zavihku Claude, ki se je odprl. Spremembe se prikažejo tukaj, ko jih Claude pošlje.",
-      "notStarted": "Claude še ni začel. V tistem klepetu vklopite povezovalnik Chalkenso (＋ → Connectors) in sporočilo pošljite znova."
+      "notStarted": "Claude še ni začel. V tistem klepetu vklopite povezovalnik Chalkenso (＋ → Connectors) in sporočilo pošljite znova.",
+      "opening": "Uvod",
+      "same": "brez sprememb",
+      "changes": "{count, plural, one {# sprememba} two {# spremembi} few {# spremembe} other {# sprememb}}"
     },
     "stop": "Ustavi",
     "discard": "Zavrzi",
@@ -430,17 +435,20 @@
       "keepText": "Lekcija glavnega tečaja ostane, kot je, izboljšava pa je opravljena.",
       "keepTextWaiting": "Lekcija glavnega tečaja ostane, kot je, spremembe, ki tam čakajo, izginejo, izboljšava pa je opravljena.",
       "kept": "Ohranjeno samo v tej skupini.",
-      "keptDone": "Ohranjeno samo v tej skupini: izboljšava je opravljena."
+      "keptDone": "Ohranjeno samo v tej skupini: izboljšava je opravljena.",
+      "openSuggestion": "Odpri predlog"
     },
     "addsDiagrams": "{count, plural, one {Doda diagram} two {Doda # diagrama} few {Doda # diagrame} other {Doda # diagramov}}",
     "didntFit": {
-      "row": "Ni se ujemalo",
+      "row": "Ni bilo mogoče umestiti",
       "value": "{count, plural, one {# sprememba} two {# spremembi} few {# spremembe} other {# sprememb}} iz kopije skupine {group}",
-      "note": "{count, plural, one {# sprememba iz kopije skupine {group} se tu ni ujemala} two {# spremembi iz kopije skupine {group} se tu nista ujemali} few {# spremembe iz kopije skupine {group} se tu niso ujemale} other {# sprememb iz kopije skupine {group} se tu ni ujemalo}}: besedilo te lekcije je tam drugačno. Naredite jih ročno z Uredi razdelek; Ni se ujemalo pokaže vsako.",
+      "note": "{count, plural, one {# spremembe} two {# sprememb} few {# sprememb} other {# sprememb}} iz kopije skupine {group} ni bilo mogoče umestiti: besedilo te lekcije se tam razlikuje.",
       "before": "V kopiji skupine {group}, prej",
       "after": "V kopiji skupine {group}, potem",
       "copy": "Kopiraj novo besedilo",
-      "copied": "Kopirano"
+      "copied": "Kopirano",
+      "fit": "Umesti z AI",
+      "see": "Poglej jih"
     },
     "savedPublished": "Objavljeno: udeleženci vidijo spremembe",
     "savedDraft": "Shranjeno: udeleženci vidijo spremembe, ko objavite lekcijo",
@@ -472,7 +480,7 @@
       "plan": "Načrtuj spremembe",
       "ticked": "{count, plural, one {# označena} two {# označeni} few {# označene} other {# označenih}}",
       "writePlan": "Napišite načrt sami",
-      "draft": "Pripravi spremembe",
+      "draft": "Napiši te spremembe",
       "keepPlan": "Obdrži načrt, kot je",
       "toFix": "{count} za popravek",
       "newCount": "{count, plural, one {# nova} two {# novi} few {# nove} other {# novih}}",
@@ -491,7 +499,22 @@
       "otherLesson": "Na drugi lekciji",
       "openOtherLesson": "Odpri to lekcijo",
       "wholeLesson": "Cela lekcija",
-      "finished": "Končano na tej lekciji"
+      "finished": "Končano na tej lekciji",
+      "steps": {
+        "label": "Koraki te izboljšave",
+        "feedback": "Povratne informacije",
+        "plan": "Načrt",
+        "changes": "Spremembe",
+        "publish": "Objava"
+      },
+      "forGroup": "Odgovarja na: „{quote}“, v skupini {group}",
+      "changeName": {
+        "reworded": "„{from}“ → „{to}“",
+        "added": "Novo: „{text}“",
+        "removed": "Odstranjeno: „{text}“",
+        "rewritten": "Prepisano: „{text}“",
+        "image": "Nova slika"
+      }
     },
     "notes": {
       "row": "Opombe za AI",
@@ -505,7 +528,40 @@
       "saving": "Shranjujem …",
       "failed": "Opombe niso bile shranjene. Poskusite znova."
     },
-    "backToMap": "Pojmi po lekcijah"
+    "backToMap": "Pojmi po lekcijah",
+    "readyTitle": "✓ {count, plural, one {# sprememba pripravljena} two {# spremembi pripravljeni} few {# spremembe pripravljene} other {# sprememb pripravljenih}} · {lesson}",
+    "tryAgain": "Poskusi znova",
+    "undoneWithCourse": "Razveljavljeno: lekcija je taka, kot je bila. Umaknjeno tudi z glavnega tečaja.",
+    "review": {
+      "label": "Pregled sprememb",
+      "position": "{index} od {total}",
+      "sideBySide": "Drugo ob drugem",
+      "looked": "Pregledano: {count} od {total}",
+      "said": "Sprememba {index} od {total}: {decision, select, keep {obdržana} other {preskočena}}"
+    },
+    "views": {
+      "label": "Kako se lekcija bere",
+      "markup": "Označeno",
+      "original": "Izvirnik",
+      "final": "Končno",
+      "notInOriginal": "Ni v izvirniku.",
+      "leftOut": "Izpuščeno."
+    },
+    "nearby": {
+      "tag": "Preveri mesto",
+      "note": "Besedilo te lekcije se tu nekoliko razlikuje, zato je šlo na najbližje ujemanje. Preskočeno, dokler ga ne obdržite."
+    },
+    "path": {
+      "label": "Kam gre ta izboljšava",
+      "mainCourse": "Glavni tečaj",
+      "saved": "shranjeno"
+    },
+    "toCourse": {
+      "label": "Tudi na glavni tečaj",
+      "review": "Na glavnem tečaju počakajo na vaš pregled in tam se nič ne spremeni, dokler ne objavite.",
+      "suggest": "Urednikom glavnega tečaja gre kot predlog.",
+      "only": "Spremeni se samo kopija te skupine. Glavni tečaj ostane tak, kot je."
+    }
   },
   "mode": {
     "label": "Način lekcije",

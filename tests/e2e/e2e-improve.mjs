@@ -140,6 +140,12 @@ try {
 
   // One draft: feedback used while it's written waits for the next one.
   await page.click('[data-testid=draft-changes]');
+  check('the working state shows on the click, before the server answers', await page.locator('[data-testid=changes-working]').waitFor({ timeout: 500 }).then(() => true, () => false));
+  check('progress is the lesson’s own sections', await page.locator('[data-testid=live-section]').first().waitFor({ timeout: 20000 }).then(() => true, () => false));
+  await page.screenshot({ path: 'tests/e2e/.shots/improve-working.png', fullPage: false });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  check('with less motion asked for, the working block holds still', await page.evaluate(() => Array.from(document.querySelectorAll('[data-testid=changes-working], [data-testid=changes-working] *')).every((element) => getComputedStyle(element).animationName === 'none')));
+  await page.emulateMedia({ reducedMotion: null });
   const late = await note('Because the browser sends cookies automatically', 'E2E late: show a forged request.');
   created.push(late);
   await page.waitForSelector('[data-testid=apply-improvement]', { timeout: 30000 });
@@ -154,6 +160,48 @@ try {
   const button = await page.locator('[data-testid=apply-improvement]').innerText();
   check('the review’s last step publishes (a published lesson)', /^Publish/.test(button), button);
   await page.screenshot({ path: 'tests/e2e/.shots/improve-review.png', fullPage: true });
+
+  // Reviewed in the lesson, by keyboard; the three ways to read it.
+  const position = () => page.locator('[data-testid=review-position]').innerText();
+  const shown = page.locator('[data-testid=inline-change]');
+  check('the review bar says which change', /^1 of \d+$/.test(await position()), await position());
+  check('the path shows both places', (await page.locator('[data-testid=improvement-path]').innerText()).includes('Main course'));
+  check('Publish says what happens on the main course', (await page.locator('[data-testid=course-hint]').innerText()).includes('nothing changes there until you publish'));
+  await page.locator('[data-testid=lesson-part]').click({ position: { x: 5, y: 5 } });
+  await page.keyboard.press('Backspace');
+  check('⌫ skips the change', (await shown.first().getAttribute('data-decision')) === 'skip');
+  await page.keyboard.press('ArrowUp');
+  await page.keyboard.press('Enter');
+  check('⏎ keeps it', (await shown.first().getAttribute('data-decision')) === 'keep');
+  await page.mouse.wheel(0, 500);
+  await page.waitForTimeout(200);
+  check('the three ways to read it stay in view as the lesson scrolls', await page.locator('[data-testid=review-view]').evaluate((control) => control.getBoundingClientRect().top >= 0 && control.getBoundingClientRect().top < 40));
+  await page.locator('[data-testid=review-view]').getByRole('button', { name: 'Final', exact: true }).click();
+  check('Final reads without marks', (await page.locator('[data-testid=lesson-part] ins, [data-testid=lesson-part] del').count()) === 0);
+  await page.locator('[data-testid=review-view]').getByRole('button', { name: 'Markup', exact: true }).click();
+  await page.screenshot({ path: 'tests/e2e/.shots/improve-review-window.png', fullPage: false });
+  await page.evaluate(() => (document.documentElement.dataset.theme = 'dark'));
+  await page.waitForTimeout(600);
+  await page.screenshot({ path: 'tests/e2e/.shots/improve-review-dark.png', fullPage: false });
+  await page.evaluate(() => (document.documentElement.dataset.theme = 'light'));
+  await page.waitForTimeout(600);
+  await page.setViewportSize({ width: 390, height: 780 });
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: 'tests/e2e/.shots/improve-review-phone.png', fullPage: false });
+  await page.getByRole('button', { name: 'Lesson', exact: true }).click();
+  await page.locator('[data-testid=review-bar]').waitFor({ timeout: 5000 });
+  await page.locator('[data-testid=inline-change]').first().scrollIntoViewIfNeeded();
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: 'tests/e2e/.shots/improve-review-phone-lesson.png', fullPage: false });
+  const reachable = (testId) =>
+    page.locator(`[data-testid=${testId}]`).evaluate((button) => {
+      const box = button.getBoundingClientRect();
+      return button.contains(document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2));
+    });
+  check('on a phone Keep and Skip can be pressed, nothing lies over them', (await reachable('review-keep')) && (await reachable('review-skip')));
+  check('on a phone the bar stays on the page', await page.locator('[data-testid=review-bar]').evaluate((bar) => bar.scrollWidth <= window.innerWidth));
+  check('and the page does not scroll sideways', await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
+  await page.setViewportSize({ width: 1280, height: 900 });
 
   // One save: what the draft covered is done; the late piece starts the next improvement.
   await page.click('[data-testid=apply-improvement]');
@@ -171,6 +219,7 @@ try {
   // Undo: the text, the feedback, the draft and the late piece go back.
   await page.locator('[data-testid=improvements-notice]').getByRole('button', { name: 'Undo' }).click();
   await waitFor(() => usedBy(late) === improvement, 40);
+  check('Undo says it also took the changes back from the main course', await page.locator('[data-testid=improvements-notice]', { hasText: 'Also taken back from the main course' }).waitFor({ timeout: 15000 }).then(() => true, () => false));
   check('Undo gives the late piece back to the improvement', usedBy(late) === improvement && sql(`select count(*) from public.tasks where id = ${quote(next)}`) === '0');
   check('Undo opens the feedback again', status(first) === 'OPEN' && status(second) === 'OPEN');
   // Forms send line breaks as CRLF, as every save from the browser does.
@@ -208,6 +257,13 @@ try {
   check('the improvement goes to the group and the main course', /Scope: group and core/.test(sql(`select plan from public.tasks where id = ${quote(improvement)}`)));
   await page.click('[data-testid=draft-changes]');
   await page.waitForSelector('[data-testid=apply-improvement]', { timeout: 30000 });
+  // Where it goes, changed at Publish.
+  const scopeNow = () => sql(`select plan from public.tasks where id = ${quote(improvement)}`);
+  await page.click('[data-testid=also-course]');
+  check('switched off, it stays with the group', await waitFor(() => /Scope: group only/.test(scopeNow()), 20));
+  check('and the foot says so', (await page.locator('[data-testid=course-hint]').innerText()).includes('main course stays as it is'));
+  await page.click('[data-testid=also-course]');
+  check('switched on, it goes to the main course again', await waitFor(() => /Scope: group and core/.test(scopeNow()), 20));
   const drawn = page.locator('[data-testid=lesson-part] img[src*="/admin/api/drafts/"]');
   check('the review shows the diagram AI drew', await drawn.first().waitFor({ timeout: 15000 }).then(() => true, () => false));
   await page.click('[data-testid=apply-improvement]');
@@ -219,16 +275,62 @@ try {
   );
   check('the main course’s lesson gets the change, diagram and all', Boolean(carriedDraft) && sql(`select payload->>'markdown' from public.ai_proposals where id = ${quote(carriedDraft)}`).includes('diagrams/'));
   const courseImproveUrl = `${BASE}/admin/courses/${courseId}/lessons/${baseLessonId}/improvements?draft=${carriedDraft}`;
-  await page.goto(courseImproveUrl);
+  // A change marked as placed where the text differs a little: tagged, and skipped until kept.
+  const carriedMarkdown = sql(`select payload->>'markdown' from public.ai_proposals where id = ${quote(carriedDraft)}`);
+  const carriedBlock = carriedMarkdown.split(/\n{2,}/).find((block) => block.includes('diagrams/'))?.replace(/\s+/g, ' ').trim() ?? '';
+  const check0 = sql(`select payload->'why'->'check' from public.ai_proposals where id = ${quote(carriedDraft)}`);
+  sql(`update public.ai_proposals set payload = jsonb_set(payload::jsonb, '{why,check}', ${quote(JSON.stringify([carriedBlock]))}::jsonb) where id = ${quote(carriedDraft)}`);
+  await page.goto(`${BASE}/admin/courses/${courseId}/lessons/${baseLessonId}/improvements?i=${improvement}`);
+  check('on the main course, the path shows where it came from', await page.locator('[data-testid=improvement-path]').waitFor({ timeout: 15000 }).then(async () => (await page.locator('[data-testid=improvement-path]').innerText()).includes('copy'), () => false));
+  check('a change placed nearby is tagged', await page.locator('[data-testid=check-place]').first().waitFor({ timeout: 15000 }).then(() => true, () => false));
+  check('and starts skipped', (await page.locator('[data-testid=inline-change]', { has: page.locator('[data-testid=check-place]') }).first().getAttribute('data-decision')) === 'skip');
+  check('feedback from the group’s copy comes along', (await page.locator('[data-testid=inline-change][data-current] [data-testid=change-answers]').count()) === 1);
+  await page.screenshot({ path: 'tests/e2e/.shots/improve-course.png', fullPage: false });
+  sql(`update public.ai_proposals set payload = jsonb_set(payload::jsonb, '{why,check}', ${quote(check0 || '[]')}::jsonb) where id = ${quote(carriedDraft)}`);
+
+  // One of the changes didn't make it into the draft: it can't be placed, and goes to AI from there.
+  const unplacedBlock = carriedMarkdown.split(/\n{2,}/).find((block) => block.startsWith('> [!note]') && block.includes('Learners mixed up'));
+  const withoutIt = carriedMarkdown.replace(`${unplacedBlock}\n\n`, '');
+  sql(`update public.ai_proposals set payload = jsonb_set(payload::jsonb, '{markdown}', ${quote(JSON.stringify(withoutIt))}::jsonb) where id = ${quote(carriedDraft)}`);
+  const courseSteps = `${BASE}/admin/courses/${courseId}/lessons/${baseLessonId}/improvements?i=${improvement}`;
+  await page.goto(courseSteps);
+  const fit = page.locator('[data-testid=fit-with-ai]');
+  check('what couldn’t be placed offers Fit it with AI', await fit.waitFor({ timeout: 15000 }).then(() => true, () => false));
+  await page.screenshot({ path: 'tests/e2e/.shots/improve-couldnt-place.png', fullPage: false });
+  // Stopped, the changes that were waiting are back.
+  await fit.click();
+  const fitStop = page.locator('[data-testid=changes-working]').getByRole('button', { name: 'Stop' });
+  await fitStop.waitFor({ timeout: 15000 });
+  await fitStop.click();
+  check('stopped, the changes waiting come back', await page.locator('[data-testid=apply-improvement]').waitFor({ timeout: 15000 }).then(() => true, () => false));
+  check('still waiting in the database', sql(`select status from public.ai_proposals where id = ${quote(carriedDraft)}`) === 'OPEN');
+  // Left to finish, it takes their place, still from the group's copy.
+  await fit.click();
+  await page.locator('[data-testid=changes-working]').waitFor({ timeout: 15000 });
+  await page.locator('[data-testid=apply-improvement]').waitFor({ timeout: 60000 });
+  const fitted = sql(`select id from public.ai_proposals where target_id = ${quote(baseLessonId)} and status = 'OPEN' and task_id = ${quote(improvement)} order by created_at desc limit 1`);
+  check('the fitted draft replaces the one waiting', Boolean(fitted) && fitted !== carriedDraft && (await waitFor(() => sql(`select status from public.ai_proposals where id = ${quote(carriedDraft)}`) === 'DISCARDED', 20)));
+  check('and is still reviewed against the same lesson, from the same group', sql(`select (payload->'why'->'fromCopy' is not null and payload->>'base' = (select payload->>'base' from public.ai_proposals where id = ${quote(carriedDraft)}))::text from public.ai_proposals where id = ${quote(fitted)}`) === 'true');
+  check('with the changes carried before it', sql(`select payload->>'markdown' from public.ai_proposals where id = ${quote(fitted)}`).includes('diagrams/'));
+  await page.goto(courseSteps);
   await page.waitForSelector('[data-testid=apply-improvement]', { timeout: 30000 });
   const carriedImage = page.locator('[data-testid=lesson-part] img[src*="diagrams"], [data-testid=lesson-part] img[alt*="request travels"]').first();
   await carriedImage.waitFor({ timeout: 15000 }).catch(() => {});
   const shows = await carriedImage.evaluate((img) => img.complete && img.naturalWidth > 0).catch(() => false);
   check('the main course’s review shows the copy’s image', shows);
+  // Changes placed nearby start skipped: the reviewer keeps them, having looked.
+  check('the carry itself says what to check', check0 !== '', check0);
+  const toCheck = page.locator('[data-testid=inline-change]', { has: page.locator('[data-testid=check-place]') });
+  for (let left = await toCheck.count(); left > 0; left = await toCheck.count()) {
+    await toCheck.first().click();
+    await page.click('[data-testid=review-keep]');
+    await page.waitForTimeout(100);
+  }
   await page.click('[data-testid=apply-improvement]');
   await page.locator('[data-testid=improvements-notice]').waitFor({ timeout: 30000 });
+  const courseNotice = await page.locator('[data-testid=improvements-notice]').innerText();
   const courseAsset = sql(`select coalesce(asset_id, '') from courses.lesson_asset_references where lesson_id = ${quote(baseLessonId)} and source_path like 'diagrams/%' limit 1`);
-  check('saved on the main course, its lesson binds the same image', Boolean(courseAsset) && courseAsset === copyAsset, `${courseAsset} vs ${copyAsset}`);
+  check('saved on the main course, its lesson binds the same image', Boolean(courseAsset) && courseAsset === copyAsset, `${courseAsset} vs ${copyAsset}; ${courseNotice}`);
   check(
     'and learners of the main course get it (published bindings)',
     sql(`select coalesce(published_asset_bindings::text, '') from courses.lessons where id = ${quote(baseLessonId)}`).includes(copyAsset)

@@ -31,11 +31,14 @@ export default function PlanDraftStatus({
   onStop,
   onUse,
   onDiscard,
+  onRetry,
 }: {
   draft: AppDraftView;
   onStop: () => void;
   onUse: () => void;
   onDiscard: () => void;
+  /** Starts it again after it failed; without it, only why is said. */
+  onRetry?: () => void;
 }) {
   const t = useTranslations('tasks.plan.aiDraft');
   const live = useRef<HTMLDivElement>(null);
@@ -45,7 +48,18 @@ export default function PlanDraftStatus({
   }, [draft.text]);
 
   if (draft.state === 'failed') {
-    return <AdminNotice>{draft.error}</AdminNotice>;
+    return (
+      <div style={{ display: 'grid', gap: '0.5rem' }} data-testid="plan-draft-failed">
+        <AdminNotice>{draft.error}</AdminNotice>
+        {onRetry ? (
+          <div>
+            <AdminButton type="button" size="compact" tone="secondary" onClick={onRetry} data-testid="plan-retry">
+              {t('retry')}
+            </AdminButton>
+          </div>
+        ) : null}
+      </div>
+    );
   }
 
   const claude = draft.source === 'claude';
@@ -72,7 +86,7 @@ export default function PlanDraftStatus({
     ? draft.stage === 'waiting'
       ? t(draft.by ? 'claudeStages.waitingOther' : 'claudeStages.waiting')
       : t(draft.stage === 'reading' ? 'claudeStages.reading' : 'claudeStages.writing')
-    : t(`stages.${draft.stage === 'waiting' ? 'reading' : draft.stage}`);
+    : t(`stages.${draft.stage === 'waiting' ? 'reading' : draft.stage === 'finishing' ? 'writing' : draft.stage}`);
   const quiet = Date.now() - new Date(draft.startedAt).getTime() > QUIET_MS;
   const hint = !claude ? t('leave') : draft.stage === 'waiting' ? (quiet ? t('notStarted') : t('send')) : t('inClaude');
   return (

@@ -236,7 +236,8 @@
       "readyClaude": "Your Claude drafted a plan",
       "readyClaudeBy": "{name}’s Claude drafted a plan",
       "use": "Use this plan",
-      "discard": "Discard"
+      "discard": "Discard",
+      "retry": "Try again"
     },
     "started": "“{title}” is in progress.",
     "undo": "Undo"

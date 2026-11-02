@@ -1523,17 +1523,17 @@ p.changeText {
 }
 
 .wordRemoved {
-  background: var(--red-pen-soft);
-  color: rgb(var(--foreground-rgb));
+  color: var(--diff-removed-fg);
   text-decoration: line-through;
-  text-decoration-color: rgba(226, 75, 74, 0.75);
-  border-radius: 3px;
 }
 
+/* Never colour alone: new words are underlined too. */
 .wordAdded {
-  background: rgba(99, 153, 34, 0.16);
-  color: rgb(var(--foreground-rgb));
-  text-decoration: none;
+  background: var(--diff-added-bg);
+  color: var(--diff-added-fg);
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.18em;
   border-radius: 3px;
 }
 

@@ -20,6 +20,14 @@
  * The rgb triplets (--foreground-rgb, --background-rgb, --accent-color) are used with alpha all
  * over the app; the named tokens below them are for cards, the sidebar and the notebook accents.
  */
+:root {
+  /* Motion: state changes settle quickly; nothing loops but the one spinner. */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 350ms;
+}
+
 :root[data-theme="dark"],
 :root:not([data-theme]),
 :root[data-theme="system"] {
@@ -30,6 +38,9 @@
   /* Tinted buttons and links that act (row actions, a lesson's next step): the accent itself in dark. */
   --action-rgb: 133, 183, 235;
   --on-accent: #0b1622;
+  --diff-added-bg: rgba(63, 185, 80, 0.18);
+  --diff-added-fg: #7ee787;
+  --diff-removed-fg: #ff9c90;
   --text-color: 150, 163, 180;
   --text-color-hex: #96a3b4;
   --text-secondary-rgb: 226, 232, 240;
@@ -65,6 +76,9 @@
   /* The navy at a light tint reads grey: tinted buttons use a brighter blue of the same family. */
   --action-rgb: 22, 104, 196;
   --on-accent: #ffffff;
+  --diff-added-bg: rgba(46, 160, 67, 0.13);
+  --diff-added-fg: #116329;
+  --diff-removed-fg: #b42318;
   --text-color: 90, 102, 118;
   --text-color-hex: #5a6676;
   --text-secondary-rgb: 11, 42, 74;
@@ -101,6 +115,9 @@
     --accent-color-hex: #0c447c;
     --action-rgb: 22, 104, 196;
     --on-accent: #ffffff;
+    --diff-added-bg: rgba(46, 160, 67, 0.13);
+    --diff-added-fg: #116329;
+    --diff-removed-fg: #b42318;
     --text-color: 90, 102, 118;
     --text-color-hex: #5a6676;
     --text-secondary-rgb: 11, 42, 74;

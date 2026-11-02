@@ -135,18 +135,18 @@ try {
   check('each is marked in the lesson, numbered', ((await change.getAttribute('aria-label')) ?? '').startsWith('Change 1 of'));
   check('nothing changed in the lesson yet', !sql(`select markdown_content from courses.lessons where id = '${lessonUrl.split('/').pop()}'`).includes('Check your work'));
   await a.screenshot({ path: SHOTS + 'ai-revision.png', fullPage: false });
-  // Opened side by side: skipped, it shows the lesson as it is; kept again and rewritten by hand, it's yours.
-  await change.click();
-  const sheet = a.getByRole('dialog');
-  await sheet.getByRole('button', { name: 'Skip', exact: true }).click();
+  // Reviewed in the lesson: skipped, it shows the lesson as it is; kept again and rewritten by hand, it's yours.
+  await a.click('[data-testid=review-skip]');
   check('a skipped change shows the lesson as it is', (await change.getAttribute('data-decision')) === 'skip');
-  await sheet.getByRole('button', { name: 'Keep', exact: true }).click();
-  await sheet.locator('[data-testid=edit-change]').click();
-  await sheet.getByRole('button', { name: 'Markdown', exact: true }).click();
-  await sheet.locator('textarea').fill('> [!tip] Check your work\n> Run the query and count the rows it returns.');
-  await sheet.getByRole('button', { name: 'Visual', exact: true }).click();
+  await change.click();
+  await a.click('[data-testid=review-keep]');
+  await change.click();
+  await a.click('[data-testid=edit-change]');
+  const inPlace = a.locator('[data-testid=edit-in-place]');
+  await inPlace.getByRole('button', { name: 'Markdown', exact: true }).click();
+  await inPlace.locator('textarea').fill('> [!tip] Check your work\n> Run the query and count the rows it returns.');
+  await inPlace.getByRole('button', { name: 'Visual', exact: true }).click();
   await a.click('[data-testid=keep-edited]');
-  await sheet.getByRole('button', { name: 'Done', exact: true }).click();
   check('the edited suggestion is kept as yours', ((await a.locator('[data-testid=inline-change]').first().getAttribute('aria-label')) ?? '').includes('Your version'));
   // Saving is the review's last step.
   await a.click('[data-testid=apply-improvement]');

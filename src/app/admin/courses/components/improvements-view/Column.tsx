@@ -68,12 +68,13 @@ export function FeedbackCard({
 }
 
 /**
- * One change, numbered as its pin in the lesson: its tick (keep it), its kind and section, and ›
- * to open it side by side. A change with nothing left to decide shows why instead of a tick.
+ * One change, numbered as its pin in the lesson: its tick (keep it), what it does and its section,
+ * and › to read it in the lesson. A change with nothing left to decide shows why instead of a tick.
  */
 export function ChangeRow({
   number,
   label,
+  section,
   state,
   keep,
   current,
@@ -84,6 +85,8 @@ export function ChangeRow({
 }: {
   number: number;
   label: string;
+  /** The section it's in. */
+  section?: string | null;
   /** Why there's nothing to decide (already in the lesson, gone from it), or that it conflicts. */
   state?: string | null;
   /** Kept or skipped; null: nothing to decide. */
@@ -103,7 +106,7 @@ export function ChangeRow({
           <span className={styles.changeLabel}>
             {number} · {label}
           </span>
-          {state ? <span className={styles.who}>{state}</span> : null}
+          {state || section ? <span className={styles.who}>{[section, state].filter(Boolean).join(' · ')}</span> : null}
         </span>
         <TbChevronRight aria-hidden size={16} className={styles.chevron} />
       </button>
@@ -124,5 +127,18 @@ export function NavRow({ title, sub, state, onOpen, testId }: { title: string; s
         <TbChevronRight aria-hidden size={16} className={styles.chevron} />
       </button>
     </li>
+  );
+}
+
+/** Where an improvement is, in one quiet line at the column's head. */
+export function StepLine({ steps, now, label }: { steps: string[]; now: number; label: string }) {
+  return (
+    <ol className={styles.steps} aria-label={label} data-testid="improvement-steps">
+      {steps.map((step, index) => (
+        <li key={step} className={styles.step} data-state={index < now ? 'done' : index === now ? 'now' : undefined} aria-current={index === now ? 'step' : undefined}>
+          {step}
+        </li>
+      ))}
+    </ol>
   );
 }

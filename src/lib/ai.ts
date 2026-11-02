@@ -3,6 +3,7 @@ import 'server-only';
 import Anthropic from '@anthropic-ai/sdk';
 import { getTranslations } from 'next-intl/server';
 import type { Locale } from '@/i18n/config';
+import type { RevisionLive } from './ai-draft-progress';
 import {
   aiAvailability,
   currentUserId,
@@ -115,9 +116,10 @@ export async function aiErrorMessage(error: unknown): Promise<string> {
 
 /**
  * How a call is going, for a draft running in the background (ai-drafts.ts): Claude is thinking
- * (sent again on each sign of life until it writes), or writing, with the text so far.
+ * (sent again on each sign of life until it writes), writing, with the text so far (and, for a
+ * revision, how far it is), or done writing and being checked.
  */
-export type AiProgress = { stage: 'thinking' } | { stage: 'writing'; text: string; share?: number };
+export type AiProgress = { stage: 'thinking' } | { stage: 'writing'; text: string; live?: RevisionLive } | { stage: 'finishing'; live?: RevisionLive };
 
 /**
  * For a call made outside the request (a background draft): the key and person it was started
@@ -321,7 +323,7 @@ export async function complete(
     if (!(error instanceof Anthropic.AuthenticationError) || key.source !== 'organization' || !key.organizationId) {
       throw error;
     }
-    // The organisation's own key stopped working: owners see a banner, and this call falls back.
+    // The organisation's own key stopped working: owners and admins see it on Home, and this call falls back.
     await markOrganizationKeyRefused(key.organizationId);
     const fallback = await fallbackAiKey(key.organizationId);
     if (!fallback) {

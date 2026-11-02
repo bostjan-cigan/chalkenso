@@ -237,6 +237,8 @@
     "groups": "{count, plural, one {# skupina} two {# skupini} few {# skupine} other {# skupin}}",
     "ai": {
       "keyInvalid": "Anthropic je zavrnil API-ključ vaše organizacije. Lastnik ali skrbnik ga lahko zamenja v razdelku Nastavitve → AI.",
+      "keyRefusedHosted": "Anthropic je zavrnil API-ključ vaše organizacije, zato se zdaj porablja AI, vključen v vaš paket. Ključ zamenjajte v razdelku Nastavitve → AI.",
+      "keyRefusedInstallation": "Anthropic je zavrnil API-ključ vaše organizacije, zato AI deluje s ključem te namestitve. Svoj ključ zamenjajte v razdelku Nastavitve → AI.",
       "cap": "AI, vključen v ta mesec, je porabljen. Lastnik ali skrbnik ga lahko dokupi v razdelku Nastavitve → AI.",
       "paused": "AI je izklopljen, dokler je vaša organizacija v mirovanju; vrne se, ko lastnik ali skrbnik nadaljuje s paketom.",
       "plan": "Pri vašem paketu AI deluje v vašem Claudu: vsako opravilo AI odprite tam („Uporaba s Claudom“).",

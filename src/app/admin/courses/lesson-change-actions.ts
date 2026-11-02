@@ -17,14 +17,14 @@ import { updateTaskStatus } from '@/lib/tasks';
  * main course's lesson comes back out of the draft there, feedback it sent on to the next
  * improvement comes back, and the drafts that went in wait for review again (for a few minutes
  * after the save). The lesson's text stays as saved: the Improve view saves the text from
- * before as well.
+ * before as well. Says whether something came back out of the main course's lesson.
  */
-export async function undoLessonChangeAction(changeId: string, taskFrom: string | null): Promise<void> {
+export async function undoLessonChangeAction(changeId: string, taskFrom: string | null): Promise<{ tookBack: boolean }> {
   const change = await prisma.lessonChange.findUnique({
     where: { id: changeId },
     select: { taskId: true, lessonId: true, proposalIds: true, createdAt: true, lesson: { select: { curriculumVersionId: true } } },
   });
-  if (!change) return;
+  if (!change) return { tookBack: false };
   const viewer = await requireVersionEdit(change.lesson.curriculumVersionId, [Permission.WRITE]);
   const from = (Object.values(TaskStatus) as string[]).includes(taskFrom ?? '') ? (taskFrom as TaskStatus) : null;
   const ref = change.taskId ? await loadTaskRef(change.taskId) : null;
@@ -36,7 +36,8 @@ export async function undoLessonChangeAction(changeId: string, taskFrom: string 
   }
   await forgetLessonChange(prisma, changeId);
   // What the save carried to the main course's lesson comes back out of the draft waiting there.
-  if (await takeBackCarry({ changeId, copyLessonId: change.lessonId })) revalidatePath('/admin', 'layout');
+  const tookBack = (await takeBackCarry({ changeId, copyLessonId: change.lessonId })) > 0;
+  if (tookBack) revalidatePath('/admin', 'layout');
   // Feedback the save sent on to the next improvement comes back (finished or not, e.g. waiting for
   // the main course): with the change forgotten, this is the lesson's open improvement again.
   if (change.taskId && canWork) await takeBackNextImprovements(prisma, { taskId: change.taskId, lessonId: change.lessonId, since: change.createdAt });
@@ -46,6 +47,7 @@ export async function undoLessonChangeAction(changeId: string, taskFrom: string 
       data: { status: AiProposalStatus.OPEN, decidedAt: null },
     });
   }
+  return { tookBack };
 }
 
 /**

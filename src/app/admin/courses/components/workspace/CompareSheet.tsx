@@ -12,7 +12,7 @@ import { renderCourseMarkdownToHtml } from '@/lib/markdown';
 import TextEditor, { type TextEditorHandle } from '../improvements-view/TextEditor';
 import { actionable, type ChangeDecision } from './ProposedChanges';
 import { renderedDiff } from './rendered-diff';
-import { stepKind, type ChangeState, type ProposedChange } from './revision';
+import { isImageBlocks, stepKind, type ChangeState, type ProposedChange } from './revision';
 import styles from './compare-sheet.module.css';
 import workspace from './workspace.module.css';
 
@@ -28,9 +28,6 @@ export type CompareReview = {
 
 const render = (markdown: string, assets: Map<string, string>) =>
   markdown.trim() ? renderCourseMarkdownToHtml(resolveLessonMarkdownAssetUrls(markdown, assets), { hastTransforms: [transformObsidianCallouts] }) : '';
-
-/** A block that is only an image (a diagram a draft adds, say): nothing in it to rewrite by hand. */
-const IMAGE_ONLY = /^(?:!\[\[[^\]\n]+\]\]|!\[[^\]\n]*\]\([^)\n]+\))$/;
 
 /** The new text a step puts in, which Edit rewrites: an edited paragraph's, or the new paragraphs'. */
 export const editableOf = (step: ProposedChange[]) => step.find((change) => change.kind !== 'remove') ?? null;
@@ -120,9 +117,9 @@ export default function CompareSheet({
   const decision = decisions.length && decisions.every((value) => value === decisions[0]) ? decisions[0] : null;
   const conflict = states.includes('conflict');
   const editable = editableOf(step);
-  const imageOnly = Boolean(editable?.after.length && editable.after.every((block) => IMAGE_ONLY.test(block.trim())));
+  const imageOnly = Boolean(editable && isImageBlocks(editable.after));
   const mine = Boolean(editable && review?.isEdited?.(editable));
-  const note = !review ? null : states[0] === 'gone' ? t('gone') : states[0] === 'done' ? t('alreadyIn') : conflict ? t('conflict') : null;
+  const note = !review ? null : states[0] === 'gone' ? t('gone') : states[0] === 'done' ? t('alreadyIn') : conflict ? t('conflict') : states.includes('nearby') ? t('nearby.note') : null;
   const where = step[0].section ? ` · ${t('inSection', { section: step[0].section })}` : '';
   const decide = (value: ChangeDecision) => choosable.forEach((change) => review!.onDecide(change, value));
   const quiet = footerNote?.(step) ?? null;

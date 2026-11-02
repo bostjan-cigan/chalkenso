@@ -134,6 +134,8 @@
 .columnBody {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
+  /* Out of room it scrolls: its cards (which clip their corners) never get squeezed. */
+  grid-auto-rows: max-content;
   align-content: start;
   gap: 1rem;
   min-height: 0;
@@ -490,7 +492,7 @@ button.tick:hover:not(:disabled) {
   line-height: 1.35;
 }
 
-/* AI is at it: a dot that breathes before the words. */
+/* AI is at it: a still dot before the words. The one moving thing is on the step itself. */
 .statePill[data-tone='working']::before {
   content: '';
   display: inline-block;
@@ -500,14 +502,6 @@ button.tick:hover:not(:disabled) {
   border-radius: 50%;
   background: rgb(var(--accent-color));
   vertical-align: 0.08em;
-  animation: breathe 1.4s ease-in-out infinite;
-}
-
-@keyframes breathe {
-  50% {
-    opacity: 0.25;
-    transform: scale(0.7);
-  }
 }
 
 .statePill[data-tone='next'] {
@@ -653,32 +647,6 @@ button.tick:hover:not(:disabled) {
   background: rgb(var(--background-rgb));
 }
 
-/* While AI rewrites the part: its edge takes the accent and a light passes over it. */
-.part[data-working='true'] {
-  position: relative;
-  border-color: rgba(var(--accent-color), 0.45);
-}
-
-.part[data-working='true']::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background: linear-gradient(100deg, transparent 30%, rgba(var(--accent-color), 0.09) 50%, transparent 70%);
-  background-size: 300% 100%;
-  animation: partSweep 2.6s linear infinite;
-}
-
-@keyframes partSweep {
-  from {
-    background-position: 100% 0;
-  }
-  to {
-    background-position: 0 0;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .statePill[data-tone='working']::before,
   .part[data-working='true']::after {
@@ -696,10 +664,16 @@ button.tick:hover:not(:disabled) {
 }
 
 .partHead {
+  position: sticky;
+  top: 0;
+  z-index: 5;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
+  margin: -0.5rem -0.25rem 0;
+  padding: 0.5rem 0.25rem;
+  background: rgb(var(--background-rgb));
 }
 
 .partBody {
@@ -1031,15 +1005,7 @@ button.tick:hover:not(:disabled) {
   box-shadow: inset 2px 0 0 rgba(var(--change-tint), 0.7);
   border-radius: 0;
   cursor: pointer;
-  transition: background-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.tracked[data-kind='add'] {
-  --change-tint: 99, 153, 34;
-}
-
-.tracked[data-kind='remove'] {
-  --change-tint: 226, 75, 74;
+  transition: background-color var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
 }
 
 .tracked:hover {
@@ -1064,14 +1030,12 @@ button.tick:hover:not(:disabled) {
 
 .trackedAdd {
   padding: 0.2rem 0.6rem;
-  background: rgba(99, 153, 34, 0.12);
+  background: var(--diff-added-bg);
 }
 
 .trackedRemove {
-  color: rgba(var(--foreground-rgb), 0.7);
+  color: var(--diff-removed-fg);
   text-decoration: line-through;
-  text-decoration-color: rgba(226, 75, 74, 0.75);
-  background: rgba(226, 75, 74, 0.06);
 }
 
 /* Callouts and quotes inside take the change's colour instead of their own grey. */
@@ -1276,4 +1240,333 @@ button.tick:hover:not(:disabled) {
   .part {
     padding: 0.75rem;
   }
+}
+
+/* The section AI is writing now, marked in the lesson. */
+.writing {
+  padding-left: 0.85rem;
+  box-shadow: inset 2px 0 0 rgb(var(--accent-color));
+  transition: box-shadow var(--dur-base) var(--ease-out);
+}
+
+/* The lesson's sections while AI writes: done, being written, still to come. */
+.liveSummary {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: rgba(var(--foreground-rgb), 0.72);
+}
+
+.liveSections {
+  display: grid;
+  gap: 0.1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.liveSection {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 1.75rem;
+  font-size: 0.86rem;
+  color: rgb(var(--foreground-rgb));
+}
+
+.liveSection[data-state='writing'] {
+  font-weight: 600;
+}
+
+.liveSection[data-state='todo'] {
+  color: rgba(var(--foreground-rgb), 0.5);
+}
+
+.liveMark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 1rem;
+  height: 1rem;
+  color: var(--diff-added-fg);
+}
+
+.liveTodo {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  border: 1.5px solid rgba(var(--foreground-rgb), 0.3);
+}
+
+.liveName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.liveCount {
+  flex: none;
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: rgba(var(--foreground-rgb), 0.6);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A quiet line of where the improvement's steps are, at the column's head. */
+.steps {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.15rem 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.78rem;
+  color: rgba(var(--foreground-rgb), 0.5);
+}
+
+.step {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.step + .step::before {
+  content: '›';
+  color: rgba(var(--foreground-rgb), 0.35);
+}
+
+.step[data-state='done'] {
+  color: var(--diff-added-fg);
+}
+
+.step[data-state='now'] {
+  font-weight: 600;
+  color: rgb(var(--foreground-rgb));
+}
+
+/* A group's improvement: its two places, each with where it stands. */
+.path {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  background: var(--card-bg);
+  overflow: hidden;
+  font-size: 0.82rem;
+}
+
+.path li + li {
+  border-top: 1px solid var(--line-subtle);
+}
+
+.pathStop {
+  display: grid;
+  grid-template-columns: 1rem minmax(0, 1fr);
+  column-gap: 0.5rem;
+  padding: 0.45rem 0.65rem;
+  color: rgb(var(--foreground-rgb));
+  text-decoration: none;
+}
+
+a.pathStop:hover {
+  background: var(--surface-1);
+}
+
+.pathStop[data-here] {
+  background: rgba(var(--accent-color), 0.08);
+}
+
+.pathMark {
+  grid-row: 1 / span 2;
+  display: grid;
+  place-items: center;
+  height: 1.2rem;
+}
+
+.pathDot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  border: 1.5px solid rgba(var(--foreground-rgb), 0.35);
+}
+
+.pathDot[data-here] {
+  border-color: rgb(var(--accent-color));
+  background: rgb(var(--accent-color));
+}
+
+.pathName {
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.pathState {
+  grid-column: 2;
+  font-size: 0.78rem;
+  line-height: 1.3;
+  color: rgba(var(--foreground-rgb), 0.64);
+}
+
+.pathDone {
+  color: var(--diff-added-fg);
+}
+
+/* The review's foot: where the changes go from here, and whether to the main course. */
+.courseChoice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+}
+
+/* The bar a review is done with: which change, side by side, Edit, Skip, Keep. Stays in view. */
+.reviewBar {
+  position: sticky;
+  bottom: max(0.75rem, env(safe-area-inset-bottom));
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow-raised);
+}
+
+.barCount {
+  padding: 0 0.35rem;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.barSpace {
+  flex: 1;
+}
+
+.barSideBySide {
+  display: inline-flex;
+}
+
+.barIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: max(34px, var(--touch-target, 0px));
+  height: max(34px, var(--touch-target, 0px));
+  padding: 0;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: rgb(var(--foreground-rgb));
+  cursor: pointer;
+}
+
+.barIcon:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+
+.barIcon:disabled {
+  color: rgba(var(--foreground-rgb), 0.28);
+  cursor: default;
+}
+
+.barIcon:focus-visible {
+  outline: 2px solid rgb(var(--accent-color));
+  outline-offset: 1px;
+}
+
+.keyHint {
+  margin-left: 0.4rem;
+  padding: 0 0.3rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: rgba(var(--foreground-rgb), 0.62);
+}
+
+/* No keyboard, and less room: above the bar that opens the column, with only what's needed. */
+@media (max-width: 899px), (pointer: coarse) {
+  .keyHint {
+    display: none;
+  }
+}
+
+@media (max-width: 899px) {
+  .reviewBar {
+    bottom: calc(52px + 0.5rem);
+  }
+
+  .barSideBySide,
+  .barLabel {
+    display: none;
+  }
+}
+
+/* Under the change being read: what it answers, and what to check. */
+.changeNote {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: rgba(var(--foreground-rgb), 0.68);
+}
+
+.checkTag {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: 6px;
+  background: rgba(186, 117, 23, 0.16);
+  color: rgb(var(--foreground-rgb));
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.unseen {
+  margin: 0;
+  font-size: 0.84rem;
+  color: rgba(var(--foreground-rgb), 0.5);
+}
+
+.lookedAt {
+  margin: 0;
+  font-size: 0.8rem;
+  color: rgba(var(--foreground-rgb), 0.6);
+  font-variant-numeric: tabular-nums;
+}
+
+/* What couldn't be placed on this lesson: to fit with AI, or by hand. */
+.leftBlock {
+  display: grid;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--line-subtle);
+}
+
+.leftActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }

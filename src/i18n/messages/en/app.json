@@ -237,6 +237,8 @@
     "groups": "{count, plural, one {# group} other {# groups}}",
     "ai": {
       "keyInvalid": "Anthropic refused your organisation’s API key. An owner or admin can replace it in Settings → AI.",
+      "keyRefusedHosted": "Anthropic refused your organisation’s API key, so AI is running on your plan’s included AI, and calls count against it. Replace the key in Settings → AI.",
+      "keyRefusedInstallation": "Anthropic refused your organisation’s API key, so AI is running on this installation’s key. Replace your key in Settings → AI.",
       "cap": "This month’s included AI is used up. An owner or admin can top up in Settings → AI.",
       "paused": "AI is off while your organisation is paused; it’s back when an owner or admin resumes the plan.",
       "plan": "On your plan, AI works in your own Claude: open any AI request there (“Use with Claude”).",

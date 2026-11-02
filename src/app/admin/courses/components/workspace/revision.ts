@@ -51,7 +51,7 @@ export function splitBlocks(markdown: string): string[] {
  * A block as compared: spacing collapsed, and list markers alike (`*`, `+` and `-` are the same
  * list to a reader; the visual editor writes `-`), so reformatting alone never counts as a change.
  */
-const normalise = (block: string) =>
+export const normalise = (block: string) =>
   block
     .replace(/^(\s*)[*+](\s)/gm, '$1-$2')
     .replace(/\s+/g, ' ')
@@ -258,10 +258,54 @@ export function diffWords(before: string, after: string): WordChange[] | null {
   return changes;
 }
 
+/** Words left between two changes up to this many read as noise: the changes become one phrase. */
+const BRIDGED_WORDS = 2;
+/** A reworded sentence with less than this share of its words kept reads best replaced whole. */
+const KEPT_SENTENCE = 0.6;
+
+const isWord = (token: string) => /[\p{L}\p{N}]/u.test(token);
+
 /**
- * Which words of two word lists changed (longest common subsequence, as `diffWords`): the removed
- * ones by their index in `a`, the added ones by their index in `b`, and where each removed run sits
- * in `b` (`removedAt`: before the word at that index; `b.length` is the end). Null when too long.
+ * The words two versions keep, by index in each, with what reads as confetti let go: a sentence
+ * mostly reworded, and a word or two kept between changes. Pure additions and removals stay exact.
+ */
+function readableMatches(a: string[], b: string[], matches: Array<[number, number]>) {
+  const kept = new Set(matches.map(([i]) => i));
+  const added = new Set(b.map((_, j) => j).filter((j) => !matches.some(([, k]) => k === j)));
+  // Sentences of the old version that are reworded (lost words, and got new ones in their place).
+  const ends = a.flatMap((token, index) => (/[.!?]$/.test(token) || index === a.length - 1 ? [index] : []));
+  let start = 0;
+  for (const end of ends) {
+    const inside = matches.filter(([i]) => i >= start && i <= end);
+    const words = a.slice(start, end + 1).filter(isWord).length;
+    const still = inside.filter(([i]) => isWord(a[i])).length;
+    const firstJ = inside[0]?.[1] ?? -1;
+    const lastJ = inside.at(-1)?.[1] ?? -1;
+    const gotNew = !inside.length || Array.from(added).some((j) => j > firstJ && j < lastJ) || added.has(lastJ + 1) || added.has(firstJ - 1);
+    if (words && still < words && still / words < KEPT_SENTENCE && gotNew) inside.forEach(([i]) => kept.delete(i));
+    start = end + 1;
+  }
+  let out = matches.filter(([i]) => kept.has(i));
+  // A word or two between two changes.
+  const runs: Array<Array<[number, number]>> = [];
+  for (const pair of out) {
+    const last = runs.at(-1)?.at(-1);
+    if (last && last[0] + 1 === pair[0] && last[1] + 1 === pair[1]) runs.at(-1)!.push(pair);
+    else runs.push([pair]);
+  }
+  const atEdge = (run: Array<[number, number]>) => {
+    const [first, last] = [run[0], run[run.length - 1]];
+    return (first[0] === 0 && first[1] === 0) || (last[0] === a.length - 1 && last[1] === b.length - 1);
+  };
+  out = runs.flatMap((run) => (!atEdge(run) && run.filter(([i]) => isWord(a[i])).length <= BRIDGED_WORDS && run.some(([i]) => isWord(a[i])) ? [] : run));
+  return out;
+}
+
+/**
+ * Which words of two word lists changed, as a reader takes them in: the longest common subsequence
+ * (as `diffWords`), without the confetti (`readableMatches`). The removed ones by their index in
+ * `a`, the added ones by their index in `b`, and where each removed run sits in `b` (`removedAt`:
+ * before the word at that index; `b.length` is the end). Null when too long.
  */
 export function changedWords(
   a: string[],
@@ -269,30 +313,85 @@ export function changedWords(
 ): { removed: Set<number>; added: Set<number>; removedAt: Map<number, number[]> } | null {
   if ((a.length + 1) * (b.length + 1) > MAX_CELLS) return null;
   const table = lcsTable(a, b);
-  const removed = new Set<number>();
-  const added = new Set<number>();
-  const removedAt = new Map<number, number[]>();
+  const matches: Array<[number, number]> = [];
   let i = 0;
   let j = 0;
-  const remove = () => {
-    removed.add(i);
-    removedAt.set(j, [...(removedAt.get(j) ?? []), i]);
-    i += 1;
-  };
   while (i < a.length && j < b.length) {
     if (a[i] === b[j]) {
+      matches.push([i, j]);
       i += 1;
       j += 1;
     } else if (table[i + 1][j] >= table[i][j + 1]) {
-      remove();
+      i += 1;
     } else {
-      added.add(j);
       j += 1;
     }
   }
-  while (i < a.length) remove();
-  while (j < b.length) added.add(j++);
+  const removed = new Set<number>();
+  const added = new Set<number>();
+  const removedAt = new Map<number, number[]>();
+  i = 0;
+  j = 0;
+  for (const [keptA, keptB] of [...readableMatches(a, b, matches), [a.length, b.length] as [number, number]]) {
+    const run: number[] = [];
+    for (; i < keptA; i += 1) {
+      removed.add(i);
+      run.push(i);
+    }
+    if (run.length) removedAt.set(j, run);
+    for (; j < keptB; j += 1) added.add(j);
+    i = keptA + 1;
+    j = keptB + 1;
+  }
   return { removed, added, removedAt };
+}
+
+/** A change in a few words: what a row of them calls it. No AI, only the diff. */
+export type ChangeName = { kind: 'reworded'; from: string; to: string } | { kind: 'added' | 'removed' | 'rewritten' | 'image'; text: string };
+
+const IMAGE_BLOCK = /^(?:!\[\[[^\]\n]+\]\]|!\[[^\]\n]*\]\([^)\n]+\))$/;
+
+/** Whether new paragraphs are only images (a diagram a draft adds, say): nothing in them to rewrite by hand. */
+export const isImageBlocks = (blocks: string[]) => blocks.length > 0 && blocks.every((block) => IMAGE_BLOCK.test(block.trim()));
+
+const openingWords = (text: string, limit = 5) => {
+  const words = text.split(/\s+/).filter(Boolean);
+  return words.length > limit ? `${words.slice(0, limit).join(' ')}…` : words.join(' ');
+};
+
+export function nameOfChange(step: ProposedChange[]): ChangeName {
+  const kind = stepKind(step);
+  const after = (step.find((change) => change.kind !== 'remove')?.after ?? []).join('\n\n');
+  const before = (step.find((change) => change.kind !== 'add')?.before ?? []).join('\n\n');
+  if (kind === 'add') return isImageBlocks(step.find((change) => change.kind !== 'remove')?.after ?? []) ? { kind: 'image', text: '' } : { kind: 'added', text: openingWords(plainText(after)) };
+  if (kind === 'remove') return { kind: 'removed', text: openingWords(plainText(before)) };
+  if (kind !== 'edit') return { kind: 'rewritten', text: openingWords(plainText(after)) };
+  const [a, b] = [wordsOf(plainText(before)), wordsOf(plainText(after))];
+  const diff = changedWords(a, b);
+  const firstRun = (changed: Set<number>, words: string[]) => {
+    const start = Math.min(...Array.from(changed));
+    let end = start;
+    while (changed.has(end + 1)) end += 1;
+    return openingWords(words.slice(start, end + 1).join(' '));
+  };
+  if (!diff || (!diff.removed.size && !diff.added.size)) return { kind: 'rewritten', text: openingWords(plainText(after)) };
+  if (!diff.removed.size) return { kind: 'added', text: firstRun(diff.added, b) };
+  if (!diff.added.size) return { kind: 'removed', text: firstRun(diff.removed, a) };
+  return { kind: 'reworded', from: firstRun(diff.removed, a), to: firstRun(diff.added, b) };
+}
+
+/**
+ * What to ask AI for changes of a group's copy that couldn't be placed on the main course's lesson:
+ * each as it was made there, to make here where it fits this lesson's own text. In English, as all
+ * requests AI gets.
+ */
+export function placeInstruction(steps: ProposedChange[][], group: string) {
+  const each = steps.map((step, index) => {
+    const before = step.flatMap((change) => change.before).join('\n\n');
+    const after = step.flatMap((change) => change.after).join('\n\n');
+    return `Change ${index + 1}:\n${before ? `It replaced:\n${before}\n\n` : ''}${after ? `With:\n${after}` : 'It removed that text.'}`;
+  });
+  return `These changes were made in the "${group}" group's copy of this lesson, but this lesson's text differs and they could not be placed automatically. Make each one here, where it fits this lesson's own text, in this lesson's wording. Change nothing else.\n\n${each.join('\n\n')}`;
 }
 
 const wordsOf = (text: string) => text.split(/\s+/).filter(Boolean);
@@ -404,7 +503,11 @@ export type ProposedChange = {
 };
 
 /** Where a change stands against the editor's text now (`placeChanges`). */
-export type ChangeState = 'clean' | 'conflict' | 'gone' | 'done';
+/**
+ * Where a change stands against the lesson as it is now. `nearby` isn't `placeChanges`' to say: it's
+ * a change carried from a group's copy to where the text differs a little, to look at before keeping.
+ */
+export type ChangeState = 'clean' | 'conflict' | 'gone' | 'done' | 'nearby';
 
 /** Short, stable ids: the same change in the same draft keeps its id across renders. */
 function hash(text: string) {
@@ -605,7 +708,7 @@ export function transplantChanges(
   before: string,
   after: string,
   target: string
-): { text: string; total: number; placed: number; unplaced: ProposedChange[]; nearby: number } {
+): { text: string; total: number; placed: number; unplaced: ProposedChange[]; nearby: number; nearbyBlocks: string[] } {
   const changes = proposeChanges(before, after);
   const states = placeChanges(before, target, changes);
   // A rewrite (a removal and new paragraphs in its place) goes in whole or not at all: half of one
@@ -629,6 +732,7 @@ export function transplantChanges(
     placed: changes.length - nearby.left.length,
     unplaced: nearby.left,
     nearby: nearby.placed.length,
+    nearbyBlocks: nearby.placedBlocks.map(normalise),
   };
 }
 
@@ -797,6 +901,8 @@ function placeNearby(base: string, target: string, changes: ProposedChange[]) {
   const fresh = blocks.map(() => false);
   const placed: ProposedChange[] = [];
   const left: ProposedChange[] = [];
+  // The paragraphs as they went in (or, for a removal, as they were there): the ones to check.
+  const placedBlocks: string[] = [];
   for (const step of changeSteps(changes)) {
     if (step.length > 1) {
       // A rewrite, whole: the new paragraphs take the old ones' place, found nearly the same there,
@@ -816,6 +922,7 @@ function placeNearby(base: string, target: string, changes: ProposedChange[]) {
       blocks.splice(found[0], 0, ...addition.after);
       fresh.splice(found[0], 0, ...addition.after.map(() => true));
       placed.push(...step);
+      placedBlocks.push(...addition.after);
       continue;
     }
     const change = step[0];
@@ -828,12 +935,14 @@ function placeNearby(base: string, target: string, changes: ProposedChange[]) {
       blocks[at] = patchWords(change.before[0], change.after[0], blocks[at]) ?? change.after[0];
       fresh[at] = true;
       placed.push(change);
+      placedBlocks.push(blocks[at]);
     } else if (change.kind === 'remove') {
       const found = Array.from(new Set(change.before.map((block) => nearest(blocks, block, NEARBY_REMOVE, change.section, fresh)).filter((index) => index !== -1)));
       if (!found.length) {
         left.push(change);
         continue;
       }
+      placedBlocks.push(...found.map((index) => blocks[index]));
       for (const index of found.sort((x, y) => y - x)) {
         blocks.splice(index, 1);
         fresh.splice(index, 1);
@@ -848,10 +957,11 @@ function placeNearby(base: string, target: string, changes: ProposedChange[]) {
       blocks.splice(at, 0, ...change.after);
       fresh.splice(at, 0, ...change.after.map(() => true));
       placed.push(change);
+      placedBlocks.push(...change.after);
     }
   }
-  if (!placed.length) return { text: target, placed, left };
-  return { text: `${blocks.join('\n\n')}${/\n$/.test(target) ? '\n' : ''}`, placed, left };
+  if (!placed.length) return { text: target, placed, left, placedBlocks };
+  return { text: `${blocks.join('\n\n')}${/\n$/.test(target) ? '\n' : ''}`, placed, left, placedBlocks };
 }
 
 /**

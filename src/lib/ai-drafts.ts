@@ -4,7 +4,7 @@ import { after } from 'next/server';
 import { AiProposalKind, AiProposalStatus, type Prisma } from '@prisma/client';
 import { getTranslations } from 'next-intl/server';
 import { AiError, type AiErrorKey, type AiProgress } from './ai';
-import { CONNECTOR_READ, GIVE_UP_MS, handoffStage, PROGRESS_MS, stillWorking, WAIT_FOR_MS, type AppDraftView, type DraftStage } from './ai-draft-progress';
+import { CONNECTOR_READ, GIVE_UP_MS, handoffStage, PROGRESS_MS, stillWorking, WAIT_FOR_MS, type AppDraftView, type DraftStage, type RevisionLive } from './ai-draft-progress';
 import type { DraftDiagram } from './draft-diagrams';
 import { withOrgScope } from './org-context';
 import { prisma } from './prisma';
@@ -25,7 +25,7 @@ import { proposeChanges } from '@/app/admin/courses/components/workspace/revisio
 type DraftPayload = {
   stage?: DraftStage;
   text?: string;
-  share?: number;
+  live?: RevisionLive;
   error?: string;
   /** A finished plan draft. */
   plan?: string;
@@ -34,8 +34,12 @@ type DraftPayload = {
   base?: string;
   /** New diagrams the revised lesson embeds, cleaned (`cleanDraftDiagrams`); stored on Save. */
   diagrams?: DraftDiagram[];
-  /** What it was asked to do: the request, the notes and the task's plan it was made from. */
-  why?: { instruction?: string; noteIds?: string[]; taskId?: string | null; planTitle?: string | null };
+  /**
+   * What it was asked to do: the request, the notes and the task's plan it was made from. Changes
+   * carried from a group's copy (carry-to-course.ts) say from which group, and which of their
+   * paragraphs went where the text differs a little (`check`), to look at before keeping.
+   */
+  why?: { instruction?: string; noteIds?: string[]; taskId?: string | null; planTitle?: string | null; fromCopy?: { group: string; lessonId: string }; check?: string[] };
 };
 
 export type DraftRun = (
@@ -100,7 +104,8 @@ async function runDraft(id: string, run: DraftRun) {
     if (now - lastWrite < every) return;
     lastWrite = now;
     lastStage = next.stage;
-    write(next.stage === 'writing' ? { stage: 'writing', text: next.text, ...(next.share !== undefined ? { share: next.share } : {}) } : { stage: 'thinking' });
+    if (next.stage === 'thinking') write({ stage: 'thinking' });
+    else write({ stage: next.stage, ...(next.stage === 'writing' ? { text: next.text } : {}), ...(next.live ? { live: next.live } : {}) });
   };
 
   try {
@@ -146,7 +151,7 @@ export async function draftView(row: DraftRow, viewerId: string, field: 'plan' |
       : null;
   const source = row.via === 'app' ? 'app' : 'claude';
   const stage = source === 'claude' ? handoffStage(row.status, payload.stage) : payload.stage ?? 'reading';
-  const base = { id: row.id, stage, share: payload.share ?? null, startedAt: row.createdAt.toISOString(), by, source } as const;
+  const base = { id: row.id, stage, live: payload.live ?? null, startedAt: row.createdAt.toISOString(), by, source } as const;
   if (row.status === AiProposalStatus.OPEN) {
     return { ...base, state: 'ready', text: String(payload[field] ?? ''), error: null };
   }
@@ -234,6 +239,10 @@ export type LessonDraftView = AppDraftView & {
   taskId: string | null;
   /** The feedback it was written for, when it says (drafts made here do; null: not said). */
   noteIds: string[] | null;
+  /** Changes carried from a group's copy: that group's name; null for any other draft. */
+  fromGroup: string | null;
+  /** Of those, the paragraphs that went where the text differs a little: to look at before keeping. */
+  check: string[];
 };
 
 /**
@@ -259,6 +268,8 @@ export async function lessonDraftView(row: DraftRow, viewerId: string): Promise<
     at: row.updatedAt.toISOString(),
     taskId: row.taskId,
     noteIds: Array.isArray(payload.why?.noteIds) ? payload.why.noteIds.filter((id): id is string => typeof id === 'string') : null,
+    fromGroup: payload.why?.fromCopy?.group ?? null,
+    check: Array.isArray(payload.why?.check) ? payload.why.check.filter((block): block is string => typeof block === 'string') : [],
   };
 }
 

@@ -236,7 +236,8 @@
       "readyClaude": "Vaš Claude je pripravil osnutek načrta",
       "readyClaudeBy": "Claude osebe {name} je pripravil osnutek načrta",
       "use": "Uporabi ta načrt",
-      "discard": "Zavrzi"
+      "discard": "Zavrzi",
+      "retry": "Poskusi znova"
     },
     "started": "„{title}“ je v delu.",
     "undo": "Razveljavi"

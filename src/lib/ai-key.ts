@@ -68,11 +68,11 @@ function keyRefused(state: { aiApiKeyCheckedAt: Date | null; aiApiKeyInvalidAt: 
 }
 
 /** The key for this request's organisation and who pays, or why there is none. */
-export const resolveAiKeyState = cache(async (): Promise<{ key: AiKey | null; reason: AiUnavailableReason | null }> => {
+export const resolveAiKeyState = cache(async (): Promise<{ key: AiKey | null; reason: AiUnavailableReason | null; ownKeyRefused: boolean }> => {
   const organizationId = await currentOrganizationId();
   // Paused, AI is off, on any key.
   if (organizationId && (await serverExtensions.isPaused(organizationId))) {
-    return { key: null, reason: 'paused' };
+    return { key: null, reason: 'paused', ownKeyRefused: false };
   }
   let own: { apiKey: string | null; refused: boolean } | null = null;
   if (serverExtensions.aiOrganizationKeys && organizationId) {
@@ -85,7 +85,7 @@ export const resolveAiKeyState = cache(async (): Promise<{ key: AiKey | null; re
   // The fallback is only asked when it is needed (a capped one reads this month's spend).
   const fallback: AiKeyFallback = own?.apiKey && !own.refused ? { key: null, reason: 'no-key' } : await serverExtensions.aiKeyFallback(organizationId);
   const choice = chooseAiKey(own, fallback);
-  return { key: choice.key ? { ...choice.key, organizationId } : null, reason: choice.reason };
+  return { key: choice.key ? { ...choice.key, organizationId } : null, reason: choice.reason, ownKeyRefused: Boolean(own?.refused) };
 });
 
 /** The key for this request's organisation, and where it came from; null when the app has no AI. */
@@ -106,22 +106,25 @@ export type AiAvailability = {
   reason: AiUnavailableReason | null;
   /** People can open the work in their own Claude instead (an edition's connector). */
   connector: boolean;
+  /** Anthropic refused the organisation's own key and this fallback pays instead (`reason` stays null). */
+  refusedKeyFallback: AiKeySource | null;
 };
 
 /** What every AI button can offer on this page: run here, open in Claude, or both. */
 export const aiAvailability = cache(async (): Promise<AiAvailability> => {
   const organizationId = await currentOrganizationId();
   const state = organizationId ? await organizationAiState(organizationId) : null;
-  const { key, reason } = await resolveAiKeyState();
+  const { key, reason, ownKeyRefused } = await resolveAiKeyState();
   // Paused, Claude can still read through the connector, but nothing is drafted for review.
   const connector = serverExtensions.claudeConnector && Boolean(state?.connectorEnabled ?? true) && reason !== 'paused';
+  const refusedKeyFallback = ownKeyRefused ? (key?.source ?? null) : null;
   if (isAiMock()) {
     // Sample output stands in for a missing key; a reached cap or a refused key still shows.
     return reason === 'cap' || reason === 'key-invalid' || reason === 'paused'
-      ? { inApp: false, source: null, reason, connector }
-      : { inApp: true, source: 'mock', reason: null, connector };
+      ? { inApp: false, source: null, reason, connector, refusedKeyFallback }
+      : { inApp: true, source: 'mock', reason: null, connector, refusedKeyFallback };
   }
-  return { inApp: Boolean(key), source: key?.source ?? null, reason, connector };
+  return { inApp: Boolean(key), source: key?.source ?? null, reason, connector, refusedKeyFallback };
 });
 
 /** Remembers that Anthropic refused the organisation's key, so owners see it and calls fall back. */

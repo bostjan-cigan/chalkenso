@@ -8,7 +8,7 @@ import AdminSectionCard from './components/ui/AdminSectionCard';
 import { Permission, type UserRole } from '@prisma/client';
 import type { Locale } from '@/i18n/config';
 import IntlProvider from '@/i18n/IntlProvider';
-import { requireMember } from '@/lib/admin-auth';
+import { isOrgAdmin, requireMember } from '@/lib/admin-auth';
 import {
   accessScope,
   canAddInstructorNotes,
@@ -101,8 +101,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
     groupRowWords(),
     getLocale() as Promise<Locale>,
   ]);
-  // AI in the app, only when it isn't simply working: why it's off, or (to developers running it
-  // locally) that it gives sample answers.
+  // AI in the app, only when it isn't simply working: why it's off, that it runs without a refused key
+  // (to those who can replace it), or (to developers running it locally) that it gives sample answers.
   const aiNote =
     ai.reason === 'paused'
       ? t('ai.paused')
@@ -110,17 +110,19 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
         ? t('ai.keyInvalid')
         : ai.reason === 'cap'
           ? t('ai.cap')
-          : isAiMock()
-            ? showsAiMockNote()
-              ? t('ai.mock')
-              : null
-            : ai.inApp
-              ? null
-              : ai.reason === 'plan'
-                ? t('ai.plan')
-                : serverExtensions.aiOrganizationKeys
-                  ? t('ai.offUntilKey')
-                  : t('ai.offInstallation');
+          : ai.refusedKeyFallback && isOrgAdmin(viewer)
+            ? t(ai.refusedKeyFallback === 'hosted' ? 'ai.keyRefusedHosted' : 'ai.keyRefusedInstallation')
+            : isAiMock()
+              ? showsAiMockNote()
+                ? t('ai.mock')
+                : null
+              : ai.inApp
+                ? null
+                : ai.reason === 'plan'
+                  ? t('ai.plan')
+                  : serverExtensions.aiOrganizationKeys
+                    ? t('ai.offUntilKey')
+                    : t('ai.offInstallation');
 
 
   // Your groups: the ones you teach first; otherwise the ones running now, busiest first.

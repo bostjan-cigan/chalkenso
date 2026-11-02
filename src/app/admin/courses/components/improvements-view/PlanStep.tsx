@@ -6,17 +6,17 @@ import { useEffect, useRef, useState, useTransition, type ReactNode } from 'reac
 import { AiProposalKind } from '@prisma/client';
 import { TbArrowUp } from 'react-icons/tb';
 import { renderMarkdownToHtml } from '@/lib/markdown';
-import { POLL_MS, type AppDraftView } from '@/lib/ai-draft-progress';
+import type { AppDraftView } from '@/lib/ai-draft-progress';
 import { parsePlanScope, planBody, withPlanScope, type PlanScope } from '@/lib/plan-scope';
 import {
   settleTaskPlanDraftAction,
   startTaskPlanDraftAction,
   stopTaskPlanDraftAction,
-  taskPlanDraftAction,
   updateTaskPlanAction,
 } from '../../../tasks/actions';
 import PlanDraftStatus from '../../../tasks/components/PlanDraftStatus';
 import { announceSaved, handoffDraft } from '../workspace/events';
+import { useDraftProgress } from '../workspace/useDraftProgress';
 import { useHandoffStarted } from '../workspace/useHandoffStarted';
 import type { ViewImprovement } from './data';
 import TextEditor, { type TextEditorHandle } from './TextEditor';
@@ -150,39 +150,33 @@ export function usePlanStep(
     setDraft(handoffDraft(detail));
   });
 
-  // While AI writes: how far it is, about once a second.
-  const draftId = draft?.state === 'working' ? draft.id : null;
+  // Where it goes changed elsewhere (at Publish): the box starts from that.
   useEffect(() => {
-    if (!draftId) return;
-    let cancelled = false;
-    const poll = async () => {
-      if (document.visibilityState !== 'visible') return;
-      const next = await taskPlanDraftAction(draftId);
-      if (cancelled) return;
-      if (next?.state === 'ready' && textRef.current === null) takeDraft(next);
-      else setDraft(next);
-    };
-    const timer = window.setInterval(() => void poll(), POLL_MS);
-    return () => {
-      cancelled = true;
-      window.clearInterval(timer);
-    };
-    // takeDraft only sets state.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draftId]);
+    setScope(improvement?.scope ?? null);
+  }, [improvement?.scope]);
 
-  const planWithAi = (update = false) =>
+  // While AI writes: how far it is, about once a second.
+  useDraftProgress<AppDraftView>(draft?.state === 'working' && draft.id ? [draft.id] : [], (_id, next) => {
+    if (next?.state === 'ready' && textRef.current === null) takeDraft(next);
+    else setDraft(next);
+  });
+
+  const planWithAi = (update = false) => {
+    if (!improvement) return;
+    setError(null);
+    // Shown at once: the server's answer only fills in which draft it is.
+    setDraft({ id: '', state: 'working', stage: 'reading', text: '', live: null, error: null, startedAt: new Date().toISOString(), by: null, source: 'app' });
     startTransition(async () => {
-      if (!improvement) return;
-      setError(null);
       const result = await startTaskPlanDraftAction(improvement.id, { update });
       if (!result.ok) {
+        setDraft(null);
         setError(result.message);
         return;
       }
       setDraft(result.draft);
       if (result.moved) onStarted(result.moved.title);
     });
+  };
 
   const save = () =>
     startTransition(async () => {
@@ -359,6 +353,7 @@ export function usePlanStep(
           void settleTaskPlanDraftAction(draft.id, false);
           setDraft(null);
         }}
+        onRetry={() => planWithAi(stale)}
       />
     );
   } else if (improvement?.plan) {

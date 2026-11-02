@@ -1,10 +1,10 @@
 import 'server-only';
 
-import { AiProposalKind, CurriculumCommentStatus, TaskStatus } from '@prisma/client';
+import { AiProposalKind, CurriculumCommentStatus, Permission, TaskStatus } from '@prisma/client';
 import { getTranslations } from 'next-intl/server';
 import type { AppDraftView } from '@/lib/ai-draft-progress';
 import { currentDraft, draftView, lessonDraftView, openLessonRevisions, type LessonDraftView } from '@/lib/ai-drafts';
-import { accessScope, canWorkOnFeedback, commentScopeWhere, loadTaskRef, taskScopeWhere, type CrmViewer } from '@/lib/crm-access';
+import { accessScope, canEditVersion, canWorkOnFeedback, commentScopeWhere, loadTaskRef, loadVersionRef, taskScopeWhere, type CrmViewer } from '@/lib/crm-access';
 import { improvementRecords, type ImprovementRecord } from '@/lib/improvement-record';
 import { improvementPlacesFor } from '@/lib/improvement-targets';
 import { ANONYMOUS_LEARNER } from '@/lib/learner-label';
@@ -46,6 +46,10 @@ export type ViewImprovement = {
   choosesScope: boolean;
   /** Its lessons have a main-course lesson behind them (not ones added in the copy only). */
   courseReachable: boolean;
+  /** The person may edit that lesson (otherwise the main course gets a suggestion). */
+  canEditCourse: boolean;
+  /** The group whose improvement it is; null for the course's own. */
+  group: string | null;
   /** A plan AI is writing for it, or wrote while nobody watched. */
   planDraft: AppDraftView | null;
   feedback: ViewFeedback[];
@@ -204,6 +208,12 @@ export async function loadImprovementsView(
     )
   );
   const improvements: ViewImprovement[] = [];
+  // The main course's lesson behind a group's improvement: whether the person may edit it.
+  const canEditLesson = async (lessonId: string | undefined) => {
+    const found = lessonId ? await prisma.lesson.findUnique({ where: { id: lessonId }, select: { curriculumVersionId: true } }) : null;
+    const version = found ? await loadVersionRef(found.curriculumVersionId) : null;
+    return Boolean(version && canEditVersion(viewer, version, [Permission.WRITE]));
+  };
   for (const task of open) {
     const place = places.get(task.id);
     const ref = await loadTaskRef(task.id);
@@ -223,6 +233,8 @@ export async function loadImprovementsView(
       scope: parsePlanScope(task.plan),
       choosesScope: Boolean(place?.groupId) && ownHere,
       courseReachable: Object.keys(place?.courseLessons ?? {}).length > 0,
+      canEditCourse: await canEditLesson(Object.values(place?.courseLessons ?? {})[0]),
+      group: place?.groupId ? (groupName.get(place.groupId) ?? '') : null,
       planDraft: planDrafts.get(task.id) ?? null,
       feedback,
       newSincePlan: feedbackSincePlan(

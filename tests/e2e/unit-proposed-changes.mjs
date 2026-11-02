@@ -122,6 +122,7 @@ const courseDiffers = copyBefore.replace('A named volume keeps the data outside 
 const partly = transplantChanges(copyBefore, copyAfter, courseDiffers);
 check('where the course differs, the change is left out', partly.placed === 1 && partly.unplaced.length === 1 && partly.unplaced[0].kind === 'edit', JSON.stringify(partly.unplaced));
 check('and the course’s paragraph stays as it is', partly.text.includes('outlives a container') && !partly.text.includes('so `down` keeps it') && partly.text.includes('still there'));
+check('what went in nearby is named, as it went in', around.nearbyBlocks.length === around.nearby && partly.nearbyBlocks.length === partly.nearby);
 const already = transplantChanges(copyBefore, copyAfter, copyAfter);
 check('changes it already has count as placed', already.placed === 2 && already.unplaced.length === 0 && blocks(already.text) === blocks(copyAfter));
 check('nothing changed in the copy: nothing to carry', transplantChanges(copyBefore, copyBefore, courseOwn).total === 0);

@@ -57,5 +57,5 @@ export function announceHandoff(detail: HandoffStartedDetail) {
 
 /** A hand-off just started, as the page shows a draft until Claude's tool calls say more. */
 export function handoffDraft(detail: HandoffStartedDetail): AppDraftView {
-  return { id: detail.pending.id, state: 'working', stage: 'waiting', text: '', share: null, error: null, startedAt: detail.pending.createdAt, by: null, source: 'claude' };
+  return { id: detail.pending.id, state: 'working', stage: 'waiting', text: '', live: null, error: null, startedAt: detail.pending.createdAt, by: null, source: 'claude' };
 }

@@ -99,20 +99,23 @@
   border-radius: 0;
 }
 
+/* One layer of colour: an edge says which side, and only the changed words are marked. */
 .field[data-side='before'] {
-  background: rgba(226, 75, 74, 0.07);
-  box-shadow: inset 3px 0 0 #e24b4a;
+  box-shadow: inset 2px 0 0 var(--diff-removed-fg);
 }
 
 .field[data-side='after'] {
-  background: rgba(99, 153, 34, 0.1);
-  box-shadow: inset 3px 0 0 #639922;
+  box-shadow: inset 2px 0 0 var(--diff-added-fg);
 }
 
 /* What goes out, whole: struck through. An edit's words carry their own marks. */
 .field[data-side='before']:not([data-kind='edit']) {
+  color: var(--diff-removed-fg);
   text-decoration: line-through;
-  text-decoration-color: rgba(226, 75, 74, 0.7);
+}
+
+.field[data-side='after']:not([data-kind='edit']) {
+  background: var(--diff-added-bg);
 }
 
 .field :global(.callout),

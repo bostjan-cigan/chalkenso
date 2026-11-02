@@ -25,12 +25,12 @@ export type CourseCarry =
  * and after, what didn't fit or went where the text differs, whether it made the draft (and the
  * course's suggestion). Undo of that save takes it back out (`takeBackCarry`).
  */
-type Carry = { changeId: string; before: string; after: string; unplaced: number; nearby: number; created: boolean; suggestionCreated: boolean };
+type Carry = { changeId: string; before: string; after: string; unplaced: number; nearby: number; check?: string[]; created: boolean; suggestionCreated: boolean };
 
 type CarriedPayload = {
   markdown?: string;
   base?: string;
-  why?: { taskId?: string | null; planTitle?: string | null; fromCopy?: { group: string; lessonId: string }; unplaced?: number; nearby?: number };
+  why?: { taskId?: string | null; planTitle?: string | null; fromCopy?: { group: string; lessonId: string }; unplaced?: number; nearby?: number; check?: string[] };
   carries?: Carry[];
 };
 
@@ -116,11 +116,13 @@ export async function carryToCourse(input: {
   // Changes that went where the course's text differs a little: the reviewer is told to check them.
   const totalNearby = (payload.why?.nearby ?? 0) + carried.nearby;
   const summary = await carriedSummary(groupName, totalUnplaced, totalNearby);
-  const why = { taskId: ownerId, planTitle: task.title, fromCopy: { group: groupName, lessonId: input.lessonId }, unplaced: totalUnplaced, nearby: totalNearby };
+  // Which paragraphs those are: the review tags them, and they start skipped.
+  const check = [...(payload.why?.check ?? []), ...carried.nearbyBlocks];
+  const why = { taskId: ownerId, planTitle: task.title, fromCopy: { group: groupName, lessonId: input.lessonId }, unplaced: totalUnplaced, nearby: totalNearby, check };
   const carries: Carry[] = [
     ...(payload.carries ?? []),
     ...(input.changeId
-      ? [{ changeId: input.changeId, before: input.before, after: input.after, unplaced, nearby: carried.nearby, created: !existing, suggestionCreated }]
+      ? [{ changeId: input.changeId, before: input.before, after: input.after, unplaced, nearby: carried.nearby, check: carried.nearbyBlocks, created: !existing, suggestionCreated }]
       : []),
   ];
   if (existing) {
@@ -181,10 +183,11 @@ export async function takeBackCarry(input: { changeId: string; copyLessonId: str
     }
     const unplaced = Math.max(0, (payload.why?.unplaced ?? 0) - carry.unplaced);
     const nearby = Math.max(0, (payload.why?.nearby ?? 0) - carry.nearby);
+    const check = (payload.why?.check ?? []).filter((block) => !carry.check?.includes(block));
     await prisma.aiProposal.update({
       where: { id: draft.id },
       data: {
-        payload: { ...payload, markdown, why: { ...payload.why, unplaced, nearby }, carries: rest } as Prisma.InputJsonValue,
+        payload: { ...payload, markdown, why: { ...payload.why, unplaced, nearby, check }, carries: rest } as Prisma.InputJsonValue,
         summary: await carriedSummary(payload.why?.fromCopy?.group ?? '', unplaced, nearby),
       },
     });

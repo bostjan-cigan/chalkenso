@@ -2,16 +2,17 @@
 
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from 'react';
-import { TbPlus } from 'react-icons/tb';
+import { TbChevronDown, TbChevronUp, TbLayoutColumns, TbPencil, TbPlus } from 'react-icons/tb';
 import { transformObsidianCallouts } from '@/lib/content/callouts';
 import { buildTextIndex, findQuoteRange } from '@/lib/content/quote-range';
 import { resolveLessonMarkdownAssetUrls } from '@/lib/course-markdown';
 import { lessonSections } from '@/lib/lesson-sections';
 import { renderCourseMarkdownToHtml } from '@/lib/markdown';
-import CompareSheet from '../workspace/CompareSheet';
+import CompareSheet, { editableOf } from '../workspace/CompareSheet';
 import { actionable, type ChangeDecision } from '../workspace/ProposedChanges';
 import { renderedInlineDiff } from '../workspace/rendered-diff';
-import { changeSteps, splitBlocks, stepKind, type ChangeState, type ProposedChange } from '../workspace/revision';
+import { changeSteps, isImageBlocks, splitBlocks, stepKind, type ChangeState, type ProposedChange } from '../workspace/revision';
+import TextEditor, { type TextEditorHandle } from './TextEditor';
 import workspace from '../workspace/workspace.module.css';
 import styles from './improvements-view.module.css';
 import './passage-highlights.css';
@@ -52,7 +53,14 @@ export type InlineChanges = {
   onEdit?: (change: ProposedChange, text: string) => void;
   /** A suggestion rewritten by hand: it's labelled as yours. */
   isEdited?: (change: ProposedChange) => boolean;
+  /** A change the person has decided on, here or from its row. */
+  isLooked?: (change: ProposedChange) => boolean;
+  /** The last change is decided: what comes next is the caller's. */
+  onAllLooked?: () => void;
 };
+
+/** How the lesson reads while reviewing: changes marked, as it is now, or as it will be (Pages' model). */
+export type ReviewView = 'markup' | 'original' | 'final';
 
 /** Where the reader is: this far down the window (the change across it is the one being read). */
 const READING_LINE = 0.4;
@@ -62,7 +70,9 @@ const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia('
 /**
  * One step of the changes, tracked in the text as track changes shows it: new words and paragraphs
  * green, removed ones struck through in red, a skipped change as the lesson has it now (so the page
- * reads as it will after Apply). Its number sits in the margin; a click opens it side by side.
+ * reads as it will after Apply). Its number sits in the margin; a click makes it the one being read.
+ * Being read, it says what it answers, and is rewritten by hand in place. Original and Final read
+ * without marks: the lesson as it is, and as it will be with the changes kept.
  */
 function TrackedStep({
   step,
@@ -73,8 +83,13 @@ function TrackedStep({
   label,
   current,
   flash,
+  view,
+  note,
+  editing,
   assets,
   onOpen,
+  onEdited,
+  onCancelEdit,
   register,
 }: {
   step: ProposedChange[];
@@ -86,11 +101,18 @@ function TrackedStep({
   label: string;
   current: boolean;
   flash: boolean;
+  view: ReviewView;
+  /** What it answers, under it while it's read. */
+  note?: ReactNode;
+  editing: boolean;
   assets: Map<string, string>;
   onOpen: () => void;
+  onEdited: (text: string) => void;
+  onCancelEdit: () => void;
   register: (element: HTMLDivElement | null) => void;
 }) {
   const t = useTranslations('editor.improvements');
+  const editor = useRef<TextEditorHandle>(null);
   const html = useMemo(
     () =>
       step.map((change) => ({
@@ -108,11 +130,16 @@ function TrackedStep({
   const chosen = decisions.filter((decision, k) => decision !== null && actionable(states[k]));
   const decision = !chosen.length ? (decisions.every((value) => value === null) ? 'keep' : 'none') : chosen.every((value) => value === chosen[0]) ? chosen[0] : 'mixed';
   const goesIn = (k: number) => (decisions[k] === null ? true : actionable(states[k]) ? decisions[k] === 'keep' : states[k] === 'done');
+  const nearby = states.includes('nearby');
 
+  const plain = (content: string, key: string) => (content ? <div key={key} className={`${workspace.prose} ${styles.proseBlock}`} dangerouslySetInnerHTML={{ __html: content }} /> : null);
   const part = (change: ProposedChange, k: number) => {
     const shown = html[k];
+    if (view === 'original') return plain(shown.before, change.id);
+    if (view === 'final') return plain(goesIn(k) ? shown.after : shown.before, change.id);
     if (change.kind === 'add') {
-      return goesIn(k) ? (
+      // One to check still shows what it would add: it's skipped only until it's been looked at.
+      return goesIn(k) || nearby ? (
         <div key={change.id} className={`${workspace.prose} ${styles.proseBlock} ${styles.trackedAdd}`} dangerouslySetInnerHTML={{ __html: shown.after }} />
       ) : (
         <p key={change.id} className={styles.trackedSkipped}>
@@ -120,10 +147,12 @@ function TrackedStep({
         </p>
       );
     }
-    if (!goesIn(k)) return <div key={change.id} className={`${workspace.prose} ${styles.proseBlock}`} dangerouslySetInnerHTML={{ __html: shown.before }} />;
+    if (!goesIn(k) && !nearby) return plain(shown.before, change.id);
     if (change.kind === 'remove') return <div key={change.id} className={`${workspace.prose} ${styles.proseBlock} ${styles.trackedRemove}`} dangerouslySetInnerHTML={{ __html: shown.before }} />;
-    return <div key={change.id} className={`${workspace.prose} ${styles.proseBlock}`} dangerouslySetInnerHTML={{ __html: shown.inline }} />;
+    return plain(shown.inline, change.id);
   };
+  const parts = step.map(part);
+  const editable = editableOf(step);
 
   return (
     <div
@@ -132,24 +161,45 @@ function TrackedStep({
       data-step={number - 1}
       data-kind={kind}
       data-decision={decision}
+      data-view={view}
       data-current={current || undefined}
       data-flash={flash || undefined}
       role="button"
       tabIndex={0}
       aria-label={label}
+      aria-current={current ? 'true' : undefined}
       data-testid="inline-change"
       onClick={() => {
         // Selecting text to copy isn't a click on the change.
-        if (window.getSelection()?.toString()) return;
+        if (editing || window.getSelection()?.toString()) return;
         onOpen();
       }}
       onKeyDown={(event) => {
-        if (event.target !== event.currentTarget || (event.key !== 'Enter' && event.key !== ' ')) return;
+        if (event.target !== event.currentTarget || event.key !== ' ') return;
         event.preventDefault();
         onOpen();
       }}
     >
-      {step.map(part)}
+      {nearby && decision !== 'keep' && view === 'markup' ? <span className={styles.checkTag} data-testid="check-place">{t('nearby.tag')}</span> : null}
+      {editing && editable ? (
+        <div data-testid="edit-in-place">
+          <TextEditor ref={editor} initial={editable.after.join('\n\n')} assets={assets} label={t('yourVersion')} />
+          <div className={styles.actionsEnd}>
+            <button type="button" className={workspace.ghostButton} onClick={onCancelEdit}>
+              {t('cancel')}
+            </button>
+            <button type="button" className={workspace.primaryButton} onClick={() => onEdited(editor.current?.read() ?? editable.after.join('\n\n'))} data-testid="keep-edited">
+              {t('keepEdited')}
+            </button>
+          </div>
+        </div>
+      ) : parts.some(Boolean) ? (
+        parts
+      ) : current ? (
+        <p className={styles.unseen}>{view === 'original' ? t('views.notInOriginal') : t('views.leftOut')}</p>
+      ) : null}
+      {current && !editing && nearby && decision !== 'keep' ? <p className={styles.changeNote}>{t('nearby.note')}</p> : null}
+      {current && !editing && note ? <p className={styles.changeNote} data-testid="change-answers">{note}</p> : null}
       <span className={styles.pin} aria-hidden title={t('compareTitle', { index: number, total })}>
         {number}
       </span>
@@ -159,16 +209,20 @@ function TrackedStep({
 
 /**
  * The lesson, whole, as learners see it: the passages feedback quoted marked in it (a click on one
- * opens it), the sections an improvement is about marked while there's nothing to review, and its
- * proposed changes tracked in place while there is, each with its number in the margin and opened
- * side by side (`CompareSheet`, which the caller opens from its list too) to keep, skip or rewrite.
- * While reviewing, the change being read (the one across the reading line) is told to the caller,
- * which marks it in its list.
+ * opens it), the sections an improvement is about marked while there's nothing to review (and the
+ * one AI is writing now), and its proposed changes tracked in place while there is, each with its
+ * number in the margin. They're reviewed here, one at a time: a bar stays in view to keep or skip the
+ * one being read (⏎ ⌫, and ↑ ↓ between them), which moves on to the next not looked at, to rewrite it
+ * in place, or to open it side by side (`CompareSheet`). The one being read (across the reading line
+ * as the window scrolls) is told to the caller, which marks it in its list.
  */
 export default function LessonPart({
   text,
   focus,
+  writing = null,
   changes,
+  view = 'markup',
+  goToStep = null,
   appliedBlocks,
   assets,
   comparing = null,
@@ -181,7 +235,12 @@ export default function LessonPart({
 }: {
   text: string;
   focus: number[];
+  /** The section AI is writing now, by its heading (undefined: none; null: the part before the first heading). */
+  writing?: string | null;
   changes?: InlineChanges | null;
+  view?: ReviewView;
+  /** A step to bring into view and read (asked from the caller's list; `at` tells one ask from the next). */
+  goToStep?: { index: number; at: number } | null;
   appliedBlocks?: Set<string>;
   assets: Map<string, string>;
   /** The change open side by side (by its step's index); null: none. */
@@ -189,7 +248,7 @@ export default function LessonPart({
   onCompare?: (index: number | null) => void;
   /** The change across the reading line as the window scrolls (null: none near it). */
   onReading?: (index: number | null) => void;
-  /** A quiet line under a change opened side by side (the feedback it answers). */
+  /** A quiet line under the change being read, and in its sheet (the feedback it answers). */
   note?: (step: ProposedChange[]) => ReactNode;
   passages?: PassageMark[];
   selectedPassage?: string | null;
@@ -211,10 +270,15 @@ export default function LessonPart({
   const choosing = Boolean(changes?.onDecide);
   const [current, setCurrent] = useState<number | null>(null);
   const [flash, setFlash] = useState<number | null>(null);
+  const [editingAt, setEditingAt] = useState<number | null>(null);
+  const [said, setSaid] = useState('');
   const elements = useRef(new Map<number, HTMLDivElement>());
+  // A change was chosen: scrolling to it doesn't choose another on the way.
+  const heldUntil = useRef(0);
 
-  // The change across the reading line, as the window scrolls: the nearest one, if it's close.
+  // The change across the reading line, as the window scrolls: the nearest one.
   const follow = useCallback(() => {
+    if (Date.now() < heldUntil.current) return;
     const line = window.innerHeight * READING_LINE;
     let best: number | null = null;
     let distance = Infinity;
@@ -226,7 +290,7 @@ export default function LessonPart({
         best = index;
       }
     });
-    setCurrent(distance < window.innerHeight * 0.25 ? best : null);
+    if (best !== null) setCurrent(best);
   }, []);
   useEffect(() => {
     if (!choosing || !steps.length) return;
@@ -254,17 +318,24 @@ export default function LessonPart({
   const goTo = useCallback((index: number) => {
     const element = elements.current.get(index);
     if (!element) return;
+    heldUntil.current = Date.now() + 700;
     const top = element.getBoundingClientRect().top + window.scrollY - window.innerHeight * READING_LINE + 12;
     window.scrollTo({ top: Math.max(0, top), behavior: reducedMotion() ? 'auto' : 'smooth' });
     setCurrent(index);
   }, []);
+  useEffect(() => {
+    if (goToStep) goTo(goToStep.index);
+  }, [goToStep, goTo]);
 
-  // A new draft to review: its first change brought into view when it's below the fold, as is the
-  // first section an improvement is about before there's anything to review.
+  // A new draft to review: its first change brought into view when it's below the fold (one to check
+  // the place of comes first), as is the first section an improvement is about before there's
+  // anything to review.
   const firstKey = steps[0]?.[0]?.id ?? (focus.length ? `focus-${focus[0]}` : '');
   const body = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const element = steps.length ? elements.current.get(0) : body.current?.querySelector(`.${styles.focus}`);
+    const first = Math.max(0, steps.findIndex((step) => step.some((change) => changes?.states[change.id] === 'nearby')));
+    if (steps.length) setCurrent(first);
+    const element = steps.length ? elements.current.get(first) : body.current?.querySelector(`.${styles.focus}`);
     if (!firstKey || !element) return;
     const box = element.getBoundingClientRect();
     if (box.top > window.innerHeight * 0.85) {
@@ -314,7 +385,16 @@ export default function LessonPart({
         current={choosing && current === index}
         flash={flash === index}
         assets={assets}
-        onOpen={() => onCompare?.(index)}
+        view={view}
+        note={note?.(step)}
+        editing={editingAt === index}
+        onOpen={() => goTo(index)}
+        onEdited={(written) => {
+          setEditingAt(null);
+          const editable = editableOf(step);
+          if (editable) changes!.onEdit?.(editable, written);
+        }}
+        onCancelEdit={() => setEditingAt(null)}
         register={(element) => {
           if (element) elements.current.set(index, element);
           else elements.current.delete(index);
@@ -322,6 +402,62 @@ export default function LessonPart({
       />
     );
   };
+
+  // --- Deciding, from the bar or the keyboard: the one being read, then on to the next not looked at ---
+  const reading = current !== null && steps[current] ? current : 0;
+  const readingStep = choosing ? (steps[reading] ?? null) : null;
+  const choosableOf = (step: ProposedChange[]) => step.filter((change) => actionable(changes?.states[change.id]));
+  const readingChoosable = readingStep ? choosableOf(readingStep) : [];
+  const readingDecision = readingChoosable.length
+    ? readingChoosable.every((change) => changes!.decisionOf(change) === 'keep')
+      ? 'keep'
+      : readingChoosable.every((change) => changes!.decisionOf(change) === 'skip')
+        ? 'skip'
+        : null
+    : null;
+  const move = (by: number) => {
+    const next = Math.min(steps.length - 1, Math.max(0, reading + by));
+    setEditingAt(null);
+    goTo(next);
+  };
+  const decide = (value: ChangeDecision) => {
+    if (!readingStep || !readingChoosable.length) return;
+    // Out of sight, the key only brings it back: nothing is decided on a change nobody can see.
+    const box = elements.current.get(reading)?.getBoundingClientRect();
+    if (box && (box.bottom < 0 || box.top > window.innerHeight)) {
+      goTo(reading);
+      return;
+    }
+    readingChoosable.forEach((change) => changes!.onDecide!(change, value));
+    setSaid(t('review.said', { index: reading + 1, total: steps.length, decision: value }));
+    const done = (step: ProposedChange[], index: number) => index === reading || !choosableOf(step).length || choosableOf(step).every((change) => changes!.isLooked?.(change));
+    const order = steps.map((_, index) => (reading + 1 + index) % steps.length);
+    const next = order.find((index) => !done(steps[index], index));
+    if (next === undefined) changes!.onAllLooked?.();
+    else goTo(next);
+  };
+  const readingEditable = readingStep ? editableOf(readingStep) : null;
+  const canRewrite = Boolean(readingEditable && changes?.onEdit && !isImageBlocks(readingEditable.after) && actionable(changes.states[readingEditable.id]));
+  const decideRef = useRef(decide);
+  decideRef.current = decide;
+  const moveRef = useRef(move);
+  moveRef.current = move;
+  useEffect(() => {
+    if (!choosing || !steps.length) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (comparing !== null || editingAt !== null || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return;
+      const target = event.target as HTMLElement | null;
+      if (target?.closest('input, textarea, select, [contenteditable="true"], [role="dialog"], [role="menu"]')) return;
+      if (event.key === 'ArrowDown') moveRef.current(1);
+      else if (event.key === 'ArrowUp') moveRef.current(-1);
+      else if (event.key === 'Backspace') decideRef.current('skip');
+      else if (event.key === 'Enter' && !target?.closest('button, a')) decideRef.current('keep');
+      else return;
+      event.preventDefault();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [choosing, steps.length, comparing, editingAt]);
 
   // The passages feedback quoted, found in the lesson as it's shown and painted over its text (the
   // DOM isn't touched, so the rendered lesson stays as React wrote it). Found again whenever the
@@ -375,14 +511,17 @@ export default function LessonPart({
   }, [steps]);
   // The sections an improvement is about are marked while there's nothing to review (not when it's all of them).
   const marked = (index: number) => !steps.length && focus.length > 0 && focus.length < sectionCount && focus.includes(sectionOfBlock[index]);
+  // The section AI is writing now, by its place among the lesson's sections.
+  const writingAt = useMemo(() => (writing === undefined ? -1 : lessonSections(text).findIndex((section) => section.heading === writing)), [text, writing]);
+  const toneOf = (index: number) => (writingAt >= 0 && sectionOfBlock[index] === writingAt ? styles.writing : marked(index) ? styles.focus : undefined);
 
   const out: ReactNode[] = [];
   let run: string[] = [];
-  let runMarked = false;
+  let runTone: string | undefined;
   const flushRun = (key: string) => {
     if (run.length) {
       out.push(
-        <div key={`p${key}`} className={runMarked ? styles.focus : undefined}>
+        <div key={`p${key}`} className={runTone}>
           <Prose text={run.join('\n\n')} assets={assets} />
         </div>
       );
@@ -411,8 +550,8 @@ export default function LessonPart({
       out.push(<Prose key={`a${index}`} text={block} assets={assets} className={styles.applied} />);
       continue;
     }
-    if (run.length && marked(index) !== runMarked) flushRun(String(index));
-    runMarked = marked(index);
+    if (run.length && toneOf(index) !== runTone) flushRun(String(index));
+    runTone = toneOf(index);
     run.push(block);
   }
   flushRun('end');
@@ -436,6 +575,43 @@ export default function LessonPart({
       >
         {out}
       </div>
+      {readingStep ? (
+        <div className={styles.reviewBar} role="toolbar" aria-label={t('review.label')} data-testid="review-bar">
+          <button type="button" className={styles.barIcon} onClick={() => move(-1)} disabled={reading === 0} aria-label={t('previousChange')} title={t('previousChange')} data-testid="review-prev">
+            <TbChevronUp aria-hidden size={18} />
+          </button>
+          <button type="button" className={styles.barIcon} onClick={() => move(1)} disabled={reading === steps.length - 1} aria-label={t('nextChange')} title={t('nextChange')} data-testid="review-next">
+            <TbChevronDown aria-hidden size={18} />
+          </button>
+          <span className={styles.barCount} data-testid="review-position">
+            {t('review.position', { index: reading + 1, total: steps.length })}
+          </span>
+          <span className={styles.barSpace} />
+          <button type="button" className={`${styles.barIcon} ${styles.barSideBySide}`} onClick={() => onCompare?.(reading)} aria-label={t('review.sideBySide')} title={t('review.sideBySide')} data-testid="side-by-side">
+            <TbLayoutColumns aria-hidden size={18} />
+          </button>
+          {canRewrite ? (
+            <button type="button" className={workspace.ghostButton} onClick={() => setEditingAt(reading)} disabled={editingAt !== null} aria-label={t('edit')} data-testid="edit-change">
+              <TbPencil aria-hidden size={15} /> <span className={styles.barLabel}>{t('edit')}</span>
+            </button>
+          ) : null}
+          {readingChoosable.length ? (
+            <div className={workspace.segmented} role="group" aria-label={t('review.label')}>
+              <button type="button" aria-pressed={readingDecision === 'skip'} className={readingDecision === 'skip' ? workspace.segmentActive : workspace.segment} onClick={() => decide('skip')} data-testid="review-skip">
+                {t(readingStep.some((change) => changes?.states[change.id] === 'conflict') ? 'keepYours' : 'skip')}
+                <kbd className={styles.keyHint}>⌫</kbd>
+              </button>
+              <button type="button" aria-pressed={readingDecision === 'keep'} className={readingDecision === 'keep' ? workspace.segmentActive : workspace.segment} onClick={() => decide('keep')} data-testid="review-keep">
+                {t(readingStep.some((change) => changes?.states[change.id] === 'conflict') ? 'useProposed' : 'keep')}
+                <kbd className={styles.keyHint}>⏎</kbd>
+              </button>
+            </div>
+          ) : null}
+          <span className={styles.srOnly} role="status">
+            {said}
+          </span>
+        </div>
+      ) : null}
       {changes ? (
         <CompareSheet
           steps={steps}

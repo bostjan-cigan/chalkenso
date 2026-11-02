@@ -6,9 +6,17 @@
 
 /**
  * How far a draft is: someone's own Claude hasn't picked it up yet (a hand-off), the request is
- * being put together (or Claude reads it), Claude is thinking, Claude is writing.
+ * being put together (or Claude reads it), Claude is thinking, Claude is writing, the answer is
+ * written and being checked (a revision's diagrams, say).
  */
-export type DraftStage = 'waiting' | 'reading' | 'thinking' | 'writing';
+export type DraftStage = 'waiting' | 'reading' | 'thinking' | 'writing' | 'finishing';
+
+/** A revision as it is written: its summary so far, and the text's own sections (`revisionLive`). */
+export type RevisionLive = {
+  summary: string;
+  sections: Array<{ heading: string | null; state: 'done' | 'writing' | 'todo'; changes: number }>;
+  changes: number;
+};
 
 /** A draft as the page shows it. */
 export type AppDraftView = {
@@ -17,8 +25,8 @@ export type AppDraftView = {
   stage: DraftStage;
   /** What Claude has written so far (working), or the finished draft (ready). */
   text: string;
-  /** How far the writing is, 0–1, when it can be told (a revised lesson against the lesson's length). */
-  share: number | null;
+  /** How far a revision is, section by section; null for anything else. */
+  live: RevisionLive | null;
   /** Why it failed, in the person's language. */
   error: string | null;
   startedAt: string;
@@ -31,6 +39,8 @@ export type AppDraftView = {
 /** Progress is written about this often, and the page polls about as often. */
 export const PROGRESS_MS = 700;
 export const POLL_MS = 1000;
+/** With the page in another tab it's asked less often: only to say when the draft is ready. */
+export const HIDDEN_POLL_MS = 5000;
 /** No word from a working draft for this long: it stopped (a restart, a deploy) and won't finish. */
 export const STALE_MS = 2 * 60 * 1000;
 
@@ -94,14 +104,6 @@ export function partialTag(text: string, tag: string) {
     if (body.endsWith(closing.slice(0, length))) return body.slice(0, -length).trimStart();
   }
   return body.trimStart();
-}
-
-/**
- * How far a rewritten text is: the part written so far against the length of the text it rewrites,
- * capped below 1 (the end isn't known until it's there).
- */
-export function writtenShare(written: string, original: string) {
-  return Math.min(0.99, written.length / Math.max(original.length, 1));
 }
 
 /** "0:07", "1:42": how long a draft has been running. */

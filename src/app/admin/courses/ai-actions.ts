@@ -1,10 +1,10 @@
 'use server';
 
-import { AiProposalKind, Permission } from '@prisma/client';
+import { AiProposalKind, AiProposalStatus, Permission, type Prisma } from '@prisma/client';
 import { getTranslations } from 'next-intl/server';
 import { getCurrentUserSession } from '@/lib/admin-auth';
 import { DEFAULT_REVISION_SUMMARY, backgroundAiKey, reviseLesson, type FeedbackItem } from '@/lib/ai';
-import { partialTag, writtenShare } from '@/lib/ai-draft-progress';
+import { revisionLive } from '@/lib/revision-progress';
 import {
   discardLessonRevision,
   lessonDraftIds,
@@ -56,6 +56,14 @@ export async function startLessonRevisionAction(input: {
   taskId?: string | null;
   /** The lesson's revision the editor's text started from. */
   baseRevision?: number | null;
+  /** The whole lesson is rewritten, not only the sections the improvement is about. */
+  whole?: boolean;
+  /**
+   * A draft waiting on this lesson to go on from (changes carried from a group's copy, with what
+   * didn't fit to place): AI revises its text, the new draft is reviewed against the same lesson and
+   * takes its place once finished, and until then it still waits.
+   */
+  continues?: string | null;
 }): Promise<LessonRevisionStart> {
   const viewer = await requireVersionEdit(input.curriculumVersionId, [Permission.WRITE]);
   const t = await getTranslations('editor.ai');
@@ -69,6 +77,8 @@ export async function startLessonRevisionAction(input: {
   if (!input.markdown.trim()) {
     return { ok: false, message: t('writeFirst') };
   }
+  const earlier = input.continues ? await loadLessonRevision(input.continues) : null;
+  const going = earlier && earlier.targetId === lesson.id && earlier.status === AiProposalStatus.OPEN ? (earlier.payload as Record<string, unknown> | null) : null;
 
   // The task's plan, only for a task that changes this lesson and that the person may work on.
   let task: { id: string; title: string; plan: string; lessons: number; notes: string } | null = null;
@@ -121,12 +131,12 @@ export async function startLessonRevisionAction(input: {
     return { ok: false, message: t('lessonNotFound') };
   }
   const context = await courseContext(input.curriculumVersionId);
-  const base = input.markdown;
+  const base = typeof going?.markdown === 'string' ? going.markdown : input.markdown;
   // For an improvement, only the sections it is about (its feedback's passages, what its plan
   // names): the AI rewrites that part, which goes back into the lesson around it.
   let span: { start: number; end: number } | null = null;
   let headings: string[] = [];
-  if (task) {
+  if (task && !input.whole) {
     const links = await prisma.taskEntityLink.findMany({
       where: { taskId: task.id, entityType: TASK_ENTITY_TYPE.curriculumComment },
       select: { entityId: true },
@@ -153,6 +163,7 @@ export async function startLessonRevisionAction(input: {
     taskId: task?.id ?? null,
     baseRevision: input.baseRevision ?? null,
     run: async (progress, signal) => {
+      let answer = '';
       const revision = await reviseLesson(
         {
           courseTitle: context?.courseTitle ?? 'Untitled course',
@@ -169,11 +180,17 @@ export async function startLessonRevisionAction(input: {
           key: ai.key,
           userId: viewer.id,
           signal,
-          // The text is rewritten whole (the lesson, or its part): how much is written says how far it is.
-          onProgress: (next) =>
-            progress(next.stage === 'writing' ? { stage: 'writing', text: '', share: writtenShare(partialTag(next.text, 'lesson'), piece) } : next),
+          // The text is rewritten whole (the lesson, or its part), in order: which of its sections are
+          // written says how far it is. Its text stays here; once it's all there, what follows is checked.
+          onProgress: (next) => {
+            if (next.stage !== 'writing') return progress(next);
+            answer = next.text;
+            const live = revisionLive(answer, piece);
+            progress(answer.includes('</lesson>') ? { stage: 'finishing', live } : { stage: 'writing', text: '', live });
+          },
         }
       );
+      progress({ stage: 'finishing', live: revisionLive(answer, piece) });
       // Its diagrams cleaned and named apart from the lesson's images and other drafts' (one it
       // can't keep is left out, embed and all).
       const { markdown, diagrams } = cleanDraftDiagrams({
@@ -182,13 +199,24 @@ export async function startLessonRevisionAction(input: {
         diagrams: revision.diagrams,
         taken: await openDiagramPaths(lesson.id),
       });
+      // Going on from a waiting draft: reviewed against the same lesson, keeping where its changes
+      // came from (and how Undo on the group's copy takes them back). It waits no longer.
+      const why = (going?.why ?? {}) as Record<string, unknown>;
+      if (going && input.continues) await settleDraft(input.continues, 'discarded');
       return {
         payload: {
           markdown,
-          base,
+          base: typeof going?.base === 'string' ? going.base : base,
+          ...(going?.carries ? { carries: going.carries } : {}),
           ...(diagrams.length ? { diagrams } : {}),
-          why: { instruction: input.instruction.trim().slice(0, 4000), noteIds: comments.map((comment) => comment.id), taskId: task?.id ?? null, planTitle: task?.title ?? null },
-        },
+          why: {
+            ...(why.fromCopy ? { fromCopy: why.fromCopy, check: why.check ?? [], nearby: why.nearby ?? 0 } : {}),
+            instruction: input.instruction.trim().slice(0, 4000),
+            noteIds: comments.map((comment) => comment.id),
+            taskId: task?.id ?? null,
+            planTitle: task?.title ?? null,
+          },
+        } as Prisma.InputJsonValue,
         summary: revision.summary === DEFAULT_REVISION_SUMMARY ? null : revision.summary,
       };
     },
@@ -227,15 +255,6 @@ async function lessonDraftAccess(draftId: string) {
   if (!lesson) return null;
   const viewer = await requireVersionEdit(lesson.curriculumVersionId, [Permission.WRITE]);
   return { row, viewer };
-}
-
-/** How far a lesson revision is (the page polls it while it runs); null once used or discarded. */
-export async function lessonRevisionDraftAction(draftId: string): Promise<LessonDraftView | null> {
-  const found = await lessonDraftAccess(draftId);
-  if (!found) return null;
-  const view = await lessonDraftView(found.row, found.viewer.id);
-  // The summary is the AI's (in the lesson's language); our stand-in for a missing one is translated.
-  return view && !view.summary && view.state === 'ready' ? { ...view, summary: (await getTranslations('editor.ai'))('revisedAsRequested') } : view;
 }
 
 /** "Stop": the revision is no longer wanted, and the AI call stops at its next step. */

@@ -109,7 +109,7 @@ export default function TaskPlanEditor({
   // Clicked, the request still on its way (the feedback is being read): shown as the first stage.
   const [clickedAt, setClickedAt] = useState<string | null>(null);
   const shown: AppDraftView | null =
-    draft ?? (starting && clickedAt ? { id: '', state: 'working', stage: 'reading', text: '', share: null, error: null, startedAt: clickedAt, by: null, source: 'app' } : null);
+    draft ?? (starting && clickedAt ? { id: '', state: 'working', stage: 'reading', text: '', live: null, error: null, startedAt: clickedAt, by: null, source: 'app' } : null);
 
   // The plan handed to someone's own Claude: followed here, like a draft made here (an earlier one is
   // no longer waited for).
