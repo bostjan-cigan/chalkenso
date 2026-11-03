@@ -15,14 +15,13 @@ import SignupForm from './SignupForm';
 export const dynamic = 'force-dynamic';
 
 /**
- * The plan the pricing page sent them for (`?plan=…`), in the visitor's language; null where the
- * edition has no plans (the local edition), and `missing` when it has and none was picked.
+ * The plan the pricing page sent them for (`?plan=…`); null where the edition has no plans (the local edition), and `missing` when it has and none was picked.
  */
-async function signupPlan(locale: Locale, requested: string | undefined) {
-  const plans = await serverExtensions.signupPlans?.(locale);
+function signupPlan(requested: string | undefined) {
+  const plans = serverExtensions.signupPlans?.();
   if (!plans) return null;
   const wanted = requested?.toUpperCase();
-  return plans.options.find((option) => option.value === wanted) ?? 'missing';
+  return plans.find((option) => option.value === wanted) ?? 'missing';
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -38,24 +37,17 @@ export default async function SignupPage({ searchParams }: { searchParams: Promi
   const signIn = t.rich('links.haveAccount', { link: (chunks: ReactNode) => <Link href="/admin/login">{chunks}</Link> });
 
   if (!(await isSignupOpen())) {
-    return (
-      <AuthShell title={t('signup.closed.title')} intro={t('signup.closed.intro')} footer={signIn}>
-        <span />
-      </AuthShell>
-    );
+    return <AuthShell title={t('signup.closed.title')} footer={signIn} />;
   }
 
   const locale = (await getLocale()) as Locale;
-  const [intro, plan] = await Promise.all([
-    serverExtensions.signupIntro(locale),
-    signupPlan(locale, (await searchParams).plan),
-  ]);
+  const plan = signupPlan((await searchParams).plan);
   // Where the edition has plans, registering starts with picking one, on its pricing page.
   if (plan === 'missing') {
     redirect(localePath('/pricing', locale));
   }
   return (
-    <AuthShell kicker={intro.kicker} title={t('signup.title')} intro={intro.intro} footer={signIn}>
+    <AuthShell title={t('signup.title')} footer={signIn}>
       <SignupForm minPasswordLength={MIN_PASSWORD_LENGTH} plan={plan} checkHandles={EDITION === 'cloud'} />
       {ui.SignupNote ? <ui.SignupNote /> : null}
     </AuthShell>

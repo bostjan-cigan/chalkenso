@@ -1,8 +1,8 @@
 /* Course access page (`/l/course/<token>`): laid out like the course page on /courses (one
    column, no cards, no site header), with lessons opening in place. */
 
-/* "Course access" / "Draft preview" tag above the title. */
-.eyebrow {
+/* "Draft preview" / "Instructor view" tag above the title (a learner's own page has none). */
+.mode {
   align-self: flex-start;
 }
 
@@ -43,7 +43,6 @@
   font-size: 1.05rem;
 }
 
-.creditAvatar,
 .creditLogo {
   flex-shrink: 0;
   width: 3rem;
@@ -135,28 +134,13 @@
   max-width: 60ch;
 }
 
-/* A paused course: lessons read as usual, nothing can be sent. Quiet, above the outline. */
+/* A paused course: lessons read as usual, nothing can be sent. One quiet line above the outline. */
 .readOnlyNotice {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
   margin: 0 0 2rem;
   padding: 0.9rem 1.1rem;
   border: 1px solid var(--line);
   border-radius: 12px;
-}
-
-.readOnlyNotice h2 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.readOnlyNotice p {
-  margin: 0;
   line-height: 1.6;
-  color: var(--text-muted);
-  max-width: 60ch;
 }
 
 /* Lesson list: the same outline as the course page on /courses (numbered rows, arcs as headings),

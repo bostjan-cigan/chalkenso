@@ -11,12 +11,11 @@ export type CoursePageContextAction = {
 
 export type CoursePageContextBadge = {
   label: string;
-  variant?: 'accent' | 'warning' | 'muted' | 'kicker' | 'inactive';
+  variant?: 'accent' | 'warning' | 'muted' | 'inactive';
 };
 
 export type CoursePageContextProps = {
   title: string;
-  subtitle?: string;
   /** Optional status pill shown next to the title (e.g. Draft / Published). */
   badge?: CoursePageContextBadge;
   back?: { href: string; label: string };
@@ -25,7 +24,6 @@ export type CoursePageContextProps = {
 
 export default function CourseManagementPageContext({
   title,
-  subtitle,
   badge,
   back,
   actions = [],
@@ -46,7 +44,6 @@ export default function CourseManagementPageContext({
             <h1 className={styles.coursePageContextTitle}>{title}</h1>
             {badge ? <AdminBadge variant={badge.variant}>{badge.label}</AdminBadge> : null}
           </div>
-          {subtitle ? <p className={styles.coursePageContextSubtitle}>{subtitle}</p> : null}
         </div>
         {actions.length > 0 ? (
           <div className={styles.coursePageContextActions}>

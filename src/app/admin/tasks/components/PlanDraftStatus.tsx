@@ -24,7 +24,7 @@ const boxStyle = {
  * A plan draft AI writes in the background, here or in someone's own Claude (a hand-off): while it
  * works, what it is doing, for how long, and the plan as it is written (the person may leave; it
  * waits here); once it is done and not in the box yet, the draft with Use this plan and Discard; if
- * it failed, why.
+ * it failed, why. A hand-off still waiting for Claude says what the person has to do there.
  */
 export default function PlanDraftStatus({
   draft,
@@ -88,7 +88,7 @@ export default function PlanDraftStatus({
       : t(draft.stage === 'reading' ? 'claudeStages.reading' : 'claudeStages.writing')
     : t(`stages.${draft.stage === 'waiting' ? 'reading' : draft.stage === 'finishing' ? 'writing' : draft.stage}`);
   const quiet = Date.now() - new Date(draft.startedAt).getTime() > QUIET_MS;
-  const hint = !claude ? t('leave') : draft.stage === 'waiting' ? (quiet ? t('notStarted') : t('send')) : t('inClaude');
+  const hint = claude && draft.stage === 'waiting' ? (quiet ? t('notStarted') : t('send')) : null;
   return (
     <AiWorking
       label={label}

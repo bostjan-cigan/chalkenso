@@ -5,7 +5,7 @@
 <h1 align="center">Chalkenso</h1>
 
 <p align="center">
-  <strong>AI-assisted curriculum design: courses that get better every time they're taught.</strong>
+  <strong>AI-assisted curriculum design.</strong>
 </p>
 
 <p align="center">

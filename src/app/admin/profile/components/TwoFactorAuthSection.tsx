@@ -52,7 +52,6 @@ export default function TwoFactorAuthSection({
   const setupTitleId = useId();
   const setupDescriptionId = useId();
   const manageTitleId = useId();
-  const manageDescriptionId = useId();
   const confirmFormId = 'admin-totp-confirm-form';
   const disableFormId = 'admin-totp-disable-form';
   const busy = isPending || isBeginning;
@@ -107,12 +106,12 @@ export default function TwoFactorAuthSection({
 
   return (
     <>
-      {/* A row of the Profile's Security group (its footer says what it does); its steps are dialogs. */}
+      {/* A row of the Profile's security group; its steps are dialogs. */}
       {totpEnabled && required ? (
-        <SheetInfoRow label={t('kicker')} value={t('rowOn')} testId="two-factor-row" />
+        <SheetInfoRow label={t('title')} value={t('rowOn')} testId="two-factor-row" />
       ) : (
         <SheetOpenRow
-          label={t('kicker')}
+          label={t('title')}
           value={totpEnabled ? t('rowOn') : t('rowOff')}
           disabled={busy}
           onClick={() => {
@@ -128,7 +127,7 @@ export default function TwoFactorAuthSection({
       )}
 
       <AccessLinkModalPortal
-        descriptionId={setupDescriptionId}
+        descriptionId={step === 'codes' ? setupDescriptionId : undefined}
         open={setupOpen}
         titleId={setupTitleId}
         onClose={() => {
@@ -139,9 +138,12 @@ export default function TwoFactorAuthSection({
           <h2 id={setupTitleId} className={modalStyles.modalTitle}>
             {step === 'codes' ? t('codesTitle') : t('setUp')}
           </h2>
-          <p id={setupDescriptionId} className={modalStyles.modalDescription}>
-            {step === 'password' ? t('passwordStep') : step === 'scan' ? t('scanStep') : t('codesStep')}
-          </p>
+          {/* Only the backup codes need a line: they are shown once. */}
+          {step === 'codes' ? (
+            <p id={setupDescriptionId} className={modalStyles.modalDescription}>
+              {t('codesStep')}
+            </p>
+          ) : null}
         </header>
         <div className={modalStyles.modalBody}>
           <ActionNotice notice={notice} />
@@ -170,7 +172,7 @@ export default function TwoFactorAuthSection({
                 width={200}
               />
               <div className={styles.totpManualSecret}>
-                <span className={styles.fieldHint}>{t('secret')}</span>
+                <span className={styles.quietText}>{t('secret')}</span>
                 <code className={styles.totpSecretCode}>{setupPayload.manualSecret}</code>
               </div>
             </>
@@ -223,7 +225,6 @@ export default function TwoFactorAuthSection({
       </AccessLinkModalPortal>
 
       <AccessLinkModalPortal
-        descriptionId={manageDescriptionId}
         open={manageOpen}
         titleId={manageTitleId}
         onClose={() => {
@@ -232,11 +233,8 @@ export default function TwoFactorAuthSection({
       >
         <header className={modalStyles.modalHeader}>
           <h2 id={manageTitleId} className={modalStyles.modalTitle}>
-            {t('kicker')}
+            {t('title')}
           </h2>
-          <p id={manageDescriptionId} className={modalStyles.modalDescription}>
-            {t('manageDescription')}
-          </p>
         </header>
         <div className={modalStyles.modalBody}>
           <ActionNotice notice={notice} />

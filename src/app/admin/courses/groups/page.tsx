@@ -100,9 +100,8 @@ export default async function CourseGroupsPage({
     >
       <section className={styles.editorPageSection}>
         <AdminSectionCard
-          kicker={t('kicker')}
-          title=""
-          kickerAction={
+          title={t('title')}
+          action={
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
               {/* All or mine: a switch, so a segmented control; New is the card's one filled button. */}
               <SegmentedControl
@@ -122,7 +121,7 @@ export default async function CourseGroupsPage({
           }
         >
           {lastGroup ? (
-            <p className={styles.fieldHint} style={{ margin: '0 0 0.9rem' }}>
+            <p className={styles.quietText} style={{ margin: '0 0 0.9rem' }}>
               {t('lastOpened')}{' '}
               <Link href={`/admin/courses/groups/${lastGroup.id}`} className={styles.inlineLink}>
                 {lastGroup.name} →
@@ -133,8 +132,7 @@ export default async function CourseGroupsPage({
             <GroupDirectory rows={rows} />
           ) : (
             <div className={styles.emptyState}>
-              <h3 className={styles.emptyStateTitle}>{mine ? t('emptyMine.title') : t('empty.title')}</h3>
-              <p className={styles.emptyStateText}>{mine ? t('emptyMine.text') : t('empty.text')}</p>
+              <h3 className={styles.emptyStateTitle}>{mine ? t('emptyMine') : t('empty')}</h3>
             </div>
           )}
         </AdminSectionCard>

@@ -36,8 +36,6 @@ interface InstructorLinksPanelProps {
   initialLink: OwnLink | null;
   /** Everyone's links, for the people who manage the group (null: not shown). */
   links: InstructorLinkRow[] | null;
-  /** The sentence on what the link does (off where a page says it once for several groups). */
-  intro?: boolean;
 }
 
 /**
@@ -51,7 +49,6 @@ export default function InstructorLinksPanel({
   canNote,
   initialLink,
   links,
-  intro = true,
 }: InstructorLinksPanelProps) {
   const t = useTranslations('groups.instructorLinks');
   const locale = useLocale();
@@ -80,7 +77,6 @@ export default function InstructorLinksPanel({
       <ActionNotice notice={notice} />
       {canNote ? (
         <>
-          {intro ? <p className={adminStyles.fieldHint} style={{ margin: 0 }}>{t('intro')}</p> : null}
           {link ? (
             <div className={styles.inlineAccessRow}>
               <div className={styles.inlineAccessMain}>
@@ -142,7 +138,7 @@ export default function InstructorLinksPanel({
 
       {links && links.length > 0 ? (
         <div style={{ display: 'grid', gap: '0.5rem' }}>
-          <p className={adminStyles.fieldHint} style={{ margin: 0, fontWeight: 600 }}>
+          <p className={adminStyles.quietText} style={{ margin: 0, fontWeight: 600 }}>
             {t('withLink')}
           </p>
           {links.map((row) => (

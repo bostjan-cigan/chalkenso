@@ -28,7 +28,7 @@ export default async function ApiTokensPage() {
   }));
 
   return (
-    <SettingsFrame active="tokens" title={t('title')} description={t('description')}>
+    <SettingsFrame active="tokens" title={t('title')}>
       <ObsidianConnect synced={synced} />
       <ApiTokensManager tokens={tokenViews} />
     </SettingsFrame>

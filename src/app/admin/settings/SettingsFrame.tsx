@@ -27,17 +27,15 @@ const TILE: Record<string, string> = {
  * sync tokens), Export, and Partners (shared by every course). Owners and admins see every tab;
  * members reach Tokens, Export (what they can open) and Partners. A component rather than a layout,
  * so an edition's own pages share it. The tabs' names are in `app.nav.settings`; the page gives its
- * own title and description.
+ * title.
  */
 export default async function SettingsFrame({
   active,
   title,
-  description,
   children,
 }: {
   active: string;
   title: string;
-  description?: string;
   children: ReactNode;
 }) {
   const [session, t] = await Promise.all([getCurrentUserSession(), getTranslations('app.nav.settings')]);
@@ -59,11 +57,8 @@ export default async function SettingsFrame({
     ...(exports ? [{ key: 'export', label: t('tabs.export'), href: '/admin/settings/export', Icon: TbPackageExport }] : []),
     { key: 'partners', label: t('tabs.partners'), href: '/admin/courses/partners', Icon: TbBuildingStore },
   ];
-  // The page's title is enough (Apple's Settings has no sentence under it); `description` is kept
-  // for the page's metadata and callers, not shown.
-  void description;
   return (
-    <AdminFrame navItems={adminNavItems('settings')} eyebrow={t('label')} title={title}>
+    <AdminFrame navItems={adminNavItems('settings')} title={title}>
       <div className={ui_.layout}>
         <nav className={ui_.nav} aria-label={t('label')}>
           {tabs.map(({ key, label, href, Icon }) => (

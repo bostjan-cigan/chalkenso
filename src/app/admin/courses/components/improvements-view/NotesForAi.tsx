@@ -13,10 +13,9 @@ import styles from './improvements-view.module.css';
  * instructor's own words about these changes, kept on the improvement. Planning and drafting here
  * use them, and so do the person's Claude and Obsidian. A row: put it in a `SheetRows` list.
  */
-export default function NotesForAi({ taskId, notes, planned, canEdit }: { taskId: string; notes: string; planned: boolean; canEdit: boolean }) {
+export default function NotesForAi({ taskId, notes, canEdit }: { taskId: string; notes: string; canEdit: boolean }) {
   const t = useTranslations('editor.improvements.notes');
   const router = useRouter();
-  const fieldId = useId();
   const formId = useId();
   const [open, setOpen] = useState(false);
   const [text, setText] = useState(notes);
@@ -59,11 +58,7 @@ export default function NotesForAi({ taskId, notes, planned, canEdit }: { taskId
             if (canEdit) save();
           }}
         >
-          <label className={styles.quiet} htmlFor={fieldId}>
-            {t('hint')}
-          </label>
           <textarea
-            id={fieldId}
             className={styles.planBox}
             value={text}
             readOnly={!canEdit}
@@ -73,9 +68,9 @@ export default function NotesForAi({ taskId, notes, planned, canEdit }: { taskId
               setError(null);
             }}
             placeholder={t('placeholder')}
+            aria-label={t('title')}
             data-testid="notes-for-ai-box"
           />
-          {planned ? <p className={styles.quiet}>{t('planned')}</p> : null}
           {error ? <p className={styles.error}>{error}</p> : null}
         </form>
       </Sheet>

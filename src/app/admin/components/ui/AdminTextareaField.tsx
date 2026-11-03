@@ -1,6 +1,6 @@
 'use client';
 
-import { forwardRef, ReactNode, TextareaHTMLAttributes } from 'react';
+import { forwardRef, TextareaHTMLAttributes } from 'react';
 import { cn } from '@/utils/cn';
 import styles from '../../admin.module.css';
 
@@ -9,7 +9,8 @@ type TextareaVariant = 'default' | 'markdown';
 interface AdminTextareaFieldProps
   extends Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'className'> {
   label: string;
-  hint?: ReactNode;
+  /** What's wrong with the value, under the field. A field says nothing else. */
+  error?: string | null;
   className?: string;
   textareaClassName?: string;
   fullWidth?: boolean;
@@ -20,7 +21,7 @@ const AdminTextareaField = forwardRef<HTMLTextAreaElement, AdminTextareaFieldPro
   function AdminTextareaField(
     {
       label,
-      hint,
+      error,
       className,
       textareaClassName,
       fullWidth = false,
@@ -44,9 +45,10 @@ const AdminTextareaField = forwardRef<HTMLTextAreaElement, AdminTextareaFieldPro
             variant === 'markdown' && styles.textAreaMarkdown,
             textareaClassName
           )}
+          aria-invalid={error ? true : undefined}
           {...props}
         />
-        {hint ? <span className={styles.fieldHint}>{hint}</span> : null}
+        {error ? <span className={styles.fieldError} role="alert">{error}</span> : null}
       </label>
     );
   }

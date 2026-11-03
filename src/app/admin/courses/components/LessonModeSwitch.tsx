@@ -61,7 +61,7 @@ export default function LessonModeSwitch({
       <ConfirmDialog
         open={Boolean(leaving)}
         title={mode === 'edit' ? t('unsavedEditTitle') : t('unsavedImproveTitle')}
-        description={mode === 'edit' ? t('unsavedEditText') : t('unsavedImproveText')}
+        description={mode === 'edit' ? undefined : t('unsavedImproveText')}
         confirmLabel={t('saveAndSwitch')}
         pending={saving}
         onConfirm={async () => {

@@ -51,11 +51,11 @@ function InviteDeliveryChoice({
   const t = useTranslations('app.invite');
   return (
     <>
-      <span className={styles.inputLabel}>{t('sendIt')}</span>
-      <div role="radiogroup" aria-label={t('sendIt')} style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+      <span className={styles.inputLabel}>{t('by')}</span>
+      <div role="radiogroup" aria-label={t('by')} style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
         {(
           [
-            ['link', t('justLink')],
+            ['link', t('link')],
             ['email', t('email')],
           ] as const
         ).map(([value, label]) => (

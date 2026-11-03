@@ -72,7 +72,7 @@ export default async function PartnerDetailPage({ params, searchParams }: { para
         </SettingsBlock>
       </SettingsGroup>
 
-      <SettingsGroup title={t('whereItShows')} footer={usedBy.length ? undefined : t('unused')} testId="partner-used-by">
+      <SettingsGroup title={t('whereItShows')} testId="partner-used-by">
         {usedBy.length ? (
           usedBy.map((entry) => (
             <SettingsRow key={`${entry.href}-${entry.label}`} label={entry.label}>

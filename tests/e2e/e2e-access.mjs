@@ -269,7 +269,7 @@ try {
   await settle(member, '/admin');
   check(
     'with no courses or groups left they see nothing',
-    (await text(member)).includes('Ask an owner or admin') && (await member.locator('nav a[href="/admin/courses"], nav a[href="/admin/courses/groups"]').count()) === 0
+    /ask an owner or admin/i.test(await text(member)) && (await member.locator('nav a[href="/admin/courses"], nav a[href="/admin/courses/groups"]').count()) === 0
   );
   check('and stay limited', sql(`select access from public.organization_members where id = ${quote(memberId)}`) === 'LIMITED');
 

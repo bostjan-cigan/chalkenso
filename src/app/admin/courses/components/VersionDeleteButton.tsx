@@ -54,8 +54,8 @@ export default function VersionDeleteButton({
       <ConfirmDialog
         open={open}
         tone="danger"
-        title={t('deleteTitle')}
-        description={t('deleteNamedDescription', { label: versionLabel })}
+        title={t('deleteNamedTitle', { label: versionLabel })}
+        description={t('deleteDescription')}
         confirmLabel={t('delete')}
         pending={isDeleting}
         onConfirm={handleDelete}

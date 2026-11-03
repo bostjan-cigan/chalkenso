@@ -6,6 +6,7 @@ import ActionNotice from '@/app/admin/components/ui/ActionNotice';
 import AdminBadge from '@/app/admin/components/ui/AdminBadge';
 import AdminButton from '@/app/admin/components/ui/AdminButton';
 import AdminField from '@/app/admin/components/ui/AdminField';
+import AdminNotice from '@/app/admin/components/ui/AdminNotice';
 import AdminSelectField from '@/app/admin/components/ui/AdminSelectField';
 import AdminTextareaField from '@/app/admin/components/ui/AdminTextareaField';
 import { SheetControlRow, SheetRows, useSheetForm } from '@/app/admin/components/ui/Sheet';
@@ -49,55 +50,32 @@ export function GroupSettingsForm({ groupId, children, testId }: { groupId: stri
   );
 }
 
-/**
- * The group's name and its short name, which follows the name until it is changed. A new group
- * shows the short name quietly under the name (`quietSlug`), its field only after Change.
- */
-export function GroupNameFields({ initialName = '', initialSlug = '', quietSlug = false }: { initialName?: string; initialSlug?: string; quietSlug?: boolean }) {
+/** The group's name and its short name, which follows the name as it is typed and can be changed after. */
+export function GroupNameFields({ initialName = '', initialSlug = '' }: { initialName?: string; initialSlug?: string }) {
   const t = useTranslations('groups.form');
   const [name, setName] = useState(initialName);
   const [slug, setSlug] = useState(initialSlug);
-  const [slugShown, setSlugShown] = useState(!quietSlug);
-  const nameField = (
-    <AdminField
-      id="group-name"
-      name="name"
-      label={t('name')}
-      placeholder={t('namePlaceholder')}
-      value={name}
-      onChange={(event) => {
-        setName(event.target.value);
-        setSlug(createSlugCandidate(event.target.value, 'group'));
-      }}
-      required
-    />
-  );
-  if (!slugShown) {
-    return (
-      <div className={styles.field}>
-        {nameField}
-        <input type="hidden" name="slug" value={slug} />
-        <p className={styles.fieldHint} style={{ margin: 0 }} data-testid="group-slug-quiet">
-          {slug ? t('slugQuiet', { slug }) : t('slugQuietEmpty')}{' '}
-          <button type="button" className={styles.fieldHintAction} onClick={() => setSlugShown(true)}>
-            {t('slugChange')}
-          </button>
-        </p>
-      </div>
-    );
-  }
   return (
     <>
-      {nameField}
+      <AdminField
+        id="group-name"
+        name="name"
+        label={t('name')}
+        placeholder={t('namePlaceholder')}
+        value={name}
+        onChange={(event) => {
+          setName(event.target.value);
+          setSlug(createSlugCandidate(event.target.value, 'group'));
+        }}
+        required
+      />
       <AdminField
         id="group-slug"
         name="slug"
         label={t('slug')}
-        hint={t('slugHint')}
         placeholder={t('slugPlaceholder')}
         value={slug}
         onChange={(event) => setSlug(createSlugCandidate(event.target.value, 'group'))}
-        autoFocus={quietSlug}
       />
     </>
   );
@@ -118,12 +96,13 @@ export function GroupLessonsFields({
   versionsByCourseId: Record<string, VersionOption[]>;
   initialCourseId?: string;
   initialVersionId?: string;
-  /** An existing group's: changing the version revokes its links (the hint says so). */
+  /** An existing group's: saving another version revokes its links, said once one is picked. */
   editing?: boolean;
 }) {
   const t = useTranslations('groups.form');
   const [courseId, setCourseId] = useState(initialCourseId);
   const [versionId, setVersionId] = useState(initialVersionId);
+  const revokesLinks = editing && Boolean(initialVersionId && versionId) && versionId !== initialVersionId;
   return (
     <>
       <AdminSelectField
@@ -148,7 +127,6 @@ export function GroupLessonsFields({
         id="group-curriculum-version-id"
         name="curriculumVersionId"
         label={t('lessonsFrom')}
-        hint={editing ? t('lessonsFromHintEdit') : t('lessonsFromHintNew')}
         value={versionId}
         onChange={(event) => setVersionId(event.target.value)}
         disabled={!courseId}
@@ -160,6 +138,7 @@ export function GroupLessonsFields({
           </option>
         ))}
       </AdminSelectField>
+      {revokesLinks ? <AdminNotice>{t('revokesLinks')}</AdminNotice> : null}
     </>
   );
 }
@@ -184,7 +163,10 @@ export function GroupDateField({ id, name, label, initialValue }: { id: string; 
   );
 }
 
-/** The pasted roster and the learners read from it, as they will be stored. */
+/**
+ * The pasted roster, its format shown by the placeholder (a heading and numbers, cleaned away), and
+ * the learners read from it, as they will be stored, once there are any.
+ */
 export function GroupRosterFields({ initialRoster = '', fullWidth = false }: { initialRoster?: string; fullWidth?: boolean }) {
   const t = useTranslations('groups.form');
   const [roster, setRoster] = useState(initialRoster);
@@ -195,21 +177,19 @@ export function GroupRosterFields({ initialRoster = '', fullWidth = false }: { i
         id="group-roster"
         name="sourceRosterText"
         label={t('roster')}
-        hint={t('rosterHint')}
-        placeholder={`SEZNAM TEČAJNIKOV:\n\n1. ISMETA DJOGIĆ\n2. MIHA STERLE`}
+        placeholder={t('rosterPlaceholder')}
         value={roster}
         onChange={(event) => setRoster(event.target.value)}
         fullWidth={fullWidth}
       />
-      <div className={`${styles.rosterPreviewBlock} ${fullWidth ? styles.fieldFullWidth : ''}`}>
-        <div className={styles.editorTopLine}>
-          <div className={styles.rosterPreviewHeading}>
-            <h3>{t('parsed')}</h3>
-            <p className={styles.helperText}>{t('parsedHint')}</p>
+      {parsed.length > 0 ? (
+        <div className={`${styles.rosterPreviewBlock} ${fullWidth ? styles.fieldFullWidth : ''}`}>
+          <div className={styles.editorTopLine}>
+            <div className={styles.rosterPreviewHeading}>
+              <h3>{t('parsed')}</h3>
+            </div>
+            <AdminBadge variant="muted">{t('learners', { count: parsed.length })}</AdminBadge>
           </div>
-          <AdminBadge variant="muted">{t('learners', { count: parsed.length })}</AdminBadge>
-        </div>
-        {parsed.length > 0 ? (
           <div className={styles.memberPreviewList}>
             {parsed.map((member) => (
               <div key={`${member.position}-${member.fullName}`} className={styles.memberPreviewItem}>
@@ -218,13 +198,8 @@ export function GroupRosterFields({ initialRoster = '', fullWidth = false }: { i
               </div>
             ))}
           </div>
-        ) : (
-          <div className={styles.emptyState}>
-            <h3 className={styles.emptyStateTitle}>{t('parsedEmpty.title')}</h3>
-            <p className={styles.emptyStateText}>{t('parsedEmpty.text')}</p>
-          </div>
-        )}
-      </div>
+        </div>
+      ) : null}
     </>
   );
 }

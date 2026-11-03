@@ -1,14 +1,14 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { ChangeEvent, useState } from 'react';
+import { useState } from 'react';
 import Dropdown from '@/components/Dropdown';
 import { DEFAULT_LOCALE, LANGUAGES, LOCALES } from '@/i18n/config';
+import AdminCheckbox from '../../components/ui/AdminCheckbox';
 import AdminField from '../../components/ui/AdminField';
-import AdminSelectField from '../../components/ui/AdminSelectField';
 import AdminSubmitButton from '../../components/ui/AdminSubmitButton';
 import AdminTextareaField from '../../components/ui/AdminTextareaField';
-import { createSlugCandidate } from '@/lib/slugs';
+import { CourseJoinFields, CourseTagsField, CourseTitleFields } from './CourseSettingsSheets';
 import PartnerListField, { type PartnerOption } from './PartnerListField';
 import styles from '../../admin.module.css';
 
@@ -42,7 +42,8 @@ interface CourseFormProps {
 /**
  * A new course: its title, address, summary (also given to AI as context), an optional repository,
  * its partners, the language of its learner pages, and how it appears on the organisation's
- * website. An existing course's are set part by part on its Settings tab.
+ * website (its cover is added once it exists). An existing course's are set part by part on its
+ * Settings tab, with the same fields.
  */
 export default function CourseForm({
   action,
@@ -66,48 +67,18 @@ export default function CourseForm({
   submitLabel,
 }: CourseFormProps) {
   const t = useTranslations('courses.form');
-  const [title, setTitle] = useState(initialTitle);
-  const [slug, setSlug] = useState(initialSlug);
   const [summary, setSummary] = useState(initialSummary);
   const [githubUrl, setGithubUrl] = useState(initialGithubUrl);
   const [allLessonsFree, setAllLessonsFree] = useState(initialAllLessonsFree);
-  const [joinTarget, setJoinTarget] = useState<JoinTarget>(initialJoinTarget);
-  const [joinPartnerId, setJoinPartnerId] = useState(initialJoinPartnerId);
-  const joinPartner = partnerOptions.find((partner) => partner.id === joinPartnerId);
-
-  function handleTitleChange(event: ChangeEvent<HTMLInputElement>) {
-    setTitle(event.target.value);
-    setSlug(createSlugCandidate(event.target.value, ''));
-  }
 
   return (
     <form className={styles.formStack} action={action}>
-
-      <AdminField
-        id="course-title"
-        name="title"
-        label={t('title')}
-        onChange={handleTitleChange}
-        placeholder={t('titlePlaceholder')}
-        required
-        value={title}
-      />
-
-      <AdminField
-        id="course-slug"
-        name="slug"
-        label={t('slug')}
-        hint={t('slugHint')}
-        onChange={(event) => setSlug(createSlugCandidate(event.target.value, ''))}
-        placeholder={t('slugPlaceholder')}
-        value={slug}
-      />
+      <CourseTitleFields initialTitle={initialTitle} initialSlug={initialSlug} />
 
       <AdminTextareaField
         id="course-summary"
         name="summary"
         label={t('summary')}
-        hint={t('summaryHint')}
         onChange={(event) => setSummary(event.target.value)}
         placeholder={t('summaryPlaceholder')}
         value={summary}
@@ -116,8 +87,8 @@ export default function CourseForm({
       <AdminField
         id="course-github-url"
         name="githubUrl"
+        type="url"
         label={t('github')}
-        hint={t('githubHint')}
         onChange={(event) => setGithubUrl(event.target.value)}
         placeholder="https://github.com/your-org/course-materials"
         value={githubUrl}
@@ -127,7 +98,6 @@ export default function CourseForm({
         id="course-language"
         name="language"
         label={t('language')}
-        hint={t('languageHint')}
         options={LOCALES.map((code) => ({ value: code, label: LANGUAGES[code].name }))}
         defaultValue={initialLanguage}
       />
@@ -135,7 +105,6 @@ export default function CourseForm({
       <PartnerListField
         id="course-partners"
         label={t('partners')}
-        hint={t('partnersHint')}
         options={partnerOptions}
         initialPartnerIds={initialPartnerIds}
       />
@@ -144,25 +113,15 @@ export default function CourseForm({
         <legend className={styles.fieldLabel} style={{ marginBottom: '0.35rem' }}>
           {t('website')}
         </legend>
-        <p className={styles.fieldHint} style={{ margin: 0 }}>
-          {t('websiteHint')}
-        </p>
         <input type="hidden" name="websiteSettings" value="1" />
-        <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <input type="checkbox" name="publicListed" defaultChecked={initialPublicListed} /> {t('publicListed')}
-        </label>
-        <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <input type="checkbox" name="pinned" defaultChecked={initialPinned} /> {t('pinned')}
-        </label>
-        <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <input
-            type="checkbox"
-            name="allLessonsFree"
-            checked={allLessonsFree}
-            onChange={(event) => setAllLessonsFree(event.target.checked)}
-          />{' '}
-          {t('allLessonsFree')}
-        </label>
+        <AdminCheckbox name="publicListed" defaultChecked={initialPublicListed} label={t('publicListed')} />
+        <AdminCheckbox name="pinned" defaultChecked={initialPinned} label={t('pinned')} />
+        <AdminCheckbox
+          name="allLessonsFree"
+          checked={allLessonsFree}
+          onChange={(event) => setAllLessonsFree(event.target.checked)}
+          label={t('allLessonsFree')}
+        />
         {allLessonsFree ? null : (
           <AdminField
             id="course-free-lessons"
@@ -170,14 +129,9 @@ export default function CourseForm({
             type="number"
             min={0}
             label={t('freeLessons')}
-            hint={t('freeLessonsHint')}
             defaultValue={String(initialFreeLessonCount)}
           />
         )}
-        <div className={styles.field}>
-          <span className={styles.inputLabel}>{t('cover.label')}</span>
-          <span className={styles.fieldHint}>{t('cover.later')}</span>
-        </div>
         <AdminField
           id="course-outcome"
           name="outcome"
@@ -185,53 +139,13 @@ export default function CourseForm({
           placeholder={t('outcomePlaceholder')}
           defaultValue={initialOutcome}
         />
-        <AdminField
-          id="course-tags"
-          name="tags"
-          label={t('tags')}
-          hint={t('tagsHint')}
-          placeholder="Python, Docker, SQL"
-          defaultValue={initialTags.join(', ')}
+        <CourseTagsField initialTags={initialTags} />
+        <CourseJoinFields
+          initialJoinTarget={initialJoinTarget}
+          initialJoinPartnerId={initialJoinPartnerId}
+          initialEnrolUrl={initialEnrolUrl}
+          partnerOptions={partnerOptions}
         />
-        <AdminSelectField
-          id="course-join-target"
-          name="joinTarget"
-          label={t('join')}
-          hint={t('joinHint')}
-          onChange={(event) => setJoinTarget(event.target.value as JoinTarget)}
-          value={joinTarget}
-        >
-          <option value="LINKEDIN">{t('joinTarget.default')}</option>
-          <option value="PARTNER">{t('joinTarget.partner')}</option>
-          <option value="LINK">{t('joinTarget.link')}</option>
-        </AdminSelectField>
-        {joinTarget === 'PARTNER' ? (
-          <AdminSelectField
-            id="course-join-partner"
-            name="joinPartnerId"
-            label={t('joinPartner')}
-            hint={joinPartner && !joinPartner.websiteUrl ? t('joinPartnerNoWebsite') : t('joinPartnerHint')}
-            onChange={(event) => setJoinPartnerId(event.target.value)}
-            value={joinPartnerId}
-          >
-            <option value="">{t('joinPartnerChoose')}</option>
-            {partnerOptions.map((partner) => (
-              <option key={partner.id} value={partner.id}>
-                {partner.name}
-              </option>
-            ))}
-          </AdminSelectField>
-        ) : null}
-        {joinTarget === 'LINK' ? (
-          <AdminField
-            id="course-enrol-url"
-            name="enrolUrl"
-            label={t('joinLink')}
-            hint={t('joinLinkHint')}
-            placeholder="https://"
-            defaultValue={initialEnrolUrl}
-          />
-        ) : null}
       </fieldset>
 
       <div className={styles.inlineActions}>

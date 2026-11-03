@@ -11,7 +11,7 @@ const COPY_ICON_SVG =
 /** The button's words; English unless the page passes its own (learner pages: `learner.lessons`). */
 export type LessonCodeCopyLabels = { copyCode: string; copied: string };
 
-const ENGLISH_LABELS: LessonCodeCopyLabels = { copyCode: 'Copy code', copied: 'Copied!' };
+const ENGLISH_LABELS: LessonCodeCopyLabels = { copyCode: 'Copy code', copied: 'Copied' };
 
 /**
  * Adds a copy button to each lesson code block inside `root`. Returns a disposer that removes the

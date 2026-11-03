@@ -35,7 +35,6 @@ function deviceName(device: OpenSession['device'], t: Words) {
 }
 
 const days = (ms: number) => Math.round(ms / 86_400_000);
-const hours = (ms: number) => Math.round(ms / 3_600_000);
 
 /** Profile: "Where you're signed in", every open session of yours, with a way to sign each out. */
 export default async function SessionsSection() {
@@ -46,7 +45,7 @@ export default async function SessionsSection() {
   const [t, locale] = await Promise.all([words(), getLocale() as Promise<Locale>]);
   const now = Date.now();
   const sessions = await listOpenSessions(session.sessionId);
-  const { kept, short } = SESSION_LIMITS;
+  const { kept } = SESSION_LIMITS;
   const rows: SessionRow[] = sessions.map((entry) => {
     const active = lastActive(entry, now, t);
     return {
@@ -61,17 +60,10 @@ export default async function SessionsSection() {
       current: entry.current,
     };
   });
-  const policy = t('policy', {
-    idle: hours(short.idleMs),
-    max: hours(short.maxMs),
-    keptIdle: days(kept.idleMs),
-    keptMax: days(kept.maxMs),
-  });
-
   return (
     <section className={styles.editorPageSection}>
-      <AdminSectionCard kicker={t('kicker')} title={t('title')}>
-        <SessionsList rows={rows} policy={policy} readOnly={session.user.impersonator ? t('readOnly') : null} />
+      <AdminSectionCard title={t('title')}>
+        <SessionsList rows={rows} readOnly={session.user.impersonator ? t('readOnly') : null} />
       </AdminSectionCard>
     </section>
   );

@@ -39,12 +39,12 @@ export default function GroupForm({ action, courses, versionsByCourseId, initial
       <div className={styles.formGrid}>
         <GroupLessonsFields courses={courses} versionsByCourseId={versionsByCourseId} initialCourseId={initialCourseId} />
 
-        <GroupNameFields quietSlug />
+        <GroupNameFields />
 
         <GroupRosterFields fullWidth />
       </div>
 
-      <AdminCheckbox name="ownCopy" label={t('form.ownCopy')} hint={t('form.ownCopyHint')} defaultChecked />
+      <AdminCheckbox name="ownCopy" label={t('form.ownCopy')} defaultChecked />
 
       <AdminSubmitButton pendingText={t('newGroup.pending')}>{t('newGroup.submit')}</AdminSubmitButton>
     </form>

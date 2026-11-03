@@ -64,10 +64,10 @@ interface CourseAccessViewProps {
   endsAt?: Date | null;
   /** When set, replaces the lesson list with a notice (expired / revoked links). */
   restrictedNotice?: { title: string; description: string; action?: ReactNode } | null;
-  /** When set, a quiet note above the lessons: they read as usual, but nothing can be sent (a paused course). */
-  readOnlyNotice?: { title: string; description: string } | null;
-  /** Pill above the title; draft preview links say so. */
-  eyebrow?: string;
+  /** When set, a quiet line above the lessons: they read as usual, but nothing can be sent (a paused course). */
+  readOnlyNotice?: string | null;
+  /** Pill above the title: what view this is when it isn't a learner's own (a draft preview, an instructor's, the team's). */
+  mode?: string;
   /** The team preview: the way back into the app. */
   back?: { href: string; label: string } | null;
   /** Optional Medium-style margin commenting (personal-link viewer or admin preview). */
@@ -209,7 +209,7 @@ export default async function CourseAccessView({
   endsAt = null,
   restrictedNotice = null,
   readOnlyNotice = null,
-  eyebrow,
+  mode,
   back = null,
   commenting = null,
   preparedBy = null,
@@ -238,7 +238,7 @@ export default async function CourseAccessView({
             </a>
           </p>
         ) : null}
-        <span className={`${courseStyles.freePill} ${styles.eyebrow}`}>{eyebrow ?? t('eyebrow')}</span>
+        {mode ? <span className={`${courseStyles.freePill} ${styles.mode}`}>{mode}</span> : null}
         <h1>{courseTitle}</h1>
         <div className={courseStyles.cardStats}>
           {lessons.length > 0 ? (
@@ -286,10 +286,9 @@ export default async function CourseAccessView({
         <Credits partners={partners} preparedBy={preparedBy} locale={locale} />
 
         {readOnlyNotice && hasLessons ? (
-          <section className={styles.readOnlyNotice} role="note" data-testid="learner-read-only">
-            <h2>{readOnlyNotice.title}</h2>
-            <p>{readOnlyNotice.description}</p>
-          </section>
+          <p className={styles.readOnlyNotice} role="note" data-testid="learner-read-only">
+            {readOnlyNotice}
+          </p>
         ) : null}
 
         {hasLessons && source ? (
@@ -309,7 +308,7 @@ export default async function CourseAccessView({
         ) : (
           <section className={styles.notice}>
             <h2>{restrictedNotice ? restrictedNotice.title : t('noLessonsTitle')}</h2>
-            <p>{restrictedNotice ? restrictedNotice.description : t('noLessonsDescription')}</p>
+            {restrictedNotice ? <p>{restrictedNotice.description}</p> : null}
             {restrictedNotice?.action ?? null}
           </section>
         )}

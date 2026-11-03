@@ -11,10 +11,11 @@ import styles from '../../../admin.module.css';
 
 /**
  * The group's learners on their own, for instructors who manage the roster and links but not the
- * group's settings. Same paste-and-preview as the group form.
+ * group's settings. The same field as the group form's (`groups.form`), with the count it reads.
  */
 export default function GroupRosterForm({ groupId, initialRoster }: { groupId: string; initialRoster: string }) {
   const t = useTranslations('groups.roster');
+  const form = useTranslations('groups.form');
   const [roster, setRoster] = useState(initialRoster);
   const parsed = parseGroupRoster(roster);
   return (
@@ -23,15 +24,15 @@ export default function GroupRosterForm({ groupId, initialRoster }: { groupId: s
       <AdminTextareaField
         id="group-roster-only"
         name="sourceRosterText"
-        label={t('label')}
-        hint={t('hint')}
+        label={form('roster')}
+        placeholder={form('rosterPlaceholder')}
         value={roster}
         onChange={(event) => setRoster(event.target.value)}
         fullWidth
       />
-      <p className={styles.fieldHint} style={{ margin: 0 }}>
+      <p className={styles.quietText} style={{ margin: 0 }}>
         <AdminBadge variant="muted">
-          {t('learners', { count: parsed.length })}
+          {form('learners', { count: parsed.length })}
         </AdminBadge>
       </p>
       <div>

@@ -12,8 +12,8 @@ import styles from './obsidian-connect.module.css';
 
 /**
  * Settings → Tokens' Obsidian card. Until one of the person's tokens has synced in this organisation:
- * the three steps to connect a vault (install the plugin, create a token, add it in Obsidian). Then
- * one row: connected, and when it last synced.
+ * the three steps to connect a vault (install the plugin, create a token, add it in Obsidian) and
+ * the guides. Then one row: connected, and when it last synced.
  */
 export default async function ObsidianConnect({ synced }: { synced: { name: string; lastUsedAt: Date | null } | null }) {
   const t = await getTranslations('account.apiTokens.obsidian');
@@ -33,7 +33,7 @@ export default async function ObsidianConnect({ synced }: { synced: { name: stri
 
   if (synced?.lastUsedAt) {
     return (
-      <SettingsGroup title={t('kicker')} testId="obsidian-connect">
+      <SettingsGroup title={t('title')} testId="obsidian-connect">
         <SettingsRow
           label={
             <span className={styles.connected}>
@@ -56,15 +56,8 @@ export default async function ObsidianConnect({ synced }: { synced: { name: stri
   }
 
   return (
-    <SettingsGroup title={t('kicker')} testId="obsidian-connect">
+    <SettingsGroup title={t('title')} testId="obsidian-connect">
       <SettingsBlock>
-        <div className={styles.head}>
-          {icon}
-          <div>
-            <h3>{t('title')}</h3>
-            <p>{t('lead')}</p>
-          </div>
-        </div>
         <ol className={styles.steps}>
           <li>
             <div>
@@ -75,8 +68,9 @@ export default async function ObsidianConnect({ synced }: { synced: { name: stri
           </li>
           <li>
             <div>
-              <strong>{t('token.title')}</strong>
-              <span>{t.rich('token.text', { link: (chunks) => <a href="#create-token">{chunks}</a> })}</span>
+              <strong>
+                <a href="#create-token">{t('token')}</a>
+              </strong>
             </div>
           </li>
           <li>
@@ -87,11 +81,12 @@ export default async function ObsidianConnect({ synced }: { synced: { name: stri
             </div>
           </li>
         </ol>
-        <p className={styles.foot}>
-          <span>{t('then')}</span>
-          {guides.plugin ? <a href={guides.plugin}>{t('pluginGuide')}</a> : null}
-          {guides.claude ? <a href={guides.claude}>{t('claudeGuide')}</a> : null}
-        </p>
+        {guides.plugin || guides.claude ? (
+          <p className={styles.foot}>
+            {guides.plugin ? <a href={guides.plugin}>{t('pluginGuide')}</a> : null}
+            {guides.claude ? <a href={guides.claude}>{t('claudeGuide')}</a> : null}
+          </p>
+        ) : null}
       </SettingsBlock>
     </SettingsGroup>
   );

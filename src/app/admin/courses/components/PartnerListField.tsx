@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { type ReactNode, useState } from 'react';
+import { useState } from 'react';
 import { FiArrowDown, FiArrowUp, FiX } from 'react-icons/fi';
 import AdminButton from '../../components/ui/AdminButton';
 import AdminSearchableSelectField from '../../components/ui/AdminSearchableSelectField';
@@ -14,7 +14,6 @@ export type PartnerOption = { id: string; name: string; websiteUrl?: string | nu
 interface PartnerListFieldProps {
   id: string;
   label: string;
-  hint?: ReactNode;
   options: PartnerOption[];
   initialPartnerIds?: string[];
   /** Spans both columns of a `formGrid`. */
@@ -37,7 +36,6 @@ const row = {
 export default function PartnerListField({
   id,
   label,
-  hint,
   options,
   initialPartnerIds = [],
   fullWidth = false,
@@ -69,7 +67,7 @@ export default function PartnerListField({
         <ol style={{ listStyle: 'none', margin: 0, padding: 0 }}>
           {partnerIds.map((partnerId, index) => (
             <li key={partnerId} style={row}>
-              <span className={styles.fieldHint} style={{ minWidth: '1.25rem' }}>
+              <span className={styles.quietText} style={{ minWidth: '1.25rem' }}>
                 {index + 1}.
               </span>
               <span style={{ flex: 1 }}>{byId.get(partnerId)?.name}</span>
@@ -108,7 +106,7 @@ export default function PartnerListField({
       ) : null}
 
       {options.length === 0 ? (
-        <span className={styles.fieldHint}>
+        <span className={styles.quietText}>
           {t.rich('none', { link: (chunks) => <Link href="/admin/courses/partners">{chunks}</Link> })}
         </span>
       ) : available.length > 0 ? (
@@ -128,8 +126,6 @@ export default function PartnerListField({
           }}
         />
       ) : null}
-
-      {hint ? <span className={styles.fieldHint}>{hint}</span> : null}
     </div>
   );
 }

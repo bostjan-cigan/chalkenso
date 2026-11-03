@@ -26,7 +26,6 @@ export default function TaskAiReadyControl({
     <AdminCheckbox
       name="aiReady"
       label={t('label')}
-      hint={t('hint')}
       checked={value}
       disabled={pending}
       onChange={(event) => {

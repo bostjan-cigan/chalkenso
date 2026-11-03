@@ -1,44 +1,27 @@
 'use client';
 
 import { ReactNode } from 'react';
-import AdminBadge from './AdminBadge';
 import AdminCard from './AdminCard';
 import styles from '../../admin.module.css';
 
 interface AdminSectionCardProps {
-  kicker: string;
+  /** The card's heading: no label above it, no sentence under it. */
   title: string;
-  icon?: ReactNode;
-  /** Renders inline to the right of the kicker badge (e.g. header action button). */
-  kickerAction?: ReactNode;
-  children: ReactNode;
+  /** Beside the title, on the right (e.g. "All groups"). */
+  action?: ReactNode;
+  children?: ReactNode;
   className?: string;
 }
 
-export default function AdminSectionCard({
-  kicker,
-  title,
-  icon,
-  kickerAction,
-  children,
-  className,
-}: AdminSectionCardProps) {
+export default function AdminSectionCard({ title, action, children, className }: AdminSectionCardProps) {
   return (
     <AdminCard variant="section" className={className}>
-      <div className={styles.cardHeader}>
-        <div className={styles.cardHeaderText}>
-          {kickerAction ? (
-            <div className={styles.cardHeaderKickerRow}>
-              <AdminBadge variant="kicker">{kicker}</AdminBadge>
-              {kickerAction}
-            </div>
-          ) : (
-            <AdminBadge variant="kicker">{kicker}</AdminBadge>
-          )}
-          {title ? <h2 className={styles.cardHeaderTitle}>{title}</h2> : null}
+      {title || action ? (
+        <div className={styles.cardHeader}>
+          {title ? <h2 className={styles.cardHeaderTitle}>{title}</h2> : <span />}
+          {action}
         </div>
-        {icon ? <div className={styles.cardHeaderIcon}>{icon}</div> : null}
-      </div>
+      ) : null}
       {children}
     </AdminCard>
   );

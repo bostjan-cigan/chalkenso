@@ -68,7 +68,6 @@ export function CourseTitleFields({ initialTitle, initialSlug }: { initialTitle:
         id="course-slug"
         name="slug"
         label={t('slug')}
-        hint={t('slugHint')}
         onChange={(event) => setSlug(createSlugCandidate(event.target.value, ''))}
         placeholder={t('slugPlaceholder')}
         value={slug}
@@ -101,7 +100,6 @@ export function CourseJoinFields({
         id="course-join-target"
         name="joinTarget"
         label={t('join')}
-        hint={t('joinHint')}
         onChange={(event) => setJoinTarget(event.target.value as JoinTarget)}
         value={joinTarget}
       >
@@ -110,33 +108,61 @@ export function CourseJoinFields({
         <option value="LINK">{t('joinTarget.link')}</option>
       </AdminSelectField>
       {joinTarget === 'PARTNER' ? (
-        <AdminSelectField
-          id="course-join-partner"
-          name="joinPartnerId"
-          label={t('joinPartner')}
-          hint={joinPartner && !joinPartner.websiteUrl ? t('joinPartnerNoWebsite') : t('joinPartnerHint')}
-          onChange={(event) => setJoinPartnerId(event.target.value)}
-          value={joinPartnerId}
-        >
-          <option value="">{t('joinPartnerChoose')}</option>
-          {partnerOptions.map((partner) => (
-            <option key={partner.id} value={partner.id}>
-              {partner.name}
-            </option>
-          ))}
-        </AdminSelectField>
+        <>
+          <AdminSelectField
+            id="course-join-partner"
+            name="joinPartnerId"
+            label={t('joinPartner')}
+            onChange={(event) => setJoinPartnerId(event.target.value)}
+            value={joinPartnerId}
+          >
+            <option value="">{t('joinPartnerChoose')}</option>
+            {partnerOptions.map((partner) => (
+              <option key={partner.id} value={partner.id}>
+                {partner.name}
+              </option>
+            ))}
+          </AdminSelectField>
+          {/* Without a website the button falls back to the site default. */}
+          {joinPartner && !joinPartner.websiteUrl ? (
+            <span className={styles.fieldError} role="alert">
+              {t('joinPartnerNoWebsite')}
+            </span>
+          ) : null}
+        </>
       ) : null}
       {joinTarget === 'LINK' ? (
         <AdminField
           id="course-enrol-url"
           name="enrolUrl"
+          type="url"
           label={t('joinLink')}
-          hint={t('joinLinkHint')}
           placeholder="https://"
           defaultValue={initialEnrolUrl}
         />
       ) : null}
     </>
+  );
+}
+
+/** As many tags as a course keeps (`getPublicPageSettings` in `../actions` drops the rest). */
+const MAX_TAGS = 5;
+
+/** The course card's tags, comma-separated; past the most it keeps, the field says so. */
+export function CourseTagsField({ initialTags }: { initialTags: string[] }) {
+  const t = useTranslations('courses.form');
+  const [tags, setTags] = useState(initialTags.join(', '));
+  const count = new Set(tags.split(',').map((tag) => tag.trim()).filter(Boolean)).size;
+  return (
+    <AdminField
+      id="course-tags"
+      name="tags"
+      label={t('tags')}
+      placeholder="Python, Docker, SQL"
+      value={tags}
+      onChange={(event) => setTags(event.target.value)}
+      error={count > MAX_TAGS ? t('tagsTooMany', { max: MAX_TAGS }) : null}
+    />
   );
 }
 

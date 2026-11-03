@@ -59,14 +59,8 @@ try {
   await pickers.nth(1).click();
   await page.locator('[role=option]:visible', { hasText: 'v1' }).first().click();
   await page.fill('#group-name', 'Weekend group');
-  const quietSlug = page.locator('[data-testid=group-slug-quiet]:visible');
-  check(
-    'its short name follows the name quietly, under it',
-    (await page.locator('main #group-slug').count()) === 0 && (await quietSlug.innerText()).includes('Short name: weekend-group'),
-    await quietSlug.innerText()
-  );
-  await quietSlug.getByRole('button', { name: 'Change' }).click();
-  check('Change opens the short name, to edit', (await page.locator('main #group-slug:visible').inputValue()) === 'weekend-group');
+  const slug = await page.locator('main #group-slug:visible').inputValue();
+  check('its short name follows the name, in its own field to edit', slug === 'weekend-group', slug);
   await page.locator('#group-roster:visible').fill('Ana Learner\nBor Learner');
   await Promise.all([page.waitForURL(/\/admin\/courses\/groups\/(?!new)[^/?]+/), page.locator('button[type=submit]:visible').last().click()]);
   groupId = new URL(page.url()).pathname.split('/').pop() ?? '';
@@ -75,8 +69,7 @@ try {
   const started = sql(`select (starts_at is null and ends_at is null and description is null and slack_handle is null)::text || '|' ||
     (select count(*) from courses.course_group_partners where group_id = g.id) from courses.course_groups g where id = ${quote(groupId)}`);
   check('it starts undated, without a description, Slack or partners', started === 'true|0', started);
-  const toSettings = page.locator('p', { hasText: 'Group created. Add its dates, description and more in' }).getByRole('link', { name: 'Settings' });
-  check('the notice points to Settings for the rest', (await toSettings.getAttribute('href')) === `/admin/courses/groups/${groupId}?tab=settings`);
+  check('the notice says it is created', (await page.locator('body').innerText()).includes('Group created.'));
 
   // 2. Links for all learners, then every link copied at once (the cards follow the new links).
   step = 'learner links';

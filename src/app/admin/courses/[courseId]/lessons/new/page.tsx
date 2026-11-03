@@ -89,7 +89,7 @@ export default async function NewLessonPage({
         courseId={course.id}
         courseTitle={course.title}
         curriculumVersionId={selectedVersionId ?? undefined}
-        versionLabel={groupName ?? selectedVersion?.label ?? t('course')}
+        versionLabel={groupName ? t('copyLabel', { group: groupName }) : (selectedVersion?.label ?? t('course'))}
         backHref={backHref}
         initial={{ title: '', slug: '', shortDescription: '', status: 'DRAFT', arcId: '', markdown: '' }}
         arcs={arcs.map((arc) => ({ id: arc.id, title: arc.title }))}

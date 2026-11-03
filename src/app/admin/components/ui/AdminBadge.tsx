@@ -4,7 +4,7 @@ import { ReactNode } from 'react';
 import { cn } from '@/utils/cn';
 import styles from '../../admin.module.css';
 
-type BadgeVariant = 'accent' | 'warning' | 'muted' | 'kicker' | 'inactive';
+type BadgeVariant = 'accent' | 'warning' | 'muted' | 'inactive';
 
 interface AdminBadgeProps {
   children: ReactNode;
@@ -22,11 +22,9 @@ export default function AdminBadge({
       ? styles.badgeWarning
       : variant === 'muted'
         ? styles.badgeMuted
-        : variant === 'kicker'
-          ? styles.kicker
-          : variant === 'inactive'
-            ? styles.badgeInactive
-            : styles.badgeAccent;
+        : variant === 'inactive'
+          ? styles.badgeInactive
+          : styles.badgeAccent;
 
   return <span className={cn(styles.badge, variantClass, className)}>{children}</span>;
 }

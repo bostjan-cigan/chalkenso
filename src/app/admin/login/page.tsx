@@ -30,27 +30,18 @@ export default async function AdminLoginPage({ searchParams }: { searchParams: S
 
   return (
     <AuthShell
-      title={
-        params.deleted
-          ? t('login.title.deleted')
-          : params.everywhere
-            ? t('login.title.everywhere')
-            : params.signedout
-              ? t('login.title.signedOut')
-              : t('login.title.welcome')
-      }
-      // After a password reset or deleting an account, the line says it worked; after a session
+      // After a password reset or deleting an account, the title says it worked; after a session
       // ended (it ran out, or was signed out from elsewhere), that it did.
-      intro={
+      title={
         params.reset
-          ? t('login.intro.reset')
+          ? t('login.title.reset')
           : params.deleted
-            ? t('login.intro.deleted')
+            ? t('login.title.deleted')
             : params.everywhere
-              ? t('login.intro.everywhere')
+              ? t('login.title.everywhere')
               : params.signedout
-              ? t('login.intro.signedOut')
-              : t('login.intro.welcome')
+                ? t('login.title.signedOut')
+                : t('login.title.welcome')
       }
       footer={
         <>

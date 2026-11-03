@@ -78,9 +78,7 @@ export default function ProfileImageSection({ currentImageUrl }: ProfileImageSec
               >
                 {t('choose')}
               </AdminButton>
-              <span className={styles.profileImageHint}>
-                {fileName ?? t('formats')}
-              </span>
+              {fileName ? <span className={styles.profileImageHint}>{fileName}</span> : null}
             </div>
             <AdminButton type="submit" disabled={!fileName || isPending}>
               {isPending ? t('uploading') : t('save')}

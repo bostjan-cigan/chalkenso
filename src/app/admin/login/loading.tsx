@@ -8,8 +8,8 @@ const block = (width: string, height: string, borderRadius: number) => (
 );
 
 /**
- * Neutral fallback for the sign-in and two-factor routes: the card's shape, where it will be (no admin
- * chrome). In the visitor's language, like the page that follows (the app around it is English).
+ * Neutral fallback for the sign-in and two-factor routes: the product name's and the card's shapes,
+ * where they will be (no admin chrome). In the visitor's language, like the page that follows (the app around it is English).
  */
 export default async function LoginLoading() {
   const t = await getTranslations('auth.loading');
@@ -18,7 +18,7 @@ export default async function LoginLoading() {
       <div className={`${styles.page} ${styles.authPage}`} aria-busy="true" aria-label={t('label')}>
         <ThemeToggle />
         <div className={styles.authLayout}>
-          <div className={styles.authAside} />
+          <div className={styles.authBrand}>{block('11rem', '2.75rem', 10)}</div>
           <div className={styles.authMain}>
             <div className={styles.authCard} style={{ minHeight: '22rem' }}>
               {block('12rem', '2rem', 10)}

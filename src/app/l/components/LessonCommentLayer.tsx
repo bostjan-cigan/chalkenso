@@ -1166,18 +1166,15 @@ export default function LessonCommentLayer({
             autoFocus
             maxLength={1000}
           />
-          <p className="alc-empty-hint">
-            {buildAiPrompt(aiCompose.selectedText, aiContext.trim()).length >
-            aiCompose.provider.prefillLimit
-              ? t('aiTooLong', { provider: aiCompose.provider.label })
-              : t('aiCopied', { provider: aiCompose.provider.label })}
-          </p>
           <div className="alc-actions">
             <button type="button" className="alc-btn alc-btn-ghost" onClick={closeAiCompose}>
               {t('cancel')}
             </button>
+            {/* Too long for the site's link, the question goes by the clipboard only: the button says so. */}
             <button type="button" className="alc-btn alc-btn-primary" onClick={sendToAi}>
-              {t('openProvider', { provider: aiCompose.provider.label })}
+              {buildAiPrompt(aiCompose.selectedText, aiContext.trim()).length > aiCompose.provider.prefillLimit
+                ? t('copyAndOpen', { provider: aiCompose.provider.label })
+                : t('openProvider', { provider: aiCompose.provider.label })}
             </button>
           </div>
         </div>

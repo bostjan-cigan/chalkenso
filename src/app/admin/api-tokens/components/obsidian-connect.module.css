@@ -1,4 +1,4 @@
-/* Settings → Tokens' Obsidian card: a heading with the app's mark, three numbered steps, and the guides. */
+/* Settings → Tokens' Obsidian card: three numbered steps and the guides; once connected, a row with the app's mark. */
 
 .gem {
   display: grid;
@@ -13,27 +13,9 @@
   font-size: 1.2rem;
 }
 
-.head {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-}
-
-.head h3 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 650;
-}
-
-.head p {
-  margin: 0.1rem 0 0;
-  font-size: 0.86rem;
-  color: var(--text-muted);
-}
-
 .steps {
   display: grid;
-  margin: 0.4rem 0 0;
+  margin: 0;
   padding: 0;
   list-style: none;
   counter-reset: step;
@@ -45,8 +27,11 @@
   gap: 0.25rem 0.75rem;
   align-items: start;
   padding: 0.75rem 0;
-  border-top: 1px solid var(--line-subtle);
   counter-increment: step;
+}
+
+.steps li + li {
+  border-top: 1px solid var(--line-subtle);
 }
 
 .steps li::before {

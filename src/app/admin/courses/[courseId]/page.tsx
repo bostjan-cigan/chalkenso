@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { FiAlertTriangle } from 'react-icons/fi';
@@ -76,7 +75,6 @@ export default async function CourseDetailPage({ params, searchParams }: { param
       activeSection="courses"
       pageContext={{
         title: course.title,
-        subtitle: course.summary ?? undefined,
         back: { href: '/admin/courses', label: t('back') },
         actions: previewHref ? [{ href: previewHref, label: t('readLessons'), tone: 'secondary' }] : [],
       }}
@@ -91,17 +89,12 @@ export default async function CourseDetailPage({ params, searchParams }: { param
     >
       <section className={styles.editorPageSection}>
         {picked ? (
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem 0.9rem' }}>
+          <div style={{ display: 'flex' }}>
             <VersionPicker
               courseId={courseId}
               value={picked.id}
               versions={versions.map((version) => ({ id: version.id, label: version.label, status: version.status }))}
             />
-            <span className={styles.fieldHint}>
-              {picked.status === CurriculumVersionStatus.PUBLISHED
-                ? t('publishedHint')
-                : t('draftHint')}
-            </span>
           </div>
         ) : null}
         {picked ? <LessonViews courseId={courseId} versionId={picked.id} /> : null}
@@ -114,38 +107,26 @@ export default async function CourseDetailPage({ params, searchParams }: { param
             feedbackHref={(lessonId) => `/admin/courses/${courseId}/feedback?lesson=${lessonId}`}
           />
         ) : picked ? (
-          <AdminSectionCard kicker={t('lessonsKicker')} title="">
+          <AdminSectionCard title={t('lessons')}>
             <ol style={{ margin: 0, paddingLeft: '1.2rem', display: 'grid', gap: '0.3rem' }}>
               {readOnly.map((lesson) => (
                 <li key={lesson.id}>{lesson.title}</li>
               ))}
             </ol>
-            {previewHref ? (
-              <p className={styles.fieldHint} style={{ margin: '0.75rem 0 0' }}>
-                <Link href={previewHref} className={styles.inlineLink}>
-                  {t('readLessons')}
-                </Link>
-              </p>
-            ) : null}
           </AdminSectionCard>
-        ) : (
-          <div className={styles.emptyState}>
-            <h3 className={styles.emptyStateTitle}>{t('emptyTitle')}</h3>
-            <p className={styles.emptyStateText}>{t('emptyText')}</p>
-          </div>
-        )}
+        ) : null}
 
         {/* Always open like every other section; a new version is made in a sheet. */}
         <AdminSectionCard
-          kicker={t('versionsKicker')}
-          title=""
-          kickerAction={
+          title={t('versions')}
+          action={
             canEdit ? (
               <SheetButton label={t('newVersion')} title={t('newVersion')} testId="new-version">
                 <CreateVersionForm
                   action={createVersionAction}
                   courseId={course.id}
                   versions={versions.map((version) => ({ id: version.id, label: version.label }))}
+                  nextLabel={`v${(versions.at(-1)?.version ?? 0) + 1}`}
                 />
               </SheetButton>
             ) : null

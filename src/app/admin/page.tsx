@@ -19,7 +19,6 @@ import {
   groupScopeWhere,
   hasAnyAccess,
   hasCourseLevelAccess,
-  isUnrestricted,
 } from '@/lib/crm-access';
 import { canAccessSection, courseGrantIds, groupGrantIds, type Grant } from '@/lib/permissions';
 import { findInstructorLinks } from '@/lib/instructor-links';
@@ -41,22 +40,22 @@ import { adminNavItems } from '@/app/admin/nav';
 
 export const dynamic = 'force-dynamic';
 
-type SearchParams = Promise<{ welcome?: string; joined?: string; org?: string }>;
+type SearchParams = Promise<{ joined?: string; org?: string }>;
 
 /** How many groups and courses Home lists before "All groups" / "All courses". */
 const GROUPS_SHOWN = 6;
 const COURSES_SHOWN = 8;
 
 /**
- * Home: what needs you (feedback nobody has answered, changes groups suggested, drafts to review),
- * then your groups and your courses, each one click from its own page. In the reader's language
- * (`app.home`).
+ * Home: its title and the two things to create, then what needs you (feedback nobody has answered,
+ * changes groups suggested, drafts to review), your groups and your courses, each one click from its
+ * own page. Each section is its title and its list; a notice is one sentence. In the reader's
+ * language (`app.home`).
  */
 export default async function AdminPage({ searchParams }: { searchParams: SearchParams }) {
   const viewer = await requireMember();
 
   // Everything counts only what the viewer reaches (limited members: their courses and groups).
-  const unrestricted = isUnrestricted(viewer);
   const courseWhere = courseScopeWhere(accessScope(viewer, 'courses'));
   const groupWhere = groupScopeWhere(accessScope(viewer, 'groups'));
   const courseLevel = hasCourseLevelAccess(viewer);
@@ -76,7 +75,6 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
     courses,
     gettingStarted,
     t,
-    tLinks,
     rowWords,
     locale,
   ] = await Promise.all([
@@ -97,12 +95,12 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
       : Promise.resolve([]),
     loadGettingStarted(),
     getTranslations('app.home'),
-    getTranslations('groups.instructorLinks'),
     groupRowWords(),
     getLocale() as Promise<Locale>,
   ]);
-  // AI in the app, only when it isn't simply working: why it's off, that it runs without a refused key
-  // (to those who can replace it), or (to developers running it locally) that it gives sample answers.
+  // AI in the app, only when it isn't simply working, in one sentence: why it's off, that it runs
+  // without a refused key (to those who can replace it), or (to developers running it locally) that it
+  // gives sample answers.
   const aiNote =
     ai.reason === 'paused'
       ? t('ai.paused')
@@ -124,7 +122,6 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
                     ? t('ai.offUntilKey')
                     : t('ai.offInstallation');
 
-
   // Your groups: the ones you teach first; otherwise the ones running now, busiest first.
   const now = new Date();
   const taught = new Set(taughtGroups.groups.map((group) => group.id));
@@ -145,45 +142,28 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
   return (
     <AdminFrame
       navItems={adminNavItems('overview')}
-      eyebrow={viewer.organization.name}
-      title={params.welcome ? t('welcome') : t('title')}
-      description={t('description')}
+      title={t('title')}
       actions={[
         ...(canCreateCourse ? [{ label: t('newCourse'), href: '/admin/courses/new' }] : []),
         ...(canCreateGroup ? [{ label: t('newGroup'), href: '/admin/courses/groups/new', tone: 'secondary' as const }] : []),
       ]}
     >
+      {/* The sidebar names the organisation they are in now. */}
       {orgNotice ? (
         <section className={styles.editorPageSection}>
-          <AdminNotice>
-            {orgNoticeText(orgNotice, locale)} {t('nowIn', { organization: viewer.organization.name })}
-          </AdminNotice>
-        </section>
-      ) : null}
-
-      {/* Getting started lives in the corner; hidden, it can come back from here while steps are left. */}
-      {gettingStarted?.hidden ? (
-        <section className={styles.editorPageSection}>
-          <ShowGettingStarted />
+          <AdminNotice>{orgNoticeText(orgNotice, locale)}</AdminNotice>
         </section>
       ) : null}
 
       {params.joined ? (
         <section className={styles.editorPageSection}>
-          <AdminNotice>
-            {t('joined', { organization: viewer.organization.name })}{' '}
-            {unrestricted
-              ? t('joinedFull')
-              : !anyAccess && taughtGroups.groups.length
-                ? t('joinedGuest')
-                : t('joinedLimited')}
-          </AdminNotice>
+          <AdminNotice>{t('joined', { organization: viewer.organization.name })}</AdminNotice>
         </section>
       ) : null}
 
       {anyAccess ? (
         <section className={styles.editorPageSection}>
-          <AdminSectionCard kicker={t('needsYou')} title="">
+          <AdminSectionCard title={t('needsYou')}>
             {needsYou.length ? (
               <ul className={styles.needsYouList} data-testid="needs-you">
                 {needsYou.map((item) => (
@@ -196,7 +176,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
                 ))}
               </ul>
             ) : (
-              <p className={styles.fieldHint} style={{ margin: 0 }} data-testid="needs-you">
+              <p className={styles.quietText} style={{ margin: 0 }} data-testid="needs-you">
                 {t('nothingWaits')}
               </p>
             )}
@@ -206,13 +186,10 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
 
       {guestGroups.length || (taughtGroups.groups.length && !anyAccess) ? (
         <section className={styles.editorPageSection}>
-          <AdminSectionCard kicker={t('yourGroups')} title="">
+          <AdminSectionCard title={t('yourGroups')}>
             {/* The instructor links' own words are the groups' (`groups.instructorLinks`). */}
             <IntlProvider namespaces={['common', 'app', 'groups.instructorLinks']}>
               <div style={{ display: 'grid', gap: '1rem' }} data-testid="guest-groups">
-                <p className={styles.fieldHint} style={{ margin: 0 }}>
-                  {tLinks('intro')}
-                </p>
                 {(anyAccess ? guestGroups : taughtGroups.groups).map((group) => (
                   <div key={group.id} style={{ display: 'grid', gap: '0.4rem' }}>
                     <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
@@ -229,7 +206,6 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
                       groupId={group.id}
                       learnerLinkTemplate={taughtGroups.template}
                       canNote={group.canNote}
-                      intro={false}
                       initialLink={group.link}
                       links={null}
                     />
@@ -250,9 +226,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
       {anyAccess && (groupCards.length || groups.length) ? (
         <section className={styles.editorPageSection}>
           <AdminSectionCard
-            kicker={taught.size ? t('groupsYouTeach') : t('runningNow')}
-            title=""
-            kickerAction={
+            title={taught.size ? t('groupsYouTeach') : t('runningNow')}
+            action={
               <AdminButton href="/admin/courses/groups" size="compact" tone="plain">
                 {t('allGroups')}
               </AdminButton>
@@ -274,7 +249,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
                 ))}
               </div>
             ) : (
-              <p className={styles.fieldHint} style={{ margin: 0 }}>
+              <p className={styles.quietText} style={{ margin: 0 }}>
                 {t('noneRunning')}
               </p>
             )}
@@ -285,9 +260,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
       {courseLevel && courses.length ? (
         <section className={styles.editorPageSection}>
           <AdminSectionCard
-            kicker={t('courses')}
-            title=""
-            kickerAction={
+            title={t('courses')}
+            action={
               <AdminButton href="/admin/courses" size="compact" tone="plain">
                 {t('allCourses')}
               </AdminButton>
@@ -307,10 +281,17 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
 
       {anyAccess && aiNote ? (
         <section className={styles.editorPageSection}>
-          <p className={styles.fieldHint} style={{ margin: 0 }}>
+          <p className={styles.quietText} style={{ margin: 0 }}>
             {aiNote}
             {!ai.inApp && ai.connector && ai.reason !== 'plan' ? ` ${t('ai.connector')}` : ''}
           </p>
+        </section>
+      ) : null}
+
+      {/* Getting started lives in the corner; hidden, it can come back from here while steps are left. */}
+      {gettingStarted?.hidden ? (
+        <section className={styles.editorPageSection}>
+          <ShowGettingStarted />
         </section>
       ) : null}
     </AdminFrame>

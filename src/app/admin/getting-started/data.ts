@@ -44,13 +44,10 @@ export type GettingStarted = {
   call: GettingStartedCall | null;
   /** They hid it: Home offers it back while steps are left. */
   hidden: boolean;
-  /** They've opened it once: the note pointing at it is no longer needed. */
-  opened: boolean;
 };
 
 /** Hidden: the same key Getting started's Hide on Home used, so whoever hid that doesn't see this. */
 export const hiddenKey = (userId: string) => personalKey('getting-started', userId);
-export const openedKey = (userId: string) => personalKey('getting-started-opened', userId);
 /** A step ticked by hand; How it works keeps the "done" it always had. */
 export const tickKey = (id: TickableStep, userId: string) => (id === 'how' ? howItWorksKey(userId) : personalKey(`getting-started-${id}`, userId));
 
@@ -68,7 +65,7 @@ export const loadGettingStarted = cache(async (): Promise<GettingStarted | null>
   const courseWhere = courseScopeWhere(accessScope(viewer, 'courses'));
   const groupWhere = groupScopeWhere(accessScope(viewer, 'groups'));
   const [remembered, membership, call, synced, counts] = await Promise.all([
-    rememberedKeys(organizationId, [hiddenKey(viewer.id), openedKey(viewer.id), ...TICKABLE.map((id) => tickKey(id, viewer.id))]),
+    rememberedKeys(organizationId, [hiddenKey(viewer.id), ...TICKABLE.map((id) => tickKey(id, viewer.id))]),
     prisma.organizationMember.findFirst({ where: { userId: viewer.id, organizationId }, select: { createdAt: true } }),
     serverExtensions.gettingStartedCall(viewer),
     // The Obsidian plugin has synced with one of their tokens here.
@@ -108,5 +105,5 @@ export const loadGettingStarted = cache(async (): Promise<GettingStarted | null>
   steps.push({ ...step('obsidian', synced > 0, '/admin/api-tokens'), optional: true });
 
   if (steps.every((entry) => entry.done || entry.optional)) return null;
-  return { steps, call, hidden: remembered.has(hiddenKey(viewer.id)), opened: remembered.has(openedKey(viewer.id)) };
+  return { steps, call, hidden: remembered.has(hiddenKey(viewer.id)) };
 });

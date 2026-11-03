@@ -305,16 +305,9 @@ async function getRestrictedNotice(
     };
   }
 
-  if (state === 'used') {
-    return {
-      title: t('usedTitle'),
-      description: t('usedDescription'),
-    };
-  }
-
-  /** Shown when the link is expired or revoked (course shell still visible above). */
+  /** Shown when the link is expired, revoked or used up (course shell still visible above). */
   return {
-    title: state === 'expired' ? t('expiredTitle') : t('revokedTitle'),
+    title: state === 'expired' ? t('expiredTitle') : state === 'revoked' ? t('revokedTitle') : t('usedTitle'),
     description: t('restrictedDescription'),
   };
 }
@@ -339,7 +332,6 @@ export default async function AccessPage({
         <AccessShell locale={locale} languageMenu>
           <article className={contentStyles.article} data-testid="learner-closed">
             <h1>{t('access.closedTitle')}</h1>
-            <p className={contentStyles.lead}>{t('access.closedDescription')}</p>
           </article>
         </AccessShell>
       </IntlProvider>
@@ -409,9 +401,9 @@ export default async function AccessPage({
       instructors={isValid ? accessPayload.instructors : []}
       startsAt={startsAt}
       endsAt={endsAt}
-      eyebrow={isPreview ? t('access.draftPreview') : instructorName ? t('access.instructorView') : undefined}
+      mode={isPreview ? t('access.draftPreview') : instructorName ? t('access.instructorView') : undefined}
       restrictedNotice={isValid ? null : await getRestrictedNotice(accessPayload.state, token, locale)}
-      readOnlyNotice={paused ? { title: t('access.pausedTitle'), description: t('access.pausedDescription') } : null}
+      readOnlyNotice={paused ? t('access.paused') : null}
       learnerSignals={signalsState ? { token, state: signalsState } : null}
     />
   );

@@ -24,22 +24,18 @@ type PendingConfirm = 'enable' | 'disable' | 'close' | null;
 export default function GroupCopyActions({
   mode,
   groupId,
-  groupName,
   readsLabel,
   closed = false,
   title,
-  footer,
   children,
 }: {
   /** null: nothing to do with a copy (a group that reads no lessons yet). */
   mode: 'start' | 'manage' | null;
   groupId: string;
-  groupName: string;
   /** The course version the group reads now (or its copy came from). */
   readsLabel: string | null;
   closed?: boolean;
   title: string;
-  footer?: ReactNode;
   children: ReactNode;
 }) {
   const t = useTranslations('groups.copyActions');
@@ -62,7 +58,7 @@ export default function GroupCopyActions({
   return (
     <>
       {notice ? <ActionNotice notice={notice} /> : null}
-      <SheetRows title={title} footer={footer} testId="group-lessons">
+      <SheetRows title={title} testId="group-lessons">
         {children}
         {mode === 'start' ? (
           <SheetActionRow label={t('start')} disabled={isPending || !readsLabel} onClick={() => setConfirm('enable')} testId="group-copy-start" />
@@ -82,9 +78,7 @@ export default function GroupCopyActions({
       <ConfirmDialog
         open={confirm === 'enable'}
         title={t('enable.title')}
-        description={
-          readsLabel ? t('enable.text', { name: groupName, version: readsLabel }) : t('enable.textLessons', { name: groupName })
-        }
+        description={t('enable.text')}
         confirmLabel={t('enable.confirm')}
         pending={isPending}
         onConfirm={() => submit(enableGroupCurriculumAction)}

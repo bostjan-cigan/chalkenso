@@ -91,11 +91,7 @@ export default async function AdminTasksPage({ searchParams }: PageProps) {
   // Only a lane that exists for this viewer: a filter must never widen what they can see.
   const selectedLaneId =
     lanes.find((lane) => lane.id === params.curriculum?.trim())?.id ?? '';
-  const filterOptions = lanes.map((lane) => ({
-    value: lane.id,
-    label: lane.sublabel ? `${lane.label} — ${lane.sublabel}` : lane.label,
-    count: lane.tasks.length,
-  }));
+  const filterOptions = lanes.map((lane) => ({ value: lane.id, label: lane.label, count: lane.tasks.length }));
   const visibleLanes = selectedLaneId
     ? lanes.filter((lane) => lane.id === selectedLaneId)
     : lanes;
@@ -117,9 +113,8 @@ export default async function AdminTasksPage({ searchParams }: PageProps) {
   const laneViews: TaskLaneView[] = visibleLanes.map((lane) => ({
     id: lane.id,
     label: lane.label,
-    sublabel: lane.sublabel,
+    closed: lane.closed,
     href: lane.href,
-    emptyHint: lane.emptyHint,
     // Collapsed by default; picking a single curriculum opens that one.
     defaultOpen: selectedLaneId !== '',
     // Dragging calls moveTaskAction, which needs Feedback & tasks — a read-only viewer would
@@ -135,14 +130,10 @@ export default async function AdminTasksPage({ searchParams }: PageProps) {
   }));
 
   return (
-    <AdminFrame
-      eyebrow={t('eyebrow')}
-      title={t('title')}
-      description={t('description')}
-      navItems={adminNavItems(null)}
-    >
+    <AdminFrame title={t('title')} navItems={adminNavItems(null)}>
       <section className={styles.editorPageSection}>
-        <AdminSectionCard kicker={t('kicker')} title="">
+        {/* The page's title names the board: the card has none of its own. */}
+        <AdminSectionCard title="">
           <div
             style={{
               display: 'flex',
@@ -166,7 +157,7 @@ export default async function AdminTasksPage({ searchParams }: PageProps) {
               />
             ) : null}
 
-            <div style={{ marginLeft: 'auto', minWidth: 260 }}>
+            <div style={{ minWidth: 260 }}>
               <TaskCurriculumFilter kind={kind} value={selectedLaneId} options={filterOptions} />
             </div>
           </div>
@@ -178,9 +169,9 @@ export default async function AdminTasksPage({ searchParams }: PageProps) {
           ) : (
             <TaskBoardClient lanes={laneViews} taskHrefPrefix={`${boardHref}&task=`} />
           )}
+          {/* Done holds the most recently finished (`DONE_ON_BOARD`): the link shows the rest. */}
           {moreDone ? (
-            <p style={{ fontSize: '0.85rem', color: 'rgba(var(--foreground-rgb), 0.6)', marginTop: '0.75rem' }}>
-              {t('doneLimit', { count: DONE_ON_BOARD })}{' '}
+            <p style={{ fontSize: '0.85rem', marginTop: '0.75rem' }}>
               <Link href={`${boardHref}&done=all`}>{t('showAllDone')}</Link>
             </p>
           ) : null}

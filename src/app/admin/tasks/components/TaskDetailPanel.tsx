@@ -110,14 +110,14 @@ const sectionTitleStyle: CSSProperties = {
   fontWeight: 600,
 };
 
-const hintStyle: CSSProperties = {
+const metaStyle: CSSProperties = {
   margin: '0 0 0.75rem',
   color: 'rgba(var(--foreground-rgb), 0.6)',
   fontSize: '0.84rem',
   lineHeight: 1.5,
 };
 
-/** Bordered block for the scope explanation, so the propose action reads as an action. */
+/** Bordered block for where the change goes, so the propose action reads as an action. */
 const calloutStyle: CSSProperties = {
   display: 'grid',
   justifyItems: 'start',
@@ -141,19 +141,19 @@ const metaGridStyle: CSSProperties = {
   gap: '0.9rem 1.5rem',
 };
 
-/** A titled block with an optional badge on the right and an optional explanatory line. */
+/** A titled block with an optional link on the right and an optional line of data (when it changed). */
 function Section({
   id,
   title,
   aside,
-  hint,
+  meta,
   children,
 }: {
   /** An anchor the path's next action can point at ("#plan"). */
   id?: string;
   title: string;
   aside?: ReactNode;
-  hint?: ReactNode;
+  meta?: ReactNode;
   children: ReactNode;
 }) {
   return (
@@ -162,7 +162,7 @@ function Section({
         <h3 style={sectionTitleStyle}>{title}</h3>
         {aside ?? null}
       </div>
-      {hint ? <p style={hintStyle}>{hint}</p> : null}
+      {meta ? <p style={metaStyle}>{meta}</p> : null}
       {children}
     </section>
   );
@@ -217,10 +217,10 @@ export default async function TaskDetailPanel({
 
   return (
     <>
+      {/* The task's title heads the card, under its badges: the card's own header holds the way out. */}
       <AdminSectionCard
-        kicker={t('kicker')}
         title=""
-        kickerAction={
+        action={
           variant === 'page' ? (
             <AdminButton href="/admin/tasks" tone="plain" size="compact">
               {t('allTasks')}
@@ -246,7 +246,7 @@ export default async function TaskDetailPanel({
             {statusLabel(task.status)}
           </AdminBadge>
           {task.scope ? (
-            <AdminBadge variant={groupScope ? 'kicker' : 'muted'}>
+            <AdminBadge variant={groupScope ? 'accent' : 'muted'}>
               {groupScope ? t('groupCopy', { group: groupScope.groupName }) : t('courseOwn')}
             </AdminBadge>
           ) : null}
@@ -308,9 +308,7 @@ export default async function TaskDetailPanel({
           <Section
             id="plan"
             title={t('plan.title')}
-            hint={[vaultAgent ? t('plan.readHintVault') : t('plan.readHint'), task.planUpdatedAt ? t('plan.updatedOn', { date: date(task.planUpdatedAt) }) : null]
-              .filter(Boolean)
-              .join(' · ')}
+            meta={task.planUpdatedAt ? t('plan.updatedOn', { date: date(task.planUpdatedAt) }) : null}
             aside={
               canWork ? (
                 <Link href={improveHref} style={crumbLinkStyle}>
@@ -319,22 +317,10 @@ export default async function TaskDetailPanel({
               ) : null
             }
           >
-            {task.plan?.trim() ? <p style={planStyle}>{planBody(task.plan)}</p> : <p style={hintStyle}>{t('plan.none')}</p>}
+            {task.plan?.trim() ? <p style={planStyle}>{planBody(task.plan)}</p> : <p style={metaStyle}>{t('plan.none')}</p>}
           </Section>
         ) : (
-          <Section
-            id="plan"
-            title={t('plan.title')}
-            hint={
-              vaultAgent
-                ? task.planUpdatedAt
-                  ? t('plan.hintUpdated', { date: date(task.planUpdatedAt) })
-                  : t('plan.hint')
-                : task.planUpdatedAt
-                  ? t('plan.hintAppUpdated', { date: date(task.planUpdatedAt) })
-                  : t('plan.hintApp')
-            }
-          >
+          <Section id="plan" title={t('plan.title')} meta={task.planUpdatedAt ? t('plan.updatedOn', { date: date(task.planUpdatedAt) }) : null}>
             <TaskPlanEditor
               taskId={task.id}
               initialPlan={task.plan ?? ''}
@@ -396,15 +382,12 @@ export default async function TaskDetailPanel({
                     })}
                   </p>
                 ) : !canWork ? null : (
-                  <>
-                    <p style={{ ...hintStyle, margin: '0 0 0.2rem' }}>{t('whose.suggestHint')}</p>
-                    <form action={proposeForCoreAction}>
-                      <input type="hidden" name="taskId" value={task.id} />
-                      <AdminButton type="submit" size="compact">
-                        {t('whose.suggest')}
-                      </AdminButton>
-                    </form>
-                  </>
+                  <form action={proposeForCoreAction}>
+                    <input type="hidden" name="taskId" value={task.id} />
+                    <AdminButton type="submit" size="compact">
+                      {t('whose.suggest')}
+                    </AdminButton>
+                  </form>
                 )}
               </>
             ) : (
@@ -441,7 +424,7 @@ export default async function TaskDetailPanel({
           ) : null}
         </Section>
 
-        <Section id="status" title={t('workflow.title')} hint={t('workflow.hint')}>
+        <Section id="status" title={t('workflow.title')}>
           <div
             style={{
               display: 'grid',
@@ -480,8 +463,7 @@ export default async function TaskDetailPanel({
           <summary style={{ cursor: 'pointer', color: 'rgba(var(--foreground-rgb), 0.72)', fontSize: '0.88rem' }}>
             {task.description ? t('instructions.show') : t('instructions.add')}
           </summary>
-          <p style={{ ...hintStyle, marginTop: '0.5rem' }}>{t('instructions.hint')}</p>
-          <form action={updateTaskDescriptionAction}>
+          <form action={updateTaskDescriptionAction} style={{ marginTop: '0.5rem' }}>
             <input type="hidden" name="taskId" value={task.id} />
             <textarea
               name="description"
@@ -502,11 +484,11 @@ export default async function TaskDetailPanel({
         </Section>
 
         {task.status === TaskStatus.IGNORED && canDelete ? (
-          <Section title={t('clear.title')} hint={t('clear.hint')}>
+          <Section title={t('clear.title')}>
             <TaskDeleteControl taskId={task.id} title={task.title} returnHref={boardHref} />
           </Section>
         ) : canDelete ? (
-          <Section title={t('delete.sectionTitle')} hint={t('delete.hint')}>
+          <Section title={t('delete.sectionTitle')}>
             <TaskDeleteControl taskId={task.id} title={task.title} returnHref={boardHref} withFeedback />
           </Section>
         ) : null}
@@ -531,7 +513,7 @@ export default async function TaskDetailPanel({
         </Section>
       </AdminSectionCard>
 
-      <AdminSectionCard kicker={t('discussion.kicker')} title="">
+      <AdminSectionCard title={t('discussion.title')}>
         {discussion.length > 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1rem' }}>
             {discussion.map((note) => (

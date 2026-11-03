@@ -142,7 +142,6 @@ try {
   check('this browser first, marked', (await rows.first().getAttribute('data-current')) === 'true' && (await rows.first().innerText()).includes('This browser'));
   const listText = await list.innerText();
   check('each says its browser and system', listText.includes('Firefox on Windows') && listText.includes('Safari on iPhone') && listText.includes('Chrome on Mac'));
-  check('the limits are explained', listText.includes('2 hours without activity') && listText.includes('(30 days at most)'));
 
   // Their details: rows that open a sheet each, saving only that part.
   step = 'profile details';
@@ -210,7 +209,7 @@ try {
   sql(`update public.user_sessions set last_seen_at = now() where id = ${quote(idleId)}`);
   await settle(idle, '/admin/profile');
   const sentToSignIn = await idle.waitForURL(/\/admin\/login\?signedout=1/, { timeout: 30000 }).then(() => true, () => false);
-  check('when it runs out, the sign-in page opens and says so', sentToSignIn && (await idle.locator('body').innerText()).includes('Your session ended'));
+  check('when it runs out, the sign-in page opens and says so', sentToSignIn && (await idle.locator('body').innerText()).includes('You’re signed out'));
   check('and knows where they were', new URL(idle.url()).searchParams.get('next') === '/admin/profile');
   await idle.fill('#admin-identifier', memberEmail);
   await idle.fill('#admin-password', password);
@@ -239,7 +238,7 @@ try {
   await signIn(owner, env.DEMO_EMAIL, env.DEMO_PASSWORD);
   await settle(owner, '/admin/team');
   await teamMemberAction(owner, memberName, 'Sign out…', 'Sign out');
-  await owner.getByText('Signed out. They’ll need to sign in again').waitFor();
+  await owner.getByText('Signed out.', { exact: true }).waitFor();
   check('the member’s session there ends, by the organisation', sql(`select ended_reason from public.user_sessions where id = ${quote(memberSession)}`) === 'organization');
   check('the membership remembers when', sql(`select signed_out_at is not null from public.organization_members where user_id = ${quote(memberUserId)}`) === 't');
   // A session that began earlier, working elsewhere, can't come back to it either.

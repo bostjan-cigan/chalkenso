@@ -147,9 +147,7 @@ export default function GroupMembersPanel({
     <div className={styles.wrap}>
       {unattachedCount ? (
         <div className={styles.unattached} data-testid="unattached-feedback">
-          <span>
-            <strong>{t('members.unattached', { count: unattachedCount })}</strong> {t('members.unattachedHint')}
-          </span>
+          <strong>{t('members.unattached', { count: unattachedCount })}</strong>
           <AdminButton type="button" tone="secondary" size="compact" onClick={() => setMoveOpen(true)} data-testid="move-feedback">
             {t('members.moveFeedback')}
           </AdminButton>

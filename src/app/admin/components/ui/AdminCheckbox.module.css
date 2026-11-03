@@ -65,18 +65,7 @@
   box-shadow: 0 0 0 4px rgba(var(--accent-color), 0.12);
 }
 
-.text {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  line-height: 1.4;
-}
-
 .label {
   color: rgb(var(--foreground-rgb));
-}
-
-.hint {
-  font-size: 0.8rem;
-  color: rgba(var(--foreground-rgb), 0.6);
+  line-height: 1.4;
 }

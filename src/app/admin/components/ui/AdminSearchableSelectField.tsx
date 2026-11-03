@@ -25,8 +25,6 @@ import styles from './AdminSearchableSelectField.module.css';
 export type AdminSearchableSelectOption = {
   label: string;
   value: string;
-  /** A second, quieter line under the label (e.g. what a role may do). */
-  hint?: string;
   /** Shown before the label in the list (e.g. a flag). */
   icon?: ReactNode;
 };
@@ -37,7 +35,6 @@ type AdminSearchableSelectFieldProps = {
   style?: CSSProperties;
   disabled?: boolean;
   fullWidth?: boolean;
-  hint?: ReactNode;
   id: string;
   label: string;
   /** Without a name nothing is submitted: for controls that act on change. */
@@ -88,7 +85,6 @@ export default function AdminSearchableSelectField({
   style,
   disabled = false,
   fullWidth = false,
-  hint,
   id,
   label,
   name,
@@ -402,7 +398,6 @@ export default function AdminSearchableSelectField({
                     >
                       {opt.icon}
                       <span className={styles.optionLabel}>{opt.label}</span>
-                      {opt.hint ? <span className={styles.optionHint}>{opt.hint}</span> : null}
                     </button>
                   </li>
                 ))
@@ -446,7 +441,6 @@ export default function AdminSearchableSelectField({
         {popup}
       </div>
 
-      {hint ? <span className={adminStyles.fieldHint}>{hint}</span> : null}
     </label>
   );
 }

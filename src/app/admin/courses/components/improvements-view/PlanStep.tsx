@@ -252,12 +252,12 @@ export function usePlanStep(
   const writing = Boolean(draft && draft.state !== 'ready');
   const busy = text !== null || writing;
 
-  const scopeChoice = improvement?.choosesScope ? (
+  // The main course is a choice only where it has the lesson (not one added in the group's copy).
+  const scopeChoice = improvement?.choosesScope && (improvement.courseReachable || scope === 'group and core') ? (
     <div className={styles.scope}>
       <span className={styles.label}>{t('whereLabel')}</span>
       <div role="radiogroup" aria-label={t('whereLabel')} className={styles.scopeOptions} data-testid="plan-scope">
         {SCOPES.map((option) => {
-          const unavailable = option.value === 'group and core' && !improvement.courseReachable;
           const selected = scope === option.value;
           return (
             <button
@@ -265,7 +265,6 @@ export function usePlanStep(
               type="button"
               role="radio"
               aria-checked={selected}
-              disabled={unavailable && !selected}
               className={selected ? styles.scopeOn : styles.scopeOption}
               onClick={() => setScope(option.value)}
             >
@@ -274,7 +273,6 @@ export function usePlanStep(
           );
         })}
       </div>
-      {!improvement.courseReachable ? <span className={styles.quiet}>{t('noCourseLesson')}</span> : null}
     </div>
   ) : null;
 
@@ -318,14 +316,10 @@ export function usePlanStep(
   } else if (improvement && text !== null) {
     view = (
       <div className={styles.planEdit}>
-        {draftInBox ? (
-          <p className={styles.quiet}>{draftInBox.claude ? t('draftedByClaude') : t('drafted')}</p>
-        ) : !text.trim() ? (
-          <p className={styles.quiet}>{t('placeholder')}</p>
-        ) : null}
+        {draftInBox ? <p className={styles.quiet}>{draftInBox.claude ? t('draftedByClaude') : t('drafted')}</p> : null}
         {/* A new key for each text put in the box (AI's plan, Claude's), so the editor starts from it. */}
         <div data-testid="plan-box">
-          <TextEditor key={`${draftInBox?.id ?? 'own'}:${text.length}`} ref={box} initial={text} assets={NO_ASSETS} label={t('label')} />
+          <TextEditor key={`${draftInBox?.id ?? 'own'}:${text.length}`} ref={box} initial={text} assets={NO_ASSETS} label={t('label')} placeholder={t('placeholder')} />
         </div>
         {text.trim() ? askBlock : null}
         {scopeChoice}
@@ -371,7 +365,7 @@ export function usePlanStep(
           {t('editPlan')}
         </button>
         {improvement.choosesScope ? (
-          <p className={styles.quiet}>{scope ? t(`goes.${scope === 'group and core' ? 'groupAndCore' : 'groupOnly'}`) : t('goes.unset')}</p>
+          <p className={styles.quiet}>{t(scope === 'group and core' ? 'goes.groupAndCore' : 'goes.groupOnly')}</p>
         ) : null}
       </div>
     );

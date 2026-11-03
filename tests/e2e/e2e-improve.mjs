@@ -166,7 +166,7 @@ try {
   const shown = page.locator('[data-testid=inline-change]');
   check('the review bar says which change', /^1 of \d+$/.test(await position()), await position());
   check('the path shows both places', (await page.locator('[data-testid=improvement-path]').innerText()).includes('Main course'));
-  check('Publish says what happens on the main course', (await page.locator('[data-testid=course-hint]').innerText()).includes('nothing changes there until you publish'));
+  check('Publish says it goes to the main course too', (await page.locator('[data-testid=also-course]').getAttribute('aria-checked')) === 'true' && (await page.locator('[data-testid=also-course]').getAttribute('aria-label')) === 'Also to the main course');
   await page.locator('[data-testid=lesson-part]').click({ position: { x: 5, y: 5 } });
   await page.keyboard.press('Backspace');
   check('⌫ skips the change', (await shown.first().getAttribute('data-decision')) === 'skip');
@@ -219,7 +219,7 @@ try {
   // Undo: the text, the feedback, the draft and the late piece go back.
   await page.locator('[data-testid=improvements-notice]').getByRole('button', { name: 'Undo' }).click();
   await waitFor(() => usedBy(late) === improvement, 40);
-  check('Undo says it also took the changes back from the main course', await page.locator('[data-testid=improvements-notice]', { hasText: 'Also taken back from the main course' }).waitFor({ timeout: 15000 }).then(() => true, () => false));
+  check('Undo says it also took the changes back from the main course', await page.locator('[data-testid=improvements-notice]', { hasText: 'here and on the main course' }).waitFor({ timeout: 15000 }).then(() => true, () => false));
   check('Undo gives the late piece back to the improvement', usedBy(late) === improvement && sql(`select count(*) from public.tasks where id = ${quote(next)}`) === '0');
   check('Undo opens the feedback again', status(first) === 'OPEN' && status(second) === 'OPEN');
   // Forms send line breaks as CRLF, as every save from the browser does.
@@ -261,7 +261,7 @@ try {
   const scopeNow = () => sql(`select plan from public.tasks where id = ${quote(improvement)}`);
   await page.click('[data-testid=also-course]');
   check('switched off, it stays with the group', await waitFor(() => /Scope: group only/.test(scopeNow()), 20));
-  check('and the foot says so', (await page.locator('[data-testid=course-hint]').innerText()).includes('main course stays as it is'));
+  check('and the foot says so', (await page.locator('[data-testid=also-course]').getAttribute('aria-checked')) === 'false');
   await page.click('[data-testid=also-course]');
   check('switched on, it goes to the main course again', await waitFor(() => /Scope: group and core/.test(scopeNow()), 20));
   const drawn = page.locator('[data-testid=lesson-part] img[src*="/admin/api/drafts/"]');

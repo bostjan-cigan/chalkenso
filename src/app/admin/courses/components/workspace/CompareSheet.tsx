@@ -10,9 +10,8 @@ import { transformObsidianCallouts } from '@/lib/content/callouts';
 import { resolveLessonMarkdownAssetUrls } from '@/lib/course-markdown';
 import { renderCourseMarkdownToHtml } from '@/lib/markdown';
 import TextEditor, { type TextEditorHandle } from '../improvements-view/TextEditor';
-import { actionable, type ChangeDecision } from './ProposedChanges';
 import { renderedDiff } from './rendered-diff';
-import { isImageBlocks, stepKind, type ChangeState, type ProposedChange } from './revision';
+import { actionable, isImageBlocks, stepKind, type ChangeDecision, type ChangeState, type ProposedChange } from './revision';
 import styles from './compare-sheet.module.css';
 import workspace from './workspace.module.css';
 
@@ -119,7 +118,7 @@ export default function CompareSheet({
   const editable = editableOf(step);
   const imageOnly = Boolean(editable && isImageBlocks(editable.after));
   const mine = Boolean(editable && review?.isEdited?.(editable));
-  const note = !review ? null : states[0] === 'gone' ? t('gone') : states[0] === 'done' ? t('alreadyIn') : conflict ? t('conflict') : states.includes('nearby') ? t('nearby.note') : null;
+  const note = !review ? null : states[0] === 'gone' ? t('gone') : states[0] === 'done' ? t('alreadyIn') : conflict ? t('conflict') : states.includes('nearby') ? t('nearby.tag') : null;
   const where = step[0].section ? ` · ${t('inSection', { section: step[0].section })}` : '';
   const decide = (value: ChangeDecision) => choosable.forEach((change) => review!.onDecide(change, value));
   const quiet = footerNote?.(step) ?? null;

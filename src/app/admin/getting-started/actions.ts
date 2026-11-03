@@ -2,7 +2,7 @@
 
 import { requireMember } from '@/lib/admin-auth';
 import { remember } from '@/lib/remembered';
-import { hiddenKey, openedKey, TICKABLE, tickKey, type TickableStep } from './data';
+import { hiddenKey, TICKABLE, tickKey, type TickableStep } from './data';
 
 /**
  * Getting started's choices, each the signed-in member's own (in their organisation). A platform
@@ -21,11 +21,4 @@ export async function hideGettingStartedAction(hidden: boolean) {
   const viewer = await requireMember();
   if (viewer.impersonator) return;
   await remember(viewer.organization.id, hiddenKey(viewer.id), Boolean(hidden));
-}
-
-/** They've opened it once: the note pointing at it goes. */
-export async function openedGettingStartedAction() {
-  const viewer = await requireMember();
-  if (viewer.impersonator) return;
-  await remember(viewer.organization.id, openedKey(viewer.id), true);
 }

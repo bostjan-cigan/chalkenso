@@ -33,6 +33,7 @@ import Switch from '../../../components/ui/Switch';
 import ConfirmDialog from '../ConfirmDialog';
 import LessonModeSwitch from '../LessonModeSwitch';
 import {
+  actionable,
   applyChanges,
   applyOnto,
   changeSteps,
@@ -45,11 +46,11 @@ import {
   proposeChanges,
   splitBlocks,
   stepKind,
+  type ChangeDecision,
   type ChangeState,
   type ProposedChange,
 } from '../workspace/revision';
 import CompareSheet, { editableOf } from '../workspace/CompareSheet';
-import { actionable, type ChangeDecision } from '../workspace/ProposedChanges';
 import { HANDOFF_STARTED_EVENT, handoffDraft, type HandoffStartedDetail } from '../workspace/events';
 import { useDraftProgress } from '../workspace/useDraftProgress';
 import { useHandoffStarted } from '../workspace/useHandoffStarted';
@@ -866,7 +867,7 @@ export default function ImprovementsView({
     const cards = cardsOf(target, own);
     return (
       <section className={styles.group} aria-label={tc('feedback')}>
-        <h3 className={styles.groupTitle}>{own && canWork ? tc('tickTitle') : tc('feedback')}</h3>
+        <h3 className={styles.groupTitle}>{tc('feedback')}</h3>
         {target?.asked ? <p className={styles.asked}>{target.asked}</p> : null}
         {cards.length ? (
           <ul className={styles.cards} data-testid="feedback-cards">
@@ -935,47 +936,26 @@ export default function ImprovementsView({
     const open = found.changes.filter((change) => actionable(found.states[change.id]));
     const kept = open.filter((change) => decisionOf(found, change) === 'keep').length;
     if (!open.length) return <p className={styles.footHint}>{t('nothingToApply')}</p>;
-    // A group's copy: where they go from here, said where it's decided.
-    const going = target ? goesToCourse(target) : false;
+    // A group's copy: whether they go on to the main course (a suggestion, for whoever can't edit it).
+    const courseLabel = target?.canEditCourse ? t('toCourse.label') : t('toCourse.suggest');
     const courseChoice =
       target?.choosesScope && target.courseReachable && target.canWork ? (
-        <>
-          <div className={styles.courseChoice}>
-            <span>{t('toCourse.label')}</span>
-            <Switch on={going} label={t('toCourse.label')} onChange={() => chooseCourse(target)} disabled={pending} testId="also-course" />
-          </div>
-          <p className={styles.footHint} data-testid="course-hint">
-            {!going ? t('toCourse.only') : target.canEditCourse ? t('toCourse.review') : t('toCourse.suggest')}
-          </p>
-        </>
+        <div className={styles.courseChoice}>
+          <span>{courseLabel}</span>
+          <Switch on={goesToCourse(target)} label={courseLabel} onChange={() => chooseCourse(target)} disabled={pending} testId="also-course" />
+        </div>
       ) : null;
-    // Nothing kept: what to do instead of a button that does nothing.
-    if (!kept) {
-      return (
-        <>
-          <p className={styles.footHint}>{t('keepOne')}</p>
-          {courseChoice}
-        </>
-      );
-    }
+    // Nothing kept: the button says so, and does nothing.
     return (
       <>
-        <button
-          type="button"
-          className={workspace.primaryButton}
-          disabled={pending}
-          onClick={onApply}
-          title={published ? t('publishHint') : t('saveHint')}
-          data-testid="apply-improvement"
-        >
+        <button type="button" className={workspace.primaryButton} disabled={pending || !kept} onClick={onApply} data-testid="apply-improvement">
           {pending
             ? t('saving')
             : kept === open.length
               ? t(published ? 'publishAll' : 'saveAll', { count: kept })
               : t(published ? 'publishSome' : 'saveSome', { count: kept, total: open.length })}
         </button>
-        {/* The foot stays short: where they go from here says what matters at this step. */}
-        {courseChoice ?? <p className={styles.footHint}>{published ? t('publishHint') : t('saveHint')}</p>}
+        {courseChoice}
       </>
     );
   };
@@ -1055,7 +1035,7 @@ export default function ImprovementsView({
           timeLabel={(time) => t('working.elapsed', { time })}
           meta={[draft.by ? t('working.startedBy', { name: draft.by }) : null]}
           still={writing}
-          detail={!claude ? t('working.leave') : draft.stage === 'waiting' ? (quiet ? t('working.notStarted') : t('working.send')) : t('working.inClaude')}
+          detail={claude && draft.stage === 'waiting' ? (quiet ? t('working.notStarted') : t('working.send')) : null}
           actions={
             draft.id ? (
               <button
@@ -1180,6 +1160,19 @@ export default function ImprovementsView({
    */
   const flow = (target: ViewImprovement | null, own: boolean): { body: ReactNode; foot: ReactNode } => {
     const back: Pane = own ? { kind: 'list' } : { kind: 'improvement', id: target?.id ?? '' };
+    // Nothing ticked yet: the step's button, waiting for the first tick.
+    const planWaiting =
+      own && canWork && lessonCards.length ? (
+        <button type="button" className={workspace.primaryButton} disabled>
+          {aiEnabled ? (
+            <>
+              <TbSparkles aria-hidden size={16} /> {tc('plan')}
+            </>
+          ) : (
+            t('planStep.write')
+          )}
+        </button>
+      ) : null;
     if (!target) {
       return {
         body: (
@@ -1188,7 +1181,7 @@ export default function ImprovementsView({
             {own ? otherWork : null}
           </>
         ),
-        foot: canWork ? <p className={styles.footHint}>{tc('tickHint')}</p> : null,
+        foot: planWaiting,
       };
     }
     const key = `improvement:${target.id}`;
@@ -1210,7 +1203,7 @@ export default function ImprovementsView({
     // The instructor's notes for AI, while the plan is being made (an improvement with feedback).
     const notesRow =
       target.feedback.length && (step === 'decide' || step === 'planning' || step === 'planned' || step === 'stale') ? (
-        <NotesForAi key={`${target.id}:${target.notes}`} taskId={target.id} notes={target.notes} planned={Boolean(target.plan)} canEdit={target.canWork} />
+        <NotesForAi key={`${target.id}:${target.notes}`} taskId={target.id} notes={target.notes} canEdit={target.canWork} />
       ) : null;
     // The group's copy and the main course's lesson are on the path; any others are listed.
     const otherPlaces = pathOf(target) ? target.others.filter((other) => !other.course && (target.choosesScope || other !== target.others.find((one) => !one.course))) : target.others;
@@ -1219,7 +1212,7 @@ export default function ImprovementsView({
       <section className={styles.leftBlock} aria-label={t('didntFit.row')} data-testid="didnt-fit-block">
         <h3 className={styles.groupTitle}>{t('didntFit.row')}</h3>
         <p className={styles.quiet} data-testid="didnt-fit-note">
-          {t('didntFit.note', { count: left.steps.length, group: left.group })}
+          {t('didntFit.value', { count: left.steps.length, group: left.group })}
         </p>
         <div className={styles.leftActions}>
           {aiEnabled && target.canWork ? (
@@ -1285,7 +1278,7 @@ export default function ImprovementsView({
         body = (
           <>
             {rows}
-            <p className={styles.quiet}>{t('vaultHint')}</p>
+            <p className={styles.quiet}>{t('vault')}</p>
           </>
         );
         foot = target.canWork ? (
@@ -1315,12 +1308,7 @@ export default function ImprovementsView({
         );
         break;
       case 'handEdit':
-        body = (
-          <>
-            {rows}
-            <p className={styles.quiet}>{t('editHint')}</p>
-          </>
-        );
+        body = rows;
         foot = editing ? (
           <div className={styles.footRow}>
             <button type="button" className={workspace.ghostButton} onClick={() => setEditing(null)}>
@@ -1404,7 +1392,7 @@ export default function ImprovementsView({
               </p>
             </>
           );
-        } else if (own && canWork) foot = <p className={styles.footHint}>{tc('tickHint')}</p>;
+        } else foot = planWaiting;
         break;
       case 'stale':
       case 'planned': {
@@ -1494,7 +1482,7 @@ export default function ImprovementsView({
         <>
           <div className={styles.paneHead}>
             <h2 className={styles.itemTitle}>{subject.label}</h2>
-            <p className={styles.subtitle}>{[pathOf(subject) ? '' : subject.whereLabel, inVault(subject) ? t('inVault') : ''].filter(Boolean).join(' · ')}</p>
+            {pathOf(subject) ? null : <p className={styles.subtitle}>{subject.whereLabel}</p>}
           </div>
           {parts.body}
         </>
@@ -1504,13 +1492,7 @@ export default function ImprovementsView({
     } else body = notFound;
   } else if (pane.kind === 'used') {
     const own = !pane.of;
-    const target = own ? lessonImprovement : subject;
-    body = (
-      <>
-        {own && target?.plan ? <p className={styles.quiet}>{afterDraft ? tc('usedHintDrafted') : tc('usedHintPlan')}</p> : null}
-        {feedbackSection(target, own, pane)}
-      </>
-    );
+    body = feedbackSection(own ? lessonImprovement : subject, own, pane);
   } else if (pane.kind === 'feedback') {
     const own = !(pane.back.kind === 'improvement' || (pane.back.kind === 'used' && pane.back.of));
     const card = (own ? lessonCards : cardsOf(subject, false)).find((one) => one.id === pane.id) ?? null;
@@ -1536,7 +1518,6 @@ export default function ImprovementsView({
     body = (
       <div className={styles.newForm}>
         <h2 className={styles.itemTitle}>{t('newTitle')}</h2>
-        <p className={styles.quiet}>{t('newHint')}</p>
         <textarea
           className={styles.planBox}
           value={newWhy}
@@ -1565,7 +1546,6 @@ export default function ImprovementsView({
         <>
           <div className={styles.paneHead}>
             <h2 className={styles.itemTitle}>{draft.source === 'claude' ? (draft.by ? t('fromClaudeBy', { name: draft.by }) : t('fromClaude')) : t('draftedHere')}</h2>
-            <p className={styles.subtitle}>{t('looseHint')}</p>
           </div>
           {draft.state === 'working' ? workingBlock(key, draft) : review ? changesSection(review) : null}
         </>

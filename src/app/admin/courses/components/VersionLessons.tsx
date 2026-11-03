@@ -51,7 +51,6 @@ export default async function VersionLessons({
   version,
   selectedLessonId,
   feedbackHref,
-  intro,
 }: {
   viewer: CrmViewer;
   version: VersionDetail;
@@ -59,8 +58,6 @@ export default async function VersionLessons({
   selectedLessonId?: string;
   /** Where a lesson's open feedback is listed (a group's or course's Feedback tab). */
   feedbackHref?: (lessonId: string) => string;
-  /** A line above the lessons (e.g. whose lessons these are). */
-  intro?: React.ReactNode;
 }) {
   const courseId = version.course.id;
   const versionRef = { id: version.id, courseId, ownerGroupId: version.ownerGroup?.id ?? null };
@@ -160,16 +157,14 @@ export default async function VersionLessons({
   return (
     <>
       <AdminSectionCard
-        kicker={t('kicker')}
-        title=""
-        kickerAction={
+        title={t('title')}
+        action={
           <AdminButton href={`/admin/courses/${courseId}/lessons/new${versionQuery}`} size="compact">
             <FiPlus size={15} />
             {t('add')}
           </AdminButton>
         }
       >
-        {intro}
         {version.lessons.length > 0 ? (
           <>
             {ungroupedLessons.length > 0 ? <div className={styles.entityList}>{ungroupedLessons.map(renderLesson)}</div> : null}
@@ -183,7 +178,7 @@ export default async function VersionLessons({
                 {lessons.length > 0 ? (
                   <div className={styles.entityList}>{lessons.map(renderLesson)}</div>
                 ) : (
-                  <p className={styles.helperText}>{t('emptySection')}</p>
+                  <p className={styles.quietText}>{t('emptySection')}</p>
                 )}
               </div>
             ))}
@@ -191,7 +186,6 @@ export default async function VersionLessons({
         ) : (
           <div className={styles.emptyState}>
             <h3 className={styles.emptyStateTitle}>{t('emptyTitle')}</h3>
-            <p className={styles.emptyStateText}>{t('emptyText')}</p>
           </div>
         )}
 

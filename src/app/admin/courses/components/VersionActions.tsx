@@ -101,7 +101,7 @@ export default function VersionActions({
         open={dialog === 'toggle'}
         tone="primary"
         title={isPublished ? t('unpublishTitle') : t('publishTitle')}
-        description={isPublished ? t('unpublishDescription') : t('publishDescription')}
+        description={isPublished ? t('unpublishDescription') : undefined}
         confirmLabel={isPublished ? t('unpublish') : t('publish')}
         pending={isPending}
         onConfirm={runToggle}

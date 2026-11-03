@@ -29,7 +29,7 @@ function Feedback({ state }: { state: SettingsActionState }) {
     return <AdminNotice>{state.error}</AdminNotice>;
   }
   if (state.message) {
-    return <p className={styles.fieldHint} style={{ margin: 0 }}>{state.message}</p>;
+    return <p className={styles.quietText} style={{ margin: 0 }}>{state.message}</p>;
   }
   return null;
 }
@@ -109,6 +109,9 @@ export function AiKeyForm({ current }: { current: { hint: string; readable: bool
               autoFocus
               required
             />
+            <p className={styles.quietText} style={{ margin: 0 }}>
+              {t('checked')}
+            </p>
             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
               <button type="button" className={settingsStyles.action} onClick={() => setEditing(false)} disabled={pending}>
                 {t('cancel')}
@@ -173,7 +176,7 @@ const choice = (selected: boolean): CSSProperties => ({
 
 /**
  * How the organisation looks in the sidebar and the switcher: its logo, or an icon on a colour. The
- * icon saves as soon as it is picked; a logo replaces it until the logo is removed.
+ * icon saves as soon as it is picked; a logo replaces it (and its picker) until the logo is removed.
  */
 export function OrganizationIdentityForm({
   org,
@@ -209,10 +212,7 @@ export function OrganizationIdentityForm({
     <div style={{ display: 'grid', gap: '1rem' }} data-testid="org-identity">
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
         <OrgBadge org={{ ...org, logoUrl: preview ?? org.logoUrl, iconName: icon, iconColor: color }} size={56} />
-        <div>
-          <strong style={{ display: 'block', fontSize: '1.05rem' }}>{org.name}</strong>
-          <span className={styles.fieldHint}>{t('shown')}</span>
-        </div>
+        <strong style={{ fontSize: '1.05rem' }}>{org.name}</strong>
       </div>
 
       <form
@@ -246,7 +246,7 @@ export function OrganizationIdentityForm({
         <AdminButton type="button" tone="secondary" size="compact" onClick={() => fileRef.current?.click()}>
           {org.logoUrl ? t('chooseAnother') : t('choose')}
         </AdminButton>
-        <span className={styles.fieldHint}>{fileName ?? t('formats')}</span>
+        {fileName ? <span className={styles.quietText}>{fileName}</span> : null}
         {fileName ? (
           <AdminButton type="submit" size="compact" disabled={pending}>
             {pending ? t('saving') : t('saveLogo')}
@@ -270,43 +270,46 @@ export function OrganizationIdentityForm({
         ) : null}
       </form>
 
-      <div style={{ display: 'grid', gap: '0.5rem', opacity: org.logoUrl ? 0.6 : 1 }}>
-        <span className={styles.inputLabel}>{org.logoUrl ? t('iconUnderLogo') : t('icon')}</span>
-        <div role="radiogroup" aria-label={t('icon')} style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-          {ORG_ICONS.map((entry) => {
-            const Icon = ORG_ICON_COMPONENTS[entry.key];
-            return (
+      {/* A logo replaces the icon: the icon and its colour are picked once there is no logo. */}
+      {org.logoUrl ? null : (
+        <div style={{ display: 'grid', gap: '0.5rem' }}>
+          <span className={styles.inputLabel}>{t('icon')}</span>
+          <div role="radiogroup" aria-label={t('icon')} style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+            {ORG_ICONS.map((entry) => {
+              const Icon = ORG_ICON_COMPONENTS[entry.key];
+              return (
+                <button
+                  key={entry.key}
+                  type="button"
+                  role="radio"
+                  aria-checked={icon === entry.key}
+                  aria-label={t(`icons.${entry.key}`)}
+                  title={t(`icons.${entry.key}`)}
+                  style={choice(icon === entry.key)}
+                  onClick={() => saveIcon(entry.key, color)}
+                >
+                  <Icon size={20} aria-hidden />
+                </button>
+              );
+            })}
+          </div>
+          <span className={styles.inputLabel}>{t('colour')}</span>
+          <div role="radiogroup" aria-label={t('colour')} style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+            {ORG_COLORS.map((entry) => (
               <button
                 key={entry.key}
                 type="button"
                 role="radio"
-                aria-checked={icon === entry.key}
-                aria-label={t(`icons.${entry.key}`)}
-                title={t(`icons.${entry.key}`)}
-                style={choice(icon === entry.key)}
-                onClick={() => saveIcon(entry.key, color)}
-              >
-                <Icon size={20} aria-hidden />
-              </button>
-            );
-          })}
+                aria-checked={color === entry.key}
+                aria-label={t(`colours.${entry.key}`)}
+                title={t(`colours.${entry.key}`)}
+                style={{ ...choice(color === entry.key), background: `rgb(${entry.rgb})` }}
+                onClick={() => saveIcon(icon, entry.key)}
+              />
+            ))}
+          </div>
         </div>
-        <span className={styles.inputLabel}>{t('colour')}</span>
-        <div role="radiogroup" aria-label={t('colour')} style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-          {ORG_COLORS.map((entry) => (
-            <button
-              key={entry.key}
-              type="button"
-              role="radio"
-              aria-checked={color === entry.key}
-              aria-label={t(`colours.${entry.key}`)}
-              title={t(`colours.${entry.key}`)}
-              style={{ ...choice(color === entry.key), background: `rgb(${entry.rgb})` }}
-              onClick={() => saveIcon(icon, entry.key)}
-            />
-          ))}
-        </div>
-      </div>
+      )}
       <Feedback state={state} />
     </div>
   );

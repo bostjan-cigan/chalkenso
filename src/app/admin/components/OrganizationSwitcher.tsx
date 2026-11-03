@@ -14,12 +14,10 @@ import OrgBadge, { type OrgBadgeData } from './OrgBadge';
 import { useSidebarCollapsed } from './SidebarState';
 import styles from '../admin.module.css';
 
-export type SwitcherOrganization = OrgBadgeData & { roleLabel: string };
-
 /**
  * The organisation card under the wordmark: its logo (or icon) and name. When there is anything to do
  * there — switch to another organisation, open its settings, create, join or leave one — it opens a
- * menu.
+ * menu: the organisations by name (a tick on this one), then those actions.
  */
 export default function OrganizationSwitcher({
   current,
@@ -29,8 +27,8 @@ export default function OrganizationSwitcher({
   createHref,
   canLeave,
 }: {
-  current: SwitcherOrganization;
-  organizations: SwitcherOrganization[];
+  current: OrgBadgeData;
+  organizations: OrgBadgeData[];
   /** Organisation settings, for owners and admins. */
   settingsHref: string | null;
   /** Joining another organisation with an invite link (the hosted edition). */
@@ -194,7 +192,6 @@ export default function OrganizationSwitcher({
       {open
         ? createPortal(
             <div ref={menuRef} className={styles.orgMenu} role="menu" aria-label={t('menu')} style={{ visibility: 'hidden' }} onKeyDown={onMenuKey}>
-              <p className={styles.orgMenuHeading}>{t('yours')}</p>
               {organizations.map((organization) => (
                 <button
                   key={organization.id}
@@ -206,7 +203,6 @@ export default function OrganizationSwitcher({
                 >
                   <OrgBadge org={organization} size={26} />
                   <span className={styles.orgMenuItemName}>{organization.name}</span>
-                  <span className={styles.orgMenuItemMeta}>{organization.roleLabel}</span>
                   {organization.id === current.id ? <TbCheck aria-hidden size={16} /> : null}
                 </button>
               ))}
@@ -241,7 +237,11 @@ export default function OrganizationSwitcher({
                         setJoinError(null);
                       }}
                     />
-                    {joinError ? <span className={styles.fieldHint}>{joinError}</span> : null}
+                    {joinError ? (
+                      <span className={styles.fieldError} role="alert">
+                        {joinError}
+                      </span>
+                    ) : null}
                     <button type="submit" className={styles.orgMenuItem} style={{ justifyContent: 'center', fontWeight: 600 }}>
                       {t('openInvite')}
                     </button>

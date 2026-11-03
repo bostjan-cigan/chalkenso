@@ -39,8 +39,8 @@ export default function PartnerDeleteButton({ partnerId, partnerName }: { partne
       <ConfirmDialog
         open={open}
         tone="danger"
-        title={t('title')}
-        description={t('description', { name: partnerName })}
+        title={t('title', { name: partnerName })}
+        description={t('description')}
         confirmLabel={t('button')}
         pending={isDeleting}
         onConfirm={handleDelete}

@@ -14,7 +14,8 @@ import styles from './MemberLinkModal.module.css';
 
 /**
  * Moving feedback whose learner left the roster (by the old link it came from) to a learner on it, so
- * it shows on their link: tick the feedback, choose the learner, Move.
+ * it shows on their link: tick the feedback (each by how much, when, and how it starts, to recognise
+ * whose it was), choose the learner, Move.
  */
 export default function MoveFeedbackModal({
   open,
@@ -33,7 +34,6 @@ export default function MoveFeedbackModal({
   const locale = useLocale();
   const router = useRouter();
   const titleId = useId();
-  const descriptionId = useId();
   const [chosen, setChosen] = useState<Set<string>>(() => new Set(sources.length === 1 ? [sources[0].key] : []));
   const [memberId, setMemberId] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -60,14 +60,11 @@ export default function MoveFeedbackModal({
     });
 
   return (
-    <AccessLinkModalPortal open={open} onClose={onClose} titleId={titleId} descriptionId={descriptionId}>
+    <AccessLinkModalPortal open={open} onClose={onClose} titleId={titleId}>
       <header className={styles.modalHeader}>
         <h2 id={titleId} className={styles.modalTitle}>
           {t('moveFeedback.title')}
         </h2>
-        <p id={descriptionId} className={styles.modalDescription}>
-          {t('moveFeedback.text')}
-        </p>
       </header>
       <div className={styles.modalBody} style={{ display: 'grid', gap: '1rem' }}>
         <div style={{ display: 'grid', gap: '0.75rem' }} data-testid="unattached-sources">
@@ -76,19 +73,12 @@ export default function MoveFeedbackModal({
               key={source.key}
               checked={chosen.has(source.key)}
               onChange={() => toggle(source.key)}
-              label={`${t('moveFeedback.pieces', { count: source.count })} · ${
-                source.linkMadeAt
-                  ? t('moveFeedback.linkMade', { date: formatAccessDate(new Date(source.linkMadeAt), locale) })
-                  : t('moveFeedback.linkGone')
-              }`}
-              hint={
-                <>
-                  {formatAccessDate(new Date(source.firstAt), locale)}
-                  {source.lastAt !== source.firstAt ? ` – ${formatAccessDate(new Date(source.lastAt), locale)}` : ''} ·{' '}
-                  {t('moveFeedback.lessons', { count: source.lessons.length, lessons: source.lessons.join(', ') })} ·{' '}
-                  {t('moveFeedback.sample', { sample: source.sample })}
-                </>
-              }
+              label={[
+                t('moveFeedback.pieces', { count: source.count }),
+                formatAccessDate(new Date(source.firstAt), locale) +
+                  (source.lastAt !== source.firstAt ? ` – ${formatAccessDate(new Date(source.lastAt), locale)}` : ''),
+                t('moveFeedback.sample', { sample: source.sample }),
+              ].join(' · ')}
             />
           ))}
         </div>

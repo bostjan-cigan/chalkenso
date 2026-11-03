@@ -50,7 +50,6 @@ export default function PartnerForm({
           id="partner-website-url"
           name="websiteUrl"
           label={t('form.website')}
-          hint={t('form.websiteHint')}
           placeholder="https://"
           type="url"
           defaultValue={initialWebsiteUrl}
@@ -60,7 +59,6 @@ export default function PartnerForm({
           id="partner-logo-url"
           name="logoUrl"
           label={t('form.logo')}
-          hint={t('form.logoHint')}
           placeholder="https://"
           type="url"
           value={logoUrl}
@@ -77,7 +75,6 @@ export default function PartnerForm({
         id="partner-description"
         name="description"
         label={t('form.description')}
-        hint={t('form.descriptionHint')}
         placeholder={t('form.descriptionPlaceholder')}
         defaultValue={initialDescription}
       />

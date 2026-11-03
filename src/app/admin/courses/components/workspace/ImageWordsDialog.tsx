@@ -53,7 +53,6 @@ export function useImageWords() {
       <AdminField
         id="image-alt"
         label={t('imageAlt')}
-        hint={t('imageAltHint')}
         value={alt}
         onChange={(event) => setAlt(event.target.value)}
         onKeyDown={(event) => {

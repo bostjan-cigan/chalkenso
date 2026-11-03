@@ -51,8 +51,8 @@ export default function LessonDeleteButton({
       <ConfirmDialog
         open={open}
         tone="danger"
-        title={t('title')}
-        description={t('description', { title: lessonTitle })}
+        title={t('title', { title: lessonTitle })}
+        description={t('description')}
         confirmLabel={t('confirm')}
         pending={isPending}
         onConfirm={handleDelete}

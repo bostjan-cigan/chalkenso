@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
-import type { ReactNode } from 'react';
 import { FiAlertTriangle } from 'react-icons/fi';
 import { TbBook2, TbMessageCircle, TbMessageCircleQuestion, TbSchool, TbSettings, TbUsers } from 'react-icons/tb';
 import { formatAccessDate, formatDateTimeLocalValue, getDefaultAccessExpiry } from '@/lib/access-links';
@@ -209,16 +208,7 @@ export default async function GroupDetailPage({ params, searchParams }: { params
       notice={
         flashMessage ? (
           <AdminNotice className={styles.statusNotice} icon={<FiAlertTriangle size={18} />} variant="banner">
-            {/* A new group starts with only its lessons, name and learners: the rest is in Settings. */}
-            {search.status === 'group-created' && canManageGroup
-              ? t.rich('created', {
-                  link: (chunks: ReactNode) => (
-                    <Link href={tabHref('settings')} className={styles.inlineLink}>
-                      {chunks}
-                    </Link>
-                  ),
-                })
-              : flashMessage}
+            {flashMessage}
           </AdminNotice>
         ) : null
       }
@@ -286,25 +276,17 @@ export default async function GroupDetailPage({ params, searchParams }: { params
                 viewer={viewer}
                 version={copyDetail}
                 feedbackHref={(lessonId) => `${groupHref}?tab=feedback&lesson=${lessonId}`}
-                intro={
-                  <p className={styles.fieldHint} style={{ margin: '0 0 0.9rem' }}>
-                    {copy.archivedAt
-                      ? t('lessons.closed')
-                      : copy.baseVersion
-                        ? t('lessons.ownCopyFrom', { version: copy.baseVersion.label })
-                        : t('lessons.ownCopyFromCourse')}
-                  </p>
-                }
               />
             ) : copy || !readVersion ? (
-              <AdminSectionCard kicker={t('lessons.kicker')} title="">
-                <p className={styles.fieldHint} style={{ margin: 0 }}>
+              // The tab names the card: no title of its own.
+              <AdminSectionCard title="">
+                <p className={styles.quietText} style={{ margin: 0 }}>
                   {copy ? t('lessons.ownCopy') : t('lessons.none')}
                 </p>
               </AdminSectionCard>
             ) : readDetail?.lessons.length ? (
               // Reading the course as it is: its lessons. Giving the group its own copy is in Settings.
-              <AdminSectionCard kicker={t('lessons.kicker')} title="">
+              <AdminSectionCard title="">
                 <ol className={styles.stackList} style={{ margin: 0, paddingLeft: '1.2rem' }}>
                   {readDetail.lessons.map((lesson) => (
                     <li key={lesson.id}>{lesson.title}</li>
@@ -319,9 +301,8 @@ export default async function GroupDetailPage({ params, searchParams }: { params
 
         {tab === 'feedback' ? (
           <AdminSectionCard
-            kicker={t('feedback.kicker')}
             title=""
-            kickerAction={
+            action={
               <AdminButton href={`/admin/api/feedback-export?group=${group.id}`} download size="compact" tone="secondary" data-testid="feedback-export">
                 {t('feedback.export')}
               </AdminButton>
@@ -356,7 +337,7 @@ export default async function GroupDetailPage({ params, searchParams }: { params
 
         {tab === 'people' && people ? (
           <>
-            <AdminSectionCard kicker={t('people.learners')} title="">
+            <AdminSectionCard title={t('people.learners')}>
               {!canManageGroup ? <GroupRosterForm groupId={group.id} initialRoster={group.sourceRosterText ?? ''} /> : null}
               {group.members.length > 0 ? (
                 <GroupMembersPanel
@@ -380,34 +361,26 @@ export default async function GroupDetailPage({ params, searchParams }: { params
                 />
               ) : (
                 <div className={styles.emptyState}>
-                  <h3 className={styles.emptyStateTitle}>{t('people.empty.title')}</h3>
-                  <p className={styles.emptyStateText}>
-                    {canManageGroup
-                      ? t.rich('people.empty.inSettings', {
-                          link: (chunks: ReactNode) => <Link href={tabHref('settings')}>{chunks}</Link>,
-                        })
-                      : t('people.empty.above')}
-                  </p>
+                  <h3 className={styles.emptyStateTitle}>{t('people.empty')}</h3>
+                  {/* Those who set the group paste its learners in Settings; the others, above. */}
+                  {canManageGroup ? (
+                    <div>
+                      <AdminButton href={tabHref('settings')} size="compact" tone="secondary">
+                        {t('people.addLearners')}
+                      </AdminButton>
+                    </div>
+                  ) : null}
                 </div>
               )}
             </AdminSectionCard>
 
-            <AdminSectionCard kicker={t('people.instructors')} title="">
+            <AdminSectionCard title={t('people.instructors')}>
               <GroupInstructorsPanel
                 groupId={group.id}
                 canManage={canManageGroup}
                 instructors={instructors.map((instructor) => ({ userId: instructor.userId, name: instructor.name }))}
                 pendingInvites={people.pendingInvites.map((invite) => ({ id: invite.id, label: invite.label, expiresAt: invite.expiresAt.toISOString() }))}
-                candidates={people.candidates.map((candidate) => ({
-                  userId: candidate.userId,
-                  name: candidate.name,
-                  gives:
-                    candidate.access.kind === 'none'
-                      ? null
-                      : candidate.access.permissions.length === 1 && candidate.access.permissions[0] === Permission.NOTES
-                        ? t('people.givesNotes')
-                        : t('people.givesAccess'),
-                }))}
+                candidates={people.candidates.map((candidate) => ({ userId: candidate.userId, name: candidate.name }))}
               />
             </AdminSectionCard>
 
@@ -491,7 +464,6 @@ export default async function GroupDetailPage({ params, searchParams }: { params
                         id="group-description"
                         name="description"
                         label={form('description')}
-                        hint={form('descriptionHint')}
                         placeholder={form('descriptionPlaceholder')}
                         defaultValue={group.description ?? ''}
                       />
@@ -504,7 +476,6 @@ export default async function GroupDetailPage({ params, searchParams }: { params
                         <PartnerListField
                           id="group-partners"
                           label={form('partners')}
-                          hint={form('partnersHint')}
                           options={settingsData[1]}
                           initialPartnerIds={group.partners.map((partner) => partner.partnerId)}
                         />
@@ -517,7 +488,6 @@ export default async function GroupDetailPage({ params, searchParams }: { params
                         id="group-slack-handle"
                         name="slackHandle"
                         label={form('slack')}
-                        hint={form('slackHint')}
                         placeholder={form('slackPlaceholder')}
                         defaultValue={group.slackHandle ?? ''}
                       />
@@ -565,22 +535,19 @@ export default async function GroupDetailPage({ params, searchParams }: { params
                 <GroupCopyActions
                   mode={copy ? 'manage' : group.curriculumVersion ? 'start' : null}
                   groupId={group.id}
-                  groupName={group.name}
                   readsLabel={copy ? (copy.baseVersion?.label ?? null) : (group.curriculumVersion?.label ?? null)}
                   closed={copy ? copy.archivedAt !== null : false}
-                  title={t('settings.copy.kicker')}
-                  footer={
-                    copy
-                      ? t('settings.copy.footer', { closed: copy.archivedAt ? 'yes' : 'no' })
-                      : group.curriculumVersion
-                        ? t('settings.copy.reads', { version: group.curriculumVersion.label })
-                        : undefined
-                  }
+                  title={t('settings.groupLessons')}
                 >
                   {copy ? (
                     <SheetInfoRow
                       label={t('settings.lessons')}
-                      value={copy.baseVersion ? t('settings.ownCopyOf', { version: copy.baseVersion.label }) : t('settings.ownCopyOfCourse')}
+                      value={[
+                        copy.baseVersion ? t('settings.ownCopyOf', { version: copy.baseVersion.label }) : t('settings.ownCopyOfCourse'),
+                        copy.archivedAt ? t('settings.closed') : null,
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
                       testId="group-lessons-row"
                     />
                   ) : (
@@ -606,7 +573,7 @@ export default async function GroupDetailPage({ params, searchParams }: { params
             ) : null}
 
             {canDeleteGroup ? (
-              <SheetRows footer={copy ? t('settings.delete.textWithCopy') : t('settings.delete.text')} testId="group-delete-rows">
+              <SheetRows testId="group-delete-rows">
                 <GroupDeleteButton row groupId={group.id} groupName={group.name} hasGroupCurriculum={Boolean(copy)} />
               </SheetRows>
             ) : null}

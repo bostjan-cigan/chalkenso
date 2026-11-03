@@ -27,7 +27,7 @@ export default async function NewPartnerPage({ searchParams }: { searchParams: S
           {flashMessage}
         </AdminNotice>
       ) : null}
-      <SettingsGroup title={t('partner')} footer={t('newSubtitle')}>
+      <SettingsGroup>
         <SettingsBlock>
           <PartnerForm action={createPartnerAction} pendingText={t('adding')} submitLabel={t('add')} />
         </SettingsBlock>

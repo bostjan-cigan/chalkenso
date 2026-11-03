@@ -9,9 +9,8 @@ import { resolveLessonMarkdownAssetUrls } from '@/lib/course-markdown';
 import { lessonSections } from '@/lib/lesson-sections';
 import { renderCourseMarkdownToHtml } from '@/lib/markdown';
 import CompareSheet, { editableOf } from '../workspace/CompareSheet';
-import { actionable, type ChangeDecision } from '../workspace/ProposedChanges';
 import { renderedInlineDiff } from '../workspace/rendered-diff';
-import { changeSteps, isImageBlocks, splitBlocks, stepKind, type ChangeState, type ProposedChange } from '../workspace/revision';
+import { actionable, changeSteps, isImageBlocks, splitBlocks, stepKind, type ChangeDecision, type ChangeState, type ProposedChange } from '../workspace/revision';
 import TextEditor, { type TextEditorHandle } from './TextEditor';
 import workspace from '../workspace/workspace.module.css';
 import styles from './improvements-view.module.css';
@@ -198,7 +197,6 @@ function TrackedStep({
       ) : current ? (
         <p className={styles.unseen}>{view === 'original' ? t('views.notInOriginal') : t('views.leftOut')}</p>
       ) : null}
-      {current && !editing && nearby && decision !== 'keep' ? <p className={styles.changeNote}>{t('nearby.note')}</p> : null}
       {current && !editing && note ? <p className={styles.changeNote} data-testid="change-answers">{note}</p> : null}
       <span className={styles.pin} aria-hidden title={t('compareTitle', { index: number, total })}>
         {number}

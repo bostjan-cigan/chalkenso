@@ -20,8 +20,8 @@ import adminStyles from '@/app/admin/admin.module.css';
 import styles from './MemberLinkModal.module.css';
 
 export type InstructorRow = { userId: string; name: string };
-/** Someone who could teach the group; `gives` says what adding them gives (null: nothing needed). */
-export type InstructorCandidate = { userId: string; name: string; gives: string | null };
+/** Someone who could teach the group (adding them gives them what they need there). */
+export type InstructorCandidate = { userId: string; name: string };
 /** An invite sent from this page that nobody has used yet. */
 export type PendingInviteRow = { id: string; label: string; expiresAt: string };
 
@@ -70,9 +70,6 @@ export default function GroupInstructorsPanel({
   return (
     <div className={styles.inlineAccessBlock} data-testid="group-instructors">
       <ActionNotice notice={notice} />
-      <p className={adminStyles.fieldHint} style={{ margin: 0 }}>
-        {t('instructors.intro')}
-      </p>
       {instructors.length ? (
         instructors.map((instructor) => (
           <div key={instructor.userId} className={styles.inlineAccessRow} data-testid="group-instructor">
@@ -99,7 +96,7 @@ export default function GroupInstructorsPanel({
           </div>
         ))
       ) : (
-        <p className={adminStyles.fieldHint} style={{ margin: 0, fontWeight: 600 }}>
+        <p className={adminStyles.quietText} style={{ margin: 0, fontWeight: 600 }}>
           {t('instructors.none')}
         </p>
       )}
@@ -112,11 +109,7 @@ export default function GroupInstructorsPanel({
               value={picked}
               placeholder={t('instructors.addPlaceholder')}
               searchPlaceholder={t('instructors.addSearch')}
-              options={candidates.map((candidate) => ({
-                value: candidate.userId,
-                label: candidate.name,
-                ...(candidate.gives ? { hint: candidate.gives } : {}),
-              }))}
+              options={candidates.map((candidate) => ({ value: candidate.userId, label: candidate.name }))}
               onValueChange={setPicked}
             />
           </div>
@@ -204,9 +197,6 @@ export default function GroupInstructorsPanel({
               <AdminButton type="button" tone="secondary" size="compact" onClick={() => setInviting(true)} data-testid="guest-invite-start">
                 {t('instructors.invite.start')}
               </AdminButton>
-              <p className={adminStyles.fieldHint} style={{ margin: '0.35rem 0 0' }}>
-                {t('instructors.invite.startHint')}
-              </p>
             </div>
           )}
 

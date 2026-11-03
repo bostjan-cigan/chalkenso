@@ -16,7 +16,6 @@ export default async function ForgotPasswordPage() {
   return (
     <AuthShell
       title={t('title')}
-      intro={t('intro')}
       footer={t.rich('rememberedIt', { link: (chunks: ReactNode) => <Link href="/admin/login">{chunks}</Link> })}
     >
       <ForgotPasswordForm />

@@ -65,28 +65,25 @@ export default function EditAccessLinkExpiryModal({
   }
 
   const title = variant === 'group' ? t('editExpiry.groupTitle') : t('editExpiry.memberTitle');
-
-  const description =
-    variant === 'group'
-      ? t('editExpiry.groupText')
-      : memberLabel
-        ? t('editExpiry.memberTextNamed', { learner: memberLabel })
-        : t('editExpiry.memberText');
+  // Whose link it is, under the title (a learner's); the group's needs nothing more.
+  const description = variant === 'member' ? memberLabel : undefined;
 
   return (
     <AccessLinkModalPortal
       open={open}
       onClose={onClose}
       titleId={titleId}
-      descriptionId={descriptionId}
+      descriptionId={description ? descriptionId : undefined}
     >
       <header className={styles.modalHeader}>
         <h2 id={titleId} className={styles.modalTitle}>
           {title}
         </h2>
-        <p id={descriptionId} className={styles.modalDescription}>
-          {description}
-        </p>
+        {description ? (
+          <p id={descriptionId} className={styles.modalDescription}>
+            {description}
+          </p>
+        ) : null}
       </header>
 
       <div className={styles.modalBody}>

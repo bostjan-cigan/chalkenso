@@ -88,7 +88,7 @@ export default function FeedbackDetail({
             <span>{tc('fixWithAi')}</span>
             <TickMark on={used} />
           </button>
-          <p className={styles.quiet}>{used ? (afterDraft ? t('hintUsedAfterDraft') : t('hintUsed')) : t('hint')}</p>
+          {used && afterDraft ? <p className={styles.quiet}>{t('waitsForDraft')}</p> : null}
         </>
       ) : null}
       {canWork && !feedback.lessonHref ? (
@@ -104,11 +104,9 @@ export default function FeedbackDetail({
               setReply(event.target.value);
               setError(null);
             }}
-            placeholder={t('replyPlaceholder')}
             data-testid="feedback-reply-box"
           />
           {error ? <p className={styles.error}>{error}</p> : null}
-          <p className={styles.quiet}>{used ? t('replyHintUsed') : t('replyHint')}</p>
           <div className={styles.actions}>
             {!used ? (
               <AdminMenu
@@ -128,8 +126,9 @@ export default function FeedbackDetail({
               />
             ) : null}
             <span className={styles.spacer} />
+            {/* A reply answers feedback that isn't ticked, so it's marked done; ticked, it stays for the changes. */}
             <button type="button" className={workspace.ghostButton} disabled={busy} onClick={send} data-testid="feedback-send-reply">
-              {t('send')}
+              {used ? t('send') : t('sendDone')}
             </button>
           </div>
         </div>

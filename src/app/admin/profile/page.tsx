@@ -16,9 +16,6 @@ import { getAdminProfileImageUrl } from '@/lib/profile-image';
 import styles from '../admin.module.css';
 import { ui } from '@/extensions/ui';
 
-/** The account's kind, as the details' footer says it (`account.profile.details.roles`). */
-const ROLE_KEYS = { SUPERADMIN: 'superadmin', USER: 'user' } as const;
-
 /**
  * The person's Profile, as Apple's account page: their details as rows with their value, each
  * opening a sheet saved on its own; two-factor as a row (its steps are dialogs); then where they're
@@ -26,10 +23,9 @@ const ROLE_KEYS = { SUPERADMIN: 'superadmin', USER: 'user' } as const;
  */
 export default async function AdminProfilePage() {
   const session = await requireUser({ allowWithoutTwoFactor: true });
-  const [t, details, twoFactor, tHow] = await Promise.all([
+  const [t, details, tHow] = await Promise.all([
     getTranslations('account.profile.page'),
     getTranslations('account.profile.details'),
-    getTranslations('account.profile.twoFactor'),
     getTranslations('app.howItWorks'),
   ]);
   const isSuperAdmin = session.role === UserRole.SUPERADMIN;
@@ -43,10 +39,8 @@ export default async function AdminProfilePage() {
       email: true,
       firstName: true,
       handle: true,
-      identifier: true,
       lastName: true,
       profileImageKey: true,
-      role: true,
       totpEnabled: true,
     },
   });
@@ -69,21 +63,11 @@ export default async function AdminProfilePage() {
       }
       pageContext={{
         back: isSuperAdmin ? { href: '/admin/platform', label: t('back') } : undefined,
-        subtitle: t('subtitle'),
         title: t('title'),
       }}
     >
       <section className={styles.editorPageSection}>
-        <SheetRows
-          title={t('details')}
-          footer={[
-            details('signedInAs', { identifier: row?.identifier ?? '' }),
-            row && row.role in ROLE_KEYS ? details(`roles.${ROLE_KEYS[row.role as keyof typeof ROLE_KEYS]}`) : null,
-          ]
-            .filter(Boolean)
-            .join(' · ')}
-          testId="profile-details"
-        >
+        <SheetRows title={t('details')} testId="profile-details">
           <SheetRow label={details('name')} value={fullName || none} testId="profile-name-row">
             <ProfileDetailsForm>
               <ProfileNameFields initialFirstName={row?.firstName ?? ''} initialLastName={row?.lastName ?? ''} />
@@ -97,7 +81,6 @@ export default async function AdminProfilePage() {
                 label={details('handle')}
                 from={fullName}
                 initial={row?.handle || undefined}
-                hint={details('handleHint')}
               />
             </ProfileDetailsForm>
           </SheetRow>
@@ -108,7 +91,6 @@ export default async function AdminProfilePage() {
                 name="email"
                 type="email"
                 label={details('email')}
-                hint={details('emailHint')}
                 placeholder={details('emailPlaceholder')}
                 defaultValue={row?.email ?? ''}
               />
@@ -131,7 +113,7 @@ export default async function AdminProfilePage() {
           </SheetRow>
         </SheetRows>
 
-        <SheetRows footer={row?.totpEnabled ? twoFactor('on') : twoFactor('off')} testId="profile-security">
+        <SheetRows testId="profile-security">
           <TwoFactorAuthSection totpEnabled={Boolean(row?.totpEnabled)} required={false} />
         </SheetRows>
       </section>

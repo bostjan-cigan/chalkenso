@@ -31,7 +31,6 @@ export default function SelectionComposer({
 }) {
   const t = useTranslations('editor.selection');
   const titleId = useId();
-  const descriptionId = useId();
   const [body, setBody] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -48,14 +47,11 @@ export default function SelectionComposer({
     });
 
   return (
-    <AccessLinkModalPortal open onClose={onClose} titleId={titleId} descriptionId={descriptionId}>
+    <AccessLinkModalPortal open onClose={onClose} titleId={titleId}>
       <header className={modal.modalHeader}>
         <h2 id={titleId} className={modal.modalTitle}>
           {improve ? t('improveTitle') : t('noteTitle')}
         </h2>
-        <p id={descriptionId} className={modal.modalDescription}>
-          {improve ? t('improveText') : t('noteText')}
-        </p>
       </header>
       <div className={modal.modalBody}>
         <blockquote style={{ margin: 0, paddingLeft: '0.75rem', borderLeft: '3px solid var(--line-strong)', fontStyle: 'italic', opacity: 0.8 }}>

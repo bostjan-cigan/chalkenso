@@ -1,7 +1,4 @@
 {
-  "meta": {
-    "title": "{product} · Oblikovanje učnih načrtov s pomočjo AI"
-  },
   "nav": {
     "label": "Glavna navigacija",
     "places": {
@@ -60,27 +57,12 @@
       }
     }
   },
-  "roles": {
-    "platformAdmin": "Skrbnik platforme",
-    "local": {
-      "OWNER": "Upravitelj",
-      "ADMIN": "Skrbnik",
-      "MEMBER": "Predavatelj"
-    },
-    "cloud": {
-      "OWNER": "Lastnik",
-      "ADMIN": "Skrbnik",
-      "MEMBER": "Član"
-    }
-  },
   "frame": {
     "home": "Domov",
     "platformAdmin": "Skrbnik platforme",
-    "acrossOrganizations": "V vseh organizacijah",
     "account": "Račun",
     "accountLink": "Račun in varnost ({name})",
     "signOut": "Odjava",
-    "platformStrip": "<strong>Skrbnik platforme.</strong> Ste zunaj vseh organizacij: kar spremenite tukaj, velja za celotno platformo. Če želite organizacijo videti od znotraj, pri enem od njenih članov uporabite <em>Prijava kot</em>.",
     "loading": "Nalaganje",
     "needYou": "{count, plural, one {# čaka na vas} two {# čakata na vas} few {# čakajo na vas} other {# čaka na vas}}"
   },
@@ -91,7 +73,6 @@
   "organizations": {
     "switch": "{name}: zamenjajte organizacijo ali odprite njene nastavitve",
     "menu": "Organizacije",
-    "yours": "Vaše organizacije",
     "settings": "Nastavitve organizacije",
     "inviteLink": "Povezava s povabilom",
     "inviteLinkInvalid": "Prilepite celotno povezavo s povabilom, ki ste jo prejeli.",
@@ -100,7 +81,7 @@
     "create": "Ustvari organizacijo",
     "leave": "Zapusti organizacijo {name}",
     "leaveTitle": "Želite zapustiti organizacijo {name}?",
-    "leaveDescription": "Izgubili boste dostop do njenih tečajev, skupin, povratnih informacij in izboljšav, vaši žetoni za sinhronizacijo in povezave s Claudom zanjo pa bodo prenehali delovati. Lastnik ali skrbnik vas lahko znova povabi.",
+    "leaveDescription": "Do njenih tečajev in skupin ne boste imeli dostopa, dokler vas znova ne povabijo.",
     "leaveConfirm": "Zapusti organizacijo",
     "errors": {
       "oneOrganization": "Ta namestitev ima eno samo organizacijo.",
@@ -113,8 +94,8 @@
   "session": {
     "idleTitle": "Ste še tam?",
     "maxTitle": "Kmalu se boste morali znova prijaviti",
-    "idleText": "Zaradi varnosti boste ob {time} odjavljeni.",
-    "maxText": "Vaša seja se konča ob {time}. Shranite svoje delo in se znova prijavite.",
+    "idleText": "Ob {time} boste odjavljeni.",
+    "maxText": "Vaša seja se konča ob {time}: shranite svoje delo.",
     "signOut": "Odjava",
     "stay": "Ohrani prijavo",
     "working": "Obdelava …",
@@ -137,13 +118,12 @@
       "keep": "Nadaljuj z urejanjem"
     },
     "loading": "Nalaganje",
-    "previewEmpty": "Predogled se posodablja med tipkanjem.",
     "failed": "Nekaj je šlo narobe. Poskusite znova."
   },
   "invite": {
-    "sendIt": "Pošiljanje",
-    "justLink": "Samo povezava: pošljete jo sami",
-    "email": "Pošlji po e-pošti",
+    "by": "Povabilo",
+    "link": "Povezava",
+    "email": "E-pošta",
     "theirEmail": "E-poštni naslov prejemnika"
   },
   "feedback": {
@@ -165,16 +145,15 @@
     "note": "Opomba",
     "lesson": "Lekcija {position}: {title}",
     "actions": "Dejanja za povratno informacijo",
-    "replyShownLearner": "Vaš odgovor · vidi ga ta udeleženec",
-    "replyShownName": "Vaš odgovor · vidi ga {name}",
+    "yourReply": "Vaš odgovor",
     "editYourReply": "Uredite svoj odgovor",
     "replyToLearner": "Odgovor udeležencu",
     "replyToName": "Odgovor osebi {name}",
-    "notePlaceholder": "Napišite odgovor …",
-    "learnerPlaceholder": "Udeleženec ga vidi ob tem odlomku v svoji lekciji.",
+    "replyPlaceholder": "Napišite odgovor …",
     "sending": "Pošiljanje …",
     "updateReply": "Posodobi odgovor",
     "sendReply": "Pošlji odgovor",
+    "sendReplyDone": "Pošlji in označi kot opravljeno",
     "cancel": "Prekliči",
     "editReply": "Uredi odgovor",
     "reply": "Odgovori",
@@ -182,7 +161,7 @@
     "seeWhatChanged": "Poglej, kaj se je spremenilo",
     "reopen": "Znova odpri",
     "deleteTitle": "Želite izbrisati to povratno informacijo?",
-    "deleteText": "Izbrisana bo za vedno in ne bo več štela v vpogledih. Tega ni mogoče razveljaviti.",
+    "deleteText": "Prav tako ne bo več štela v vpogledih.",
     "deleteConfirm": "Izbriši",
     "list": {
       "show": "Prikaz",
@@ -195,10 +174,9 @@
       "copyOf": "kopija skupine {group}",
       "copyOfUnnamed": "kopija skupine"
     },
-    "markDone": "Označi kot opravljeno (sprememba ni potrebna)",
+    "markDone": "Označi kot opravljeno",
     "use": "Upoštevaj",
-    "used": "V izboljšavi lekcije · {status}",
-    "replyMarksDone": "Pošiljanje jo označi kot opravljeno. Če naj se lekcija zaradi nje spremeni, jo raje upoštevajte."
+    "used": "V izboljšavi lekcije · {status}"
   },
   "needsYou": {
     "groupFeedback": "{count, plural, one {# nova povratna informacija} two {# novi povratni informaciji} few {# nove povratne informacije} other {# novih povratnih informacij}} v skupini {group}",
@@ -212,20 +190,14 @@
   },
   "home": {
     "title": "Domov",
-    "welcome": "Dobrodošli. Oblikujmo vaš prvi tečaj.",
-    "description": "Kaj čaka na vas, vaše skupine in vaši tečaji. Povratne informacije udeležencev oblikujejo lekcije vsake skupine; vsako spremembo potrdite vi.",
     "newCourse": "Nov tečaj",
     "newGroup": "Nova skupina",
-    "nowIn": "Zdaj ste v organizaciji {organization}.",
     "joined": "Pridružili ste se organizaciji {organization}.",
-    "joinedFull": "Vaše skupine in tečaji so v stranski vrstici.",
-    "joinedGuest": "Ste gostujoči predavatelj: spodaj odprite svojo skupino in zabeležite, kaj se dogaja pri pouku.",
-    "joinedLimited": "Delate na tečajih in skupinah, ki vam jih je izbral lastnik ali skrbnik.",
     "needsYou": "Čaka na vas",
-    "nothingWaits": "Trenutno nič ne čaka na vas. Tu bodo prikazane nove povratne informacije in osnutki za pregled.",
+    "nothingWaits": "Trenutno nič ne čaka na vas.",
     "yourGroups": "Vaše skupine",
     "readLessons": "Preberi lekcije",
-    "noAccess": "Tu še nimate nobenega tečaja ali skupine. Lastnika ali skrbnika prosite za dostop.",
+    "noAccess": "Tu še nimate tečajev ali skupin: lastnika ali skrbnika prosite za dostop.",
     "groupsYouTeach": "Skupine, ki jih poučujete",
     "runningNow": "Trenutno potekajo",
     "allGroups": "Vse skupine →",
@@ -236,16 +208,16 @@
     "allCourses": "Vsi tečaji →",
     "groups": "{count, plural, one {# skupina} two {# skupini} few {# skupine} other {# skupin}}",
     "ai": {
-      "keyInvalid": "Anthropic je zavrnil API-ključ vaše organizacije. Lastnik ali skrbnik ga lahko zamenja v razdelku Nastavitve → AI.",
-      "keyRefusedHosted": "Anthropic je zavrnil API-ključ vaše organizacije, zato se zdaj porablja AI, vključen v vaš paket. Ključ zamenjajte v razdelku Nastavitve → AI.",
-      "keyRefusedInstallation": "Anthropic je zavrnil API-ključ vaše organizacije, zato AI deluje s ključem te namestitve. Svoj ključ zamenjajte v razdelku Nastavitve → AI.",
-      "cap": "AI, vključen v ta mesec, je porabljen. Lastnik ali skrbnik ga lahko dokupi v razdelku Nastavitve → AI.",
-      "paused": "AI je izklopljen, dokler je vaša organizacija v mirovanju; vrne se, ko lastnik ali skrbnik nadaljuje s paketom.",
-      "plan": "Pri vašem paketu AI deluje v vašem Claudu: vsako opravilo AI odprite tam („Uporaba s Claudom“).",
-      "mock": "AI je v vzorčnem načinu (AI_MOCK=1): osnutki so vnaprej pripravljeni primeri. Za uporabo Clauda dodajte API-ključ Anthropic in odstranite AI_MOCK.",
-      "offUntilKey": "AI v aplikaciji je izklopljen, dokler lastnik ali skrbnik v razdelku Nastavitve → AI ne doda API-ključa Anthropic.",
-      "offInstallation": "Osnutki z AI so v tej namestitvi izklopljeni. Za vklop nastavite ANTHROPIC_API_KEY (ali AI_MOCK=1, da jih preizkusite z vzorčnimi odgovori).",
-      "connector": "Medtem lahko vsako opravilo AI odprete v svojem Claudu („Uporaba s Claudom“)."
+      "keyInvalid": "Anthropic je zavrnil API-ključ vaše organizacije.",
+      "keyRefusedHosted": "Anthropic je zavrnil API-ključ vaše organizacije, zato se zdaj porablja AI, vključen v vaš paket.",
+      "keyRefusedInstallation": "Anthropic je zavrnil API-ključ vaše organizacije, zato AI deluje s ključem te namestitve.",
+      "cap": "AI, vključen v ta mesec, je porabljen.",
+      "paused": "AI je izklopljen, dokler je vaša organizacija v mirovanju.",
+      "plan": "Pri vašem paketu AI deluje v vašem Claudu.",
+      "mock": "AI daje vzorčne odgovore (AI_MOCK=1).",
+      "offUntilKey": "AI je izklopljen, dokler lastnik ali skrbnik ne doda API-ključa Anthropic.",
+      "offInstallation": "AI je izklopljen: za vklop nastavite ANTHROPIC_API_KEY.",
+      "connector": "Medtem uporabite svoj Claude."
     }
   },
   "impersonation": {
@@ -253,21 +225,15 @@
   },
   "gettingStarted": {
     "title": "Prvi koraki",
-    "note": "Še nekaj korakov, pa poučujete.",
-    "nearly": "Skoraj ste tam!",
-    "allDone": "Vse je nared. Pouk se začne!",
     "progress": "Opravljeno: {done} od {total}",
     "open": "Prvi koraki: {done} od {total} korakov",
-    "hint": "Tukaj dokončate nastavitev",
     "close": "Zapri",
     "markDone": "Označi kot opravljeno",
     "markNotDone": "Označi kot neopravljeno",
     "notForMe": "Ni zame",
     "doneByItself": "Opravljeno",
-    "footer": "Kljukice se postavljajo sproti.",
     "hide": "Skrij prve korake",
-    "hidden": "Prvi koraki so skriti.",
-    "show": "Pokaži jih",
+    "show": "Pokaži prve korake",
     "notNow": "Ne zdaj",
     "booked": "Rezervirano: {when}",
     "steps": {
@@ -275,43 +241,35 @@
         "title": "Ustvarite račun"
       },
       "how": {
-        "title": "Dve minuti o tem, kako deluje",
-        "hint": "Krog, skozi katerega gre vsaka skupina, in kje pomaga UI."
+        "title": "Oglejte si, kako deluje"
       },
       "profile": {
-        "title": "Dopolnite profil",
-        "hint": "Vaše ime in fotografija, da udeleženci vedo, kdo je kaj napisal."
+        "title": "Dopolnite profil"
       },
       "course": {
-        "title": "Ustvarite prvi tečaj",
-        "hint": "Njegov naslov in vrstica o tem, komu je namenjen."
+        "title": "Ustvarite prvi tečaj"
       },
       "lesson": {
-        "title": "Napišite lekcijo",
-        "hint": "Z njenimi cilji in pojmi."
+        "title": "Napišite lekcijo"
       },
       "group": {
-        "title": "Začnite skupino",
-        "hint": "In delite povezave za udeležence."
+        "title": "Začnite skupino"
       },
       "invite": {
-        "title": "Povabite sodelavca",
-        "hint": "Da tečaj oblikujeta skupaj."
+        "title": "Povabite sodelavca"
       },
       "obsidian": {
         "section": "Če pišete v Obsidianu",
-        "title": "Povežite svoj trezor",
-        "hint": "Namestite vtičnik Chalkenso in lekcije se sinhronizirajo v obe smeri."
+        "title": "Povežite svoj trezor"
       }
     }
   },
   "howItWorks": {
     "title": "Kako deluje Chalkenso",
-    "description": "Krog, skozi katerega gre vsaka skupina, kje pri vašem paketu pomaga AI in kdo odloča.",
     "markDone": "Označi kot opravljeno",
     "profileOpen": "Odpri",
     "loop": {
-      "title": "En krog, vsaka skupina",
+      "title": "Krog",
       "teach": {
         "title": "Poučujte",
         "text": "Udeleženci odprejo svojo povezavo; vi med uro zapisujete ob odlomku."
@@ -331,9 +289,8 @@
     },
     "decide": {
       "title": "Odločate vi",
-      "text": "Vsak osnutek počaka v načinu Izboljšaj pri lekciji, kdorkoli ga je pripravil. Obkljukajte spremembe, ki jih obdržite, nato shranite in objavite. Do udeležencev pred tem ne pride nič."
+      "text": "Vsak osnutek počaka v načinu Izboljšaj pri lekciji: do udeležencev ne pride nič, dokler ga ne objavite."
     },
-    "membersNote": "AI, ekipo in paket nastavijo lastniki in skrbniki vaše organizacije.",
     "action": {
       "connect": "Povežite svoj Claude",
       "lesson": "Preizkusite na lekciji"

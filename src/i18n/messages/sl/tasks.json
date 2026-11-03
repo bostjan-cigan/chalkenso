@@ -7,36 +7,23 @@
   },
   "kinds": {
     "curriculum": {
-      "label": "Lekcije",
-      "emptyHint": "Izboljšavo načrtujte iz povratne informacije na zavihku Povratne informacije v skupini ali tečaju."
+      "label": "Lekcije"
     }
   },
   "lanes": {
-    "courseOwn": "Lekcije tečaja",
-    "closed": "Zaključeno",
-    "readsCourse": "{course} · bere lekcije tečaja",
-    "groupEmpty": "Lekcije te skupine še nimajo sprememb.",
-    "groupFeedbackEmpty": "Iz povratnih informacij te skupine še ni izboljšav.",
     "untied": "Ni vezano na učni načrt",
     "deletedCourse": "Izbrisan tečaj"
   },
   "page": {
-    "eyebrow": "Izboljšave tečajev",
     "title": "Izboljšave",
-    "description": "Vse spremembe, ki nastajajo iz povratnih informacij in opomb: ena vrstica za vsak tečaj (njegove lekcije) in za vsako skupino (njeno kopijo). Kartico povlecite v drug stolpec, da spremenite njeno stanje. Vsaka skupina in vsak tečaj ima svoje spremembe tudi na zavihku Povratne informacije.",
-    "kicker": "Tabla izboljšav",
     "kindNav": "Vrsta",
     "empty": "Tu še ni učnih načrtov za prikaz.",
-    "doneLimit": "Stolpec Opravljeno prikazuje {count, plural, one {# nazadnje opravljeno izboljšavo} two {# nazadnje opravljeni izboljšavi} few {# nazadnje opravljene izboljšave} other {# nazadnje opravljenih izboljšav}}.",
     "showAllDone": "Prikaži vse opravljene izboljšave",
     "drawerLabel": "Podrobnosti izboljšave",
-    "closeTask": "Zapri izboljšavo",
-    "close": "Zapri"
+    "closeTask": "Zapri izboljšavo"
   },
   "detailPage": {
-    "eyebrow": "Izboljšave",
-    "title": "Izboljšava",
-    "description": "Kaj naj se v lekciji spremeni, zakaj in načrt za spremembo."
+    "title": "Izboljšava"
   },
   "filter": {
     "label": "Tečaj ali skupina",
@@ -46,12 +33,12 @@
   "board": {
     "laneLabel": "Izboljšave: {label}",
     "laneCount": "{open, plural, one {# odprta} two {# odprti} few {# odprte} other {# odprtih}} · {total}",
+    "closed": "Zaključeno",
     "openCourse": "Odpri tečaj",
     "openGroup": "Odpri skupino",
     "untiedTasks": "{count, plural, one {# nevezano izboljšavo} two {# nevezani izboljšavi} few {# nevezane izboljšave} other {# nevezanih izboljšav}}",
     "ignoredTasks": "{count, plural, one {# opuščeno izboljšavo} two {# opuščeni izboljšavi} few {# opuščene izboljšave} other {# opuščenih izboljšav}}",
     "deleteAll": "Izbriši vse ({count})",
-    "noTasksYet": "Izboljšav še ni. {hint}",
     "clear": "Počisti",
     "assignedTo": "Dodeljeno: {name}",
     "contextGroup": "Skupina {name}",
@@ -61,25 +48,20 @@
     "created": "Ustvarjeno {unit, select, today {danes} days {pred {count, plural, one {# dnevom} two {# dnevoma} few {# dnevi} other {# dnevi}}} weeks {pred {count, plural, one {# tednom} two {# tednoma} few {# tedni} other {# tedni}}} months {pred {count, plural, one {# mesecem} two {# mesecema} few {# meseci} other {# meseci}}} other {pred {count, plural, one {# letom} two {# letoma} few {# leti} other {# leti}}}}",
     "age": "{unit, select, today {danes} days {{count} d} weeks {{count} ted.} months {{count} mes.} other {{count} l.}}",
     "plan": "Načrt",
-    "planTitle": "Ima načrt popravka",
     "ai": "AI",
-    "aiTitle": "Odobreno za lokalnega agenta: ta popravek lahko izvede sam",
+    "aiTitle": "Pripravljeno za agenta AI",
     "notes": "{count, plural, one {# opomba v razpravi} two {# opombi v razpravi} few {# opombe v razpravi} other {# opomb v razpravi}}",
     "delete": "Izbriši",
-    "dropHere": "Spustite izboljšave sem",
-    "nothingHere": "Tu ni ničesar",
     "confirm": {
-      "title": "Izbriši izboljšavo",
-      "titleIgnored": "Izbriši opuščeno izboljšavo",
-      "quoted": "nalogo „{title}“",
-      "description": "Trajno izbriše {what}, {mode, select, ignored {{count, plural, one {ki je bila opuščena} two {ki sta bili opuščeni} few {ki so bile opuščene} other {ki so bile opuščene}}} other {{count, plural, one {ki ni vezana na noben učni načrt} two {ki nista vezani na noben učni načrt} few {ki niso vezane na noben učni načrt} other {ki niso vezane na noben učni načrt}}}}. Izbrišejo se tudi opombe v razpravi. Tega ni mogoče razveljaviti.",
+      "title": "Izbrišem {what}?",
+      "quoted": "„{title}“",
+      "description": "Izbrišejo se tudi opombe v razpravi.",
       "deleteOne": "Izbriši izboljšavo",
       "deleteMany": "Izbriši {count, plural, one {# izboljšavo} two {# izboljšavi} few {# izboljšave} other {# izboljšav}}",
       "cancel": "Prekliči"
     }
   },
   "detail": {
-    "kicker": "Izboljšava",
     "allTasks": "← Vse izboljšave",
     "openFullPage": "Odpri celotno stran ↗",
     "openInLesson": "Odpri v lekciji",
@@ -90,35 +72,26 @@
     "lesson": "Lekcija {position}: {title}",
     "workflow": {
       "title": "Potek dela",
-      "hint": "Kdo dela na izboljšavi, kako daleč je in ali jo sme prevzeti agent. Vse se shrani takoj, ko izberete.",
       "assigned": "{status} · dodeljeno: {name}",
       "unassigned": "{status} · nedodeljeno"
     },
     "whose": {
       "title": "Kam gre sprememba",
-      "group": "Ta izboljšava spremeni samo kopijo lekcij skupine <link>{group}</link>. Lekcije tečaja ostanejo, kot so.",
+      "group": "Spremeni samo kopijo lekcij skupine <link>{group}</link>.",
       "alreadySuggested": "Že predlagano za tečaj kot <task>{title}</task> ({status}).",
-      "suggestHint": "Naj to spremembo dobijo tudi lekcije tečaja? Predlagajte jo za tečaj: tako na tečaju nastane povezana izboljšava, ki jo sprejme ali zavrne tisti, ki tečaj upravlja. Izboljšava te skupine ostane, kot je.",
       "suggest": "Predlagaj za tečaj",
-      "course": "Ta izboljšava spremeni lekcije tečaja: nove skupine začnejo z njimi. Skupine, ki že imajo svojo kopijo, jo obdržijo.",
+      "course": "Spremeni lekcije tečaja.",
       "suggestedFrom": "Predlagano za tečaj iz izboljšave skupine <task>{title}</task> ({status}).",
-      "both": "Ta izboljšava spremeni kopijo skupine <link>{group}</link> in lekcijo glavnega tečaja, iz katere je nastala. Ko shranite kopijo skupine, iste spremembe počakajo na lekciji glavnega tečaja, da jih tam pregledate. Opravljena je, ko sta shranjeni obe."
+      "both": "Spremeni kopijo skupine <link>{group}</link> in lekcijo glavnega tečaja, iz katere je nastala."
     },
     "plan": {
       "title": "Načrt popravka",
-      "hint": "Kaj popravek naredi. Napišite ga tukaj ali v opombi s povratnimi informacijami lekcije v Obsidianu: to je isti načrt.",
-      "hintUpdated": "Kaj popravek naredi. Napišite ga tukaj ali v opombi s povratnimi informacijami lekcije v Obsidianu: to je isti načrt · posodobljeno {date}.",
-      "hintApp": "Kaj popravek naredi: kaj se spremeni, kje in zakaj.",
-      "hintAppUpdated": "Kaj popravek naredi: kaj se spremeni, kje in zakaj · posodobljeno {date}.",
-      "readHint": "Kaj izboljšava naredi: kaj se spremeni, kje in zakaj. Načrtuje se v lekciji, z AI.",
-      "readHintVault": "Kaj izboljšava naredi. Načrtuje se v lekciji, z AI, ali v Obsidianovi opombi s povratnimi informacijami lekcije.",
-      "updatedOn": "posodobljeno {date}",
+      "updatedOn": "Posodobljeno {date}",
       "none": "Načrta še ni.",
       "changeInLesson": "Spremeni ga v lekciji"
     },
     "instructions": {
       "title": "Opombe za izvajalca",
-      "hint": "Kar mora vedeti, preden spremeni lekcijo. Kaj so rekli udeleženci, je zgoraj pod Povratne informacije.",
       "none": "Navodil še ni.",
       "placeholder": "Kaj naj se v lekciji spremeni?",
       "save": "Shrani navodila",
@@ -126,8 +99,7 @@
       "add": "Dodaj opombe"
     },
     "clear": {
-      "title": "Počisti to izboljšavo",
-      "hint": "Opuščeno pomeni, da je bil popravek pregledan in zavrnjen. Izbris nalogo za vedno odstrani s table, skupaj z opombami v razpravi."
+      "title": "Počisti to izboljšavo"
     },
     "details": {
       "title": "Podrobnosti",
@@ -140,8 +112,8 @@
       "quote": "„{text}“"
     },
     "discussion": {
-      "kicker": "Razprava",
-      "empty": "Opomb še ni. Prvo dodajte spodaj.",
+      "title": "Razprava",
+      "empty": "Opomb še ni.",
       "placeholder": "Vnesite interno opombo …",
       "label": "Nova opomba",
       "add": "Dodaj opombo"
@@ -151,10 +123,9 @@
     },
     "delete": {
       "sectionTitle": "Izbris",
-      "hint": "Za izboljšavo, narejeno po pomoti. Njene povratne informacije se vrnejo med tiste za odločitev.",
       "button": "Izbriši to izboljšavo …",
       "title": "Izbrišem to izboljšavo?",
-      "description": "„{title}“ bo trajno izbrisana. Njene povratne informacije se vrnejo med tiste za odločitev, lekcija pa ostane taka, kot je.",
+      "description": "Njene povratne informacije se vrnejo med tiste za odločitev.",
       "confirm": "Izbriši izboljšavo"
     },
     "places": {
@@ -162,13 +133,13 @@
       "lesson": "Lekcija {position} · {title}",
       "saved": "Shranjeno",
       "remove": "Odstrani",
-      "removed": "Lekcija {position} ni več del te izboljšave.",
+      "removed": "Lekcija {position} je odstranjena.",
       "addLabel": "Dodaj lekcijo",
       "addPlaceholder": "Izberite lekcijo",
       "add": "Dodaj",
-      "added": "Lekcija {position} je dodana. Načrt velja tudi zanjo: napišite, kaj se tam spremeni.",
+      "added": "Lekcija {position} je dodana.",
       "leaveCourse": "Pusti glavni tečaj, kot je",
-      "leaveCourseHint": "Spremeni se le kopija skupine. Predlagane spremembe, ki čakajo na lekciji glavnega tečaja, gredo.",
+      "leaveCourseLoses": "Njene predlagane spremembe na glavnem tečaju gredo.",
       "leftCourse": "Glavni tečaj ostane, kot je.",
       "moved": "„{title}“ je opravljena.",
       "undo": "Razveljavi"
@@ -178,13 +149,11 @@
   "controls": {
     "status": "Stanje",
     "aiReady": {
-      "label": "Pripravljeno za agenta AI",
-      "hint": "Agent lahko ta popravek prevzame od začetka do konca. Če je izklopljeno, le pomaga tistemu, ki ureja lekcijo."
+      "label": "Pripravljeno za agenta AI"
     },
     "assignee": {
       "label": "Dodeljeno",
       "unassigned": "Nedodeljeno",
-      "teachesGroup": "Poučuje to skupino",
       "search": "Poiščite osebo …"
     }
   },
@@ -193,21 +162,15 @@
     "placeholder": "Kaj se bo v lekciji spremenilo, kje in zakaj.",
     "scopeLabel": "Kam gre sprememba",
     "scopes": {
-      "groupOnly": {
-        "title": "Samo ta skupina",
-        "text": "Njihovi primeri, tempo ali orodja. Glavni tečaj ostane, kot je."
-      },
-      "groupAndCore": {
-        "title": "Skupina in glavni tečaj",
-        "text": "Ko shranite lekcijo skupine, iste spremembe počakajo na lekciji glavnega tečaja, da jih tam pregledate."
-      },
-      "noCourseLesson": "Glavni tečaj nima lekcije za spremembo: ta je bila dodana v kopiji skupine. Namesto tega jo predlagajte za tečaj."
+      "groupOnly": "Samo ta skupina",
+      "groupAndCore": "Skupina in glavni tečaj",
+      "noCourseLesson": "Glavni tečaj nima lekcije za spremembo."
     },
     "save": "Shrani načrt",
     "saving": "Shranjevanje …",
     "draft": "Osnutek z AI",
     "drafting": "Pripravljanje osnutka …",
-    "draftReady": "Osnutek je pripravljen. Po potrebi ga uredite, nato shranite.",
+    "draftReady": "Osnutek je pripravljen, a še ni shranjen.",
     "saved": "Načrt je shranjen.",
     "notFound": "Izboljšave ni mogoče najti.",
     "noLesson": "Ta izboljšava ni vezana na lekcijo, zato ni iz česa pripraviti načrta.",
@@ -227,9 +190,7 @@
       "elapsed": "{time} doslej",
       "stop": "Ustavi",
       "soFar": "Načrt doslej",
-      "leave": "To stran lahko zapustite. Osnutek se shrani in vas počaka tukaj, ko bo pripravljen.",
-      "inClaude": "V vašem Claudu. Načrt se prikaže tukaj, ko ga pošlje.",
-      "send": "Pošljite sporočilo v zavihku Claude, ki se je odprl. Načrt se prikaže tukaj, ko ga Claude pošlje.",
+      "send": "Pošljite sporočilo v zavihku Claude, ki se je odprl.",
       "notStarted": "Claude še ni začel. V tistem klepetu vklopite povezovalnik Chalkenso (＋ → Connectors) in sporočilo pošljite znova.",
       "ready": "AI je pripravil osnutek načrta",
       "readyBy": "AI je pripravil osnutek načrta, začel(a): {name}",
@@ -315,7 +276,7 @@
     "publishBar": "{count, plural, one {# lekcija ima shranjene spremembe, ki jih udeleženci še ne vidijo.} two {# lekciji imata shranjene spremembe, ki jih udeleženci še ne vidijo.} few {# lekcije imajo shranjene spremembe, ki jih udeleženci še ne vidijo.} other {# lekcij ima shranjene spremembe, ki jih udeleženci še ne vidijo.}}",
     "publishButton": "{count, plural, =1 {Objavi jo} =2 {Objavi obe} other {Objavi vse #}}",
     "publishTitle": "{count, plural, one {Objavim to lekcijo?} two {Objavim # lekciji?} few {Objavim # lekcije?} other {Objavim # lekcij?}}",
-    "publishDescription": "Udeleženci od zdaj vidijo shranjene spremembe, povratne informacije, na katere odgovarjajo, pa se označijo kot opravljene.",
+    "publishDescription": "Povratne informacije, na katere spremembe odgovarjajo, se označijo kot opravljene.",
     "publishConfirm": "Objavi",
     "cancel": "Prekliči",
     "empty": "Tu trenutno ni ničesar za izboljšati.",
@@ -336,8 +297,8 @@
     "publishTitle": "Objavim to lekcijo?",
     "publishDescription": "Udeleženci vidijo lekcijo, kot je shranjena zdaj, s to spremembo.",
     "cancel": "Prekliči",
-    "notRecorded": "Kaj se je spremenilo, ni zapisano: shranjeno je bilo, preden je Chalkenso to beležil.",
-    "nothing": "Zanjo ni bilo nič shranjeno. Označena je bila kot opravljena brez spremembe lekcije.",
+    "notRecorded": "Kaj se je spremenilo, pri tej ni zapisano.",
+    "nothing": "Označena je bila kot opravljena brez spremembe lekcije.",
     "section": "v »{section}«",
     "kinds": {
       "edit": "Spremenjeno",

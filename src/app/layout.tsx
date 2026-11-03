@@ -9,7 +9,7 @@ import { DEFAULT_LOCALE, LOCALES, LOCALE_COOKIE } from '@/i18n/config';
 
 export const metadata: Metadata = {
   title: {
-    default: `${PRODUCT_NAME} · AI-assisted curriculum design`,
+    default: PRODUCT_NAME,
     template: `%s | ${PRODUCT_NAME}`,
   },
   description: PRODUCT_DESCRIPTION,

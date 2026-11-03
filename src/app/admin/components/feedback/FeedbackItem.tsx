@@ -66,7 +66,6 @@ export default function FeedbackItem({
   const [pending, startTransition] = useTransition();
   const open = item.status === 'OPEN';
   // A note's author by name; a learner stays "this learner".
-  const replyShown = item.isInstructorNote ? t('replyShownName', { name: item.proposerName }) : t('replyShownLearner');
   const replyTo = item.isInstructorNote ? t('replyToName', { name: item.proposerName }) : t('replyToLearner');
 
   function run(work: () => Promise<void>) {
@@ -154,7 +153,7 @@ export default function FeedbackItem({
 
       {reply && !composing ? (
         <div className={styles.itemReply}>
-          <p className={styles.itemReplyLabel}>{replyShown}</p>
+          <p className={styles.itemReplyLabel}>{t('yourReply')}</p>
           <p className={styles.itemReplyText}>{reply}</p>
         </div>
       ) : null}
@@ -169,15 +168,14 @@ export default function FeedbackItem({
             className={styles.itemTextarea}
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
-            placeholder={item.isInstructorNote ? t('notePlaceholder') : t('learnerPlaceholder')}
+            placeholder={t('replyPlaceholder')}
             maxLength={4000}
             autoFocus
           />
-          {/* Not used in an improvement, a reply is its answer. */}
-          {open && !task ? <p className={styles.itemMeta}>{t('replyMarksDone')}</p> : null}
           <div className={styles.itemActions}>
+            {/* Not used in an improvement, a reply is its answer: sending it marks it done. */}
             <AdminButton type="button" size="compact" onClick={sendReply} disabled={pending || !draft.trim()}>
-              {pending ? t('sending') : reply ? t('updateReply') : t('sendReply')}
+              {pending ? t('sending') : reply ? t('updateReply') : open && !task ? t('sendReplyDone') : t('sendReply')}
             </AdminButton>
             <AdminButton
               type="button"

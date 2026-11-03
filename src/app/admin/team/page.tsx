@@ -53,7 +53,7 @@ export default async function TeamPage() {
   const isOwner = viewer.orgRole === OrgRole.OWNER;
   const { team } = serverExtensions;
   const words = await team.words(locale);
-  const inviteRoles = team.inviteRoles.map((role) => ({ value: role, ...words.roles[role] }));
+  const inviteRoles = team.inviteRoles.map((role) => ({ value: role, label: words.roles[role].label }));
   // Roles someone can be changed to: owners only by an owner.
   const roleOptions = team.roleChanges
     ? (['OWNER', 'ADMIN', 'MEMBER'] as const)
@@ -62,22 +62,13 @@ export default async function TeamPage() {
     : null;
 
   return (
-    <AdminFrame
-      navItems={adminNavItems('team')}
-      eyebrow={t('eyebrow')}
-      title={viewer.organization.name}
-      description={words.description}
-    >
+    <AdminFrame navItems={adminNavItems('team')} title={t('title')}>
       <div style={{ display: 'grid', gap: '1.25rem' }}>
         {/* Inviting is now and then: a sheet from the members' card (as a course's New version). */}
         <AdminSectionCard
-          kicker={t('members.kicker')}
           title={t('members.title', { count: members.length })}
-          kickerAction={
+          action={
             <SheetButton label={t('invite.button')} title={t('invite.title')} testId="team-invite">
-              <p className={styles.fieldHint} style={{ marginTop: 0 }}>
-                {t('invite.intro')}
-              </p>
               <InviteForm roles={inviteRoles} accessOptions={accessOptions} />
             </SheetButton>
           }
@@ -101,22 +92,25 @@ export default async function TeamPage() {
                 >
                   <div style={{ display: 'grid', gap: '0.2rem', minWidth: 0, overflowWrap: 'anywhere' }}>
                     <strong>
-                      {displayName(member.user)} {isSelf ? <span className={styles.fieldHint}>{t('members.you')}</span> : null}
+                      {displayName(member.user)} {isSelf ? <span className={styles.quietText}>{t('members.you')}</span> : null}
                     </strong>
-                    <span className={styles.fieldHint}>
+                    <span className={styles.quietText}>
                       {t('members.lastSignedIn', {
                         email: member.user.email ?? member.user.identifier,
                         date: member.user.lastLoginAt ? formatDate(member.user.lastLoginAt, locale) : t('members.never'),
                       })}
                     </span>
-                    <span className={styles.fieldHint} data-testid="member-access">
+                    <span className={styles.quietText} data-testid="member-access">
                       {describeAccess(accessViews.get(member.user.id) ?? { kind: 'full' }, accessOptions, accessWords)}
                     </span>
                   </div>
                   <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                    <AdminBadge variant={member.role === OrgRole.MEMBER ? 'muted' : 'accent'}>
-                      {words.roles[member.role].label}
-                    </AdminBadge>
+                    {/* The role once: as a badge, or as the picker that changes it. */}
+                    {canEdit && roleOptions ? null : (
+                      <AdminBadge variant={member.role === OrgRole.MEMBER ? 'muted' : 'accent'}>
+                        {words.roles[member.role].label}
+                      </AdminBadge>
+                    )}
                     <MemberControls
                       memberId={member.id}
                       memberName={displayName(member.user)}
@@ -140,13 +134,13 @@ export default async function TeamPage() {
         </AdminSectionCard>
 
         {invites.length > 0 ? (
-          <AdminSectionCard kicker={t('invites.kicker')} title={t('invites.title', { count: invites.length })}>
+          <AdminSectionCard title={t('invites.title', { count: invites.length })}>
             <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: '0.6rem' }}>
               {invites.map((invite) => (
                 <li key={invite.id} style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: '0.5rem 1rem', alignItems: 'center' }}>
                   <span>
                     {invite.label} · {words.roles[invite.orgRole].label}{' '}
-                    <span className={styles.fieldHint}>
+                    <span className={styles.quietText}>
                       ·{' '}
                       {t('invites.details', {
                         access: describeAccess(inviteAccessView(invite), accessOptions, accessWords),

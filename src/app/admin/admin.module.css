@@ -39,102 +39,23 @@
   color: rgb(var(--foreground-rgb));
 }
 
-/* Sign-in and its kin: what Chalkenso does on the left (wide screens), the page's card on the right. */
+/* Sign-in and its kin: the product name over the page's card, in the middle. */
 .authLayout {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 1080px;
+  max-width: 492px;
   min-height: 100vh;
   margin: 0 auto;
-  padding: 5rem 2.5rem 4rem;
+  padding: 5rem 1rem 4rem;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 460px);
-  align-items: center;
-  gap: 4.5rem;
-}
-
-.authAside {
-  display: grid;
-  gap: 2rem;
+  grid-template-columns: minmax(0, 1fr);
   align-content: center;
+  gap: 1.75rem;
 }
 
-/* A learning quote or bit of trivia, in the red-pen hand of the front page's margin notes. The space
-   is kept while the browser draws one, so nothing moves when it appears. */
-.authNote {
-  display: grid;
-  justify-items: start;
-  gap: 1rem;
-  max-width: 28rem;
-  min-height: 12rem;
-  align-content: start;
-}
-
-.authNoteFigure {
-  display: grid;
-  gap: 0.6rem;
-  margin: 0;
-  animation: authNoteIn 0.35s ease-out both;
-}
-
-.authNoteLabel {
-  margin: 0;
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.authNoteText {
-  margin: 0;
-  font-family: var(--font-hand), 'Comic Sans MS', cursive;
-  font-size: 2.15rem;
-  font-weight: 500;
-  line-height: 1.12;
-  color: var(--red-pen);
-  text-wrap: pretty;
-  rotate: -1deg;
-}
-
-.authNoteBy {
-  font-size: 0.95rem;
-  line-height: 1.45;
-  color: var(--text-muted);
-}
-
-.authNoteNext {
-  padding: 0.3rem 0;
-  border: 0;
-  background: none;
-  font: inherit;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: rgb(var(--accent-color));
-  cursor: pointer;
-}
-
-.authNoteNext:hover {
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.authNoteNext[hidden] {
-  display: none;
-}
-
-@keyframes authNoteIn {
-  from {
-    opacity: 0;
-    translate: 0 4px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .authNoteFigure {
-    animation: none;
-  }
+.authLayout > .authBrand {
+  justify-self: center;
 }
 
 .authMain {
@@ -165,22 +86,10 @@
   color: rgb(var(--foreground-rgb));
 }
 
-.authIntro {
-  margin: 0;
-  font-size: 1rem;
-  line-height: 1.5;
-  color: rgba(var(--foreground-rgb), 0.7);
-}
-
 .authBody {
   display: grid;
   gap: 1.25rem;
   min-width: 0;
-}
-
-/* A page with nothing but its title and line (an invite that ran out) keeps one gap, not two. */
-.authBody:empty {
-  display: none;
 }
 
 /* The ways elsewhere (forgot your password, create an account), at the card's foot. */
@@ -198,37 +107,7 @@
   font-weight: 600;
 }
 
-/* Narrower: the product name above the card, the note under it. */
 @media (max-width: 960px) {
-  .authLayout {
-    max-width: 520px;
-    grid-template-columns: minmax(0, 1fr);
-    align-content: center;
-    gap: 1.75rem;
-    padding: 5rem 1rem 3rem;
-  }
-
-  .authAside {
-    display: contents;
-  }
-
-  .authBrand {
-    justify-self: center;
-  }
-
-  .authNote {
-    order: 1;
-    justify-self: center;
-    justify-items: center;
-    min-height: 0;
-    padding: 0.5rem 0.5rem 0;
-    text-align: center;
-  }
-
-  .authNoteText {
-    font-size: 1.75rem;
-  }
-
   .authBrand {
     font-size: 2.1rem;
   }
@@ -360,43 +239,6 @@
   }
 }
 
-.orgCurrent {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  width: 100%;
-  padding: 0.45rem 0.6rem;
-  border-radius: 10px;
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  box-shadow: var(--card-shadow);
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: rgb(var(--foreground-rgb));
-}
-
-.orgInitial {
-  flex: none;
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--marker);
-  color: var(--marker-text);
-  font-size: 0.75rem;
-  font-weight: 700;
-}
-
-.orgName {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 /* The organisation card under the wordmark: its logo or icon, and its name; opens the switcher. */
 .orgCard {
   display: flex;
@@ -526,13 +368,6 @@ button.orgCard:focus-visible {
   white-space: nowrap;
 }
 
-.orgMenuItemMeta {
-  flex: none;
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: rgba(var(--foreground-rgb), 0.55);
-}
-
 .orgMenuDivider {
   height: 1px;
   margin: 0.3rem 0.25rem;
@@ -545,14 +380,8 @@ button.orgCard:focus-visible {
   padding: 0.3rem 0.5rem 0.5rem;
 }
 
-.sidebarOrg,
-.orgSwitcher {
+.sidebarOrg {
   min-width: 0;
-}
-
-.orgSwitcher {
-  display: grid;
-  gap: 0.35rem;
 }
 
 .sideNav {
@@ -660,11 +489,6 @@ button.orgCard:focus-visible {
   font-weight: 600;
 }
 
-.sidebarAccountMeta {
-  font-size: 0.76rem;
-  color: rgba(var(--foreground-rgb), 0.58);
-}
-
 .sidebarTools {
   display: flex;
   align-items: center;
@@ -748,14 +572,6 @@ button.orgCard:focus-visible {
   letter-spacing: 0.005em;
 }
 
-.platformMarkText span {
-  font-size: 0.74rem;
-  opacity: 0.72;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 .sideNavGroup {
   display: grid;
   gap: 2px;
@@ -772,24 +588,6 @@ button.orgCard:focus-visible {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: rgba(var(--foreground-rgb), 0.48);
-}
-
-/* Above every platform admin page: where you are. */
-.platformStrip {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.55rem 1.25rem;
-  border-bottom: 1px solid rgba(250, 199, 117, 0.45);
-  background: rgba(250, 199, 117, 0.16);
-  color: rgb(var(--foreground-rgb));
-  font-size: 0.86rem;
-  line-height: 1.45;
-}
-
-.platformStrip svg {
-  flex: none;
-  color: rgb(var(--foreground-rgb));
 }
 
 /*
@@ -1041,12 +839,6 @@ button.orgCard:focus-visible {
   font-weight: 600;
 }
 
-.profileSectionTitle {
-  font-size: 1.15rem;
-  font-weight: 600;
-  margin: 0 0 0.35rem;
-}
-
 .profileForm {
   display: flex;
   flex-direction: column;
@@ -1058,13 +850,6 @@ button.orgCard:focus-visible {
 .totpModalForm {
   margin-top: 0;
   max-width: none;
-}
-
-.totpSetup {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin-top: 0.75rem;
 }
 
 /* Backup codes, shown once after turning two-factor on: two columns of monospace codes. */
@@ -1122,16 +907,7 @@ button.navPill {
 
 .card,
 .heroCard,
-.sectionCard,
-.loginPanel,
-.summaryCard,
-.moduleCard,
-.stepCard,
-.courseCard,
-.courseCardActive,
-.lessonCard,
-.uploadItem,
-.alertCard {
+.courseCard {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: 14px;
@@ -1156,10 +932,6 @@ button.navPill {
   box-shadow: none;
 }
 
-.heroCard .kicker {
-  color: var(--red-pen);
-}
-
 .heroContent {
   display: flex;
   flex-direction: column;
@@ -1167,50 +939,13 @@ button.navPill {
   justify-content: center;
 }
 
-/* Section labels: a short red-pen margin stroke; the page eyebrow is written in red too */
-.kicker,
-.eyebrow,
-.panelKicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  width: fit-content;
-  padding: 0;
-  border-radius: 0;
-  background: none;
-  color: rgba(var(--foreground-rgb), 0.62);
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  text-transform: none;
-}
-
-.kicker::before,
-.eyebrow::before,
-.panelKicker::before {
-  content: '';
-  width: 14px;
-  height: 2px;
-  border-radius: 2px;
-  background: var(--red-pen-line);
-}
-
-.heroTitle,
-.loginTitle {
+.heroTitle {
   font-size: clamp(1.6rem, 2.8vw, 2.15rem);
   line-height: 1.15;
   font-weight: 700;
   letter-spacing: -0.02em;
   max-width: 28ch;
   color: rgb(var(--foreground-rgb));
-}
-
-.heroDescription,
-.loginDescription {
-  color: rgba(var(--foreground-rgb), 0.72);
-  font-size: 0.98rem;
-  line-height: 1.5;
-  max-width: 54ch;
 }
 
 .actionRow,
@@ -1320,18 +1055,8 @@ button.navPill {
 }
 
 .heroSummary,
-.summaryStack,
-.contentGrid,
-.managementGrid,
-.lowerGrid,
-.moduleGrid,
-.stepList,
 .formGrid,
-.scopeList,
-.lessonList,
-.uploadQueue,
 .stackList,
-.checklist,
 .loginForm {
   display: grid;
   gap: 1.5rem;
@@ -1342,19 +1067,6 @@ button.navPill {
   display: grid;
   gap: 0.75rem;
   border-bottom: 1px solid var(--card-border);
-}
-
-.sectionNavHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-.sectionNavLabel {
-  color: rgba(var(--foreground-rgb), 0.62);
-  font-size: 0.8rem;
-  font-weight: 600;
 }
 
 .sectionNavList {
@@ -1502,184 +1214,50 @@ button.navPill {
   flex-shrink: 0;
 }
 
-.summaryStack {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
 /* Admin overview: two wide stat tiles */
-.summaryStackWide {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.25rem;
-}
 
-.statCardLarge .statLabel {
-  font-size: 0.92rem;
-}
-
-.statCardLarge .statValue {
-  font-size: 2.1rem;
-  margin-top: 0.45rem;
-}
-
-.statCardLarge .statNote {
-  font-size: 0.88rem;
-  margin-top: 0.55rem;
-  line-height: 1.45;
-}
-
-.cardSummary,
-.summaryCard {
+.cardSummary {
   padding: 1rem 1.1rem;
 }
 
-.cardSummary.statCardLarge {
-  padding: 1.35rem 1.5rem;
-  min-height: 7.5rem;
-  display: grid;
-  align-content: start;
-}
-
-.statLabel,
-.summaryLabel {
-  display: block;
-  color: rgba(var(--foreground-rgb), 0.6);
-  font-size: 0.88rem;
-}
-
-.statValue,
-.summaryValue {
-  display: block;
-  margin-top: 0.3rem;
-  font-size: 1.85rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: rgb(var(--foreground-rgb));
-}
-
-.statNote,
-.summaryNote {
-  margin-top: 0.2rem;
-  color: rgba(var(--foreground-rgb), 0.6);
-  font-size: 0.82rem;
-}
-
-.contentGrid {
-  grid-template-columns: 1.5fr 1.1fr;
-}
-
-.managementGrid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.lowerGrid {
-  grid-template-columns: 1.2fr 1.1fr 0.9fr;
-}
-
-.cardSection,
-.sectionCard {
+.cardSection {
   padding: 1.25rem;
 }
 
-.cardHeader,
-.sectionHeader {
+/* A card's title and its one action ("All courses"), on one row at every width. */
+.cardHeader {
   display: flex;
-  align-items: flex-start;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.5rem 1rem;
   margin-bottom: 0.9rem;
 }
 
-.cardHeaderText {
-  display: grid;
-  gap: 0.35rem;
-  flex: 1;
-  min-width: 0;
-}
-
-.cardHeaderKickerRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.65rem;
-  flex-wrap: wrap;
-  width: 100%;
-  min-width: 0;
-}
-
 .cardHeaderTitle,
-.sectionHeader h2,
-.loginPanelHeader h1,
-.loginPanelHeader h2,
-.moduleCard h3,
-.stepCard h3,
-.courseCard h3,
-.courseCardActive h3,
-.lessonCard h3,
-.alertCard h3 {
+.courseCard h3 {
   font-size: 1.05rem;
   font-weight: 700;
   letter-spacing: -0.01em;
   color: rgb(var(--foreground-rgb));
 }
 
-.cardHeaderIcon,
-.sectionHeader svg,
-.highlightIcon,
-.noticeIcon,
-.alertIcon {
+.noticeIcon {
   color: rgb(var(--accent-color));
 }
 
-.moduleGrid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
 .cardCompact,
-.moduleCard,
-.stepCard,
-.courseCard,
-.courseCardActive,
-.lessonCard,
-.uploadItem,
-.alertCard {
+.courseCard {
   padding: 0.85rem;
 }
 
-.moduleTopRow,
-.lessonTopRow,
-.courseCardTopRow,
-.uploadTopRow {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 0.35rem;
-}
-
-.moduleDescription,
-.moduleDetail,
-.stepCard p,
-.scopeItem,
-.courseCard p,
-.courseCardActive p,
-.lessonCard p,
-.uploadItem p,
-.loginPanelHeader p,
-.helperText,
-.alertCard p {
+.courseCard p {
   color: rgba(var(--foreground-rgb), 0.66);
   line-height: 1.45;
   font-size: 0.92rem;
 }
 
-.moduleDetail {
-  margin-top: 0.3rem;
-}
-
-.cardLink,
-.cardLinkMuted,
-.textLink,
-.inlinePreviewLink {
+.textLink {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
@@ -1687,49 +1265,7 @@ button.navPill {
   color: rgb(var(--accent-color));
 }
 
-.cardLinkMuted {
-  color: rgba(var(--foreground-rgb), 0.45);
-}
-
-.stepList {
-  grid-template-columns: 1fr;
-}
-
-.stepCard {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.8rem;
-  align-items: flex-start;
-}
-
-.stepNumber {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.2rem;
-  height: 2.2rem;
-  border-radius: 999px;
-  background: rgba(var(--accent-color), 0.18);
-  color: rgb(var(--foreground-rgb));
-  font-weight: 700;
-}
-
-.scopeList {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.scopeItem {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.6rem;
-  padding: 0.75rem;
-  border-radius: 14px;
-  background: rgba(var(--foreground-rgb), 0.04);
-}
-
-.badge,
-.statusBadge,
-.statusBadgeWarning {
+.badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1742,22 +1278,13 @@ button.navPill {
   white-space: nowrap;
 }
 
-/* AdminBadge variant="kicker" also carries .badge: keep the label look */
-.badge.kicker {
-  padding: 0;
-  border-radius: 0;
-  font-size: 0.8rem;
-}
-
-.badgeAccent,
-.statusBadge {
+.badgeAccent {
   background: rgba(var(--accent-color), 0.12);
   color: rgb(var(--accent-color));
 }
 
 /* Warning: marker yellow */
-.badgeWarning,
-.statusBadgeWarning {
+.badgeWarning {
   background: var(--marker);
   color: var(--marker-text);
 }
@@ -1773,32 +1300,17 @@ button.navPill {
   color: var(--red-pen-text);
 }
 
-.metaRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-top: 0.55rem;
-  color: rgba(var(--foreground-rgb), 0.55);
-  font-size: 0.82rem;
-  flex-wrap: wrap;
-}
-
-.cardSelected,
-.courseCardActive {
+.cardSelected {
   border-color: rgba(var(--accent-color), 0.3);
   box-shadow: 0 24px 64px rgba(var(--accent-color), 0.12);
 }
 
-.field,
-.fieldGroup,
-.fieldGroupFull {
+.field {
   display: grid;
   gap: 0.4rem;
 }
 
-.fieldFullWidth,
-.fieldGroupFull {
+.fieldFullWidth {
   grid-column: 1 / -1;
 }
 
@@ -1810,10 +1322,7 @@ button.navPill {
 }
 
 .textInput,
-.textArea,
-.fieldInput,
-.fieldTextarea,
-.markdownTextarea {
+.textArea {
   width: 100%;
   border: 1px solid var(--line-strong);
   border-radius: 10px;
@@ -1825,23 +1334,18 @@ button.navPill {
 }
 
 .textInput:focus,
-.textArea:focus,
-.fieldInput:focus,
-.fieldTextarea:focus,
-.markdownTextarea:focus {
+.textArea:focus {
   outline: none;
   border-color: rgba(var(--accent-color), 0.65);
   box-shadow: 0 0 0 3px rgba(var(--accent-color), 0.15);
 }
 
-.textArea,
-.fieldTextarea {
+.textArea {
   min-height: 110px;
   resize: vertical;
 }
 
-.textAreaMarkdown,
-.markdownTextarea {
+.textAreaMarkdown {
   min-height: 260px;
   resize: vertical;
   font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -1849,17 +1353,25 @@ button.navPill {
   line-height: 1.5;
 }
 
-.fieldHint {
+/* Quiet words: a row's data, a status, an empty state. Never an explanation of the screen. */
+.quietText {
   color: rgba(var(--foreground-rgb), 0.66);
   line-height: 1.45;
   font-size: 0.84rem;
 }
 
-/* A word in a hint that acts (a new group's short name: Change), in the accent like a link. */
-.fieldHintAction {
+/* What's wrong with a field's value: the only line a field has under it. */
+.fieldError {
+  color: var(--red-pen);
+  line-height: 1.45;
+  font-size: 0.84rem;
+}
+
+/* A small word that acts (a booking day's hours: Remove, Add), in the accent like a link. */
+.textAction {
   display: inline-flex;
   align-items: center;
-  /* 44px to tap on touch screens, without making the hint's line taller. */
+  /* 44px to tap on touch screens, without making its line taller. */
   min-height: var(--touch-target, 0px);
   margin-block: min(0px, calc((1.45em - var(--touch-target, 0px)) / 2));
   padding: 0;
@@ -1871,12 +1383,12 @@ button.navPill {
   cursor: pointer;
 }
 
-.fieldHintAction:hover {
+.textAction:hover {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
-.fieldHintAction:focus-visible {
+.textAction:focus-visible {
   outline: 2px solid rgba(var(--accent-color), 0.55);
   outline-offset: 2px;
   border-radius: 4px;
@@ -1884,29 +1396,11 @@ button.navPill {
 
 .formGrid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  /* Keep inputs aligned when one column has a hint and the other does not */
+  /* Keep inputs aligned when one column has an error and the other does not */
   align-items: start;
 }
 
-.checklistItem {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.6rem;
-  padding: 0.7rem 0.8rem;
-  border-radius: 10px;
-  background: var(--surface-1);
-  color: rgba(var(--foreground-rgb), 0.78);
-  font-size: 0.9rem;
-}
-
-.checkMark {
-  color: rgb(var(--accent-color));
-  font-size: 1.2rem;
-  line-height: 1;
-}
-
-.noticeCard,
-.alertCard {
+.noticeCard {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 0.75rem;
@@ -1917,8 +1411,7 @@ button.navPill {
   background: rgba(250, 199, 117, 0.16);
 }
 
-.noticeBanner,
-.warningBanner {
+.noticeBanner {
   display: flex;
   align-items: center;
   gap: 0.65rem;
@@ -1931,22 +1424,14 @@ button.navPill {
   font-size: 0.9rem;
 }
 
-.lessonList,
-.uploadQueue,
 .stackList {
   grid-template-columns: 1fr;
 }
 
 .entityList,
-.linkPanelStack,
-.memberAccessList,
 .memberPreviewList {
   display: grid;
   gap: 0.85rem;
-}
-
-.entityListFooter {
-  margin-top: 0.85rem;
 }
 
 /* Lesson list grouped by section (arc) on the version editor. */
@@ -1987,9 +1472,7 @@ button.navPill {
   line-height: 1.45;
 }
 
-.entityRow,
-.memberAccessRow,
-.accessLinkCard {
+.entityRow {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -1997,15 +1480,13 @@ button.navPill {
   flex-wrap: wrap;
 }
 
-.entityRowBody,
-.memberPreviewBody {
+.entityRowBody {
   min-width: 0;
   display: grid;
   gap: 0.35rem;
 }
 
-.entityRowActions,
-.memberAccessActions {
+.entityRowActions {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -2022,25 +1503,6 @@ button.navPill {
 }
 
 /* Group list: whole tile is a link; slot reserves width where “Open group” was. */
-.entityTileLink {
-  color: inherit;
-  text-decoration: none;
-}
-
-.entityRowActionSlot {
-  flex: 0 0 7rem;
-  max-width: 7rem;
-  align-self: center;
-  min-height: 2.75rem;
-}
-
-.entityTitleRow {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
 
 .courseListRow {
   align-items: center;
@@ -2073,18 +1535,6 @@ button.navPill {
   flex-wrap: nowrap;
 }
 
-.entitySummary {
-  color: rgba(var(--foreground-rgb), 0.66);
-  line-height: 1.45;
-  font-size: 0.92rem;
-}
-
-.lessonCard {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.8rem;
-}
-
 .lessonIndex {
   display: inline-flex;
   align-items: center;
@@ -2097,37 +1547,13 @@ button.navPill {
   font-weight: 700;
 }
 
-.lessonBody {
-  min-width: 0;
-}
-
-.uploadItem {
-  display: grid;
-  gap: 0.55rem;
-}
-
-.inlineCode {
-  display: inline-flex;
-  width: fit-content;
-  max-width: 100%;
-  padding: 0.35rem 0.55rem;
-  border-radius: 10px;
-  background: rgba(var(--foreground-rgb), 0.06);
-  color: rgba(var(--foreground-rgb), 0.72);
-  overflow-wrap: anywhere;
-  font-size: 0.82rem;
-}
-
-.cardPanel,
-.loginPanel {
+.cardPanel {
   width: 100%;
   max-width: 430px;
   padding: 1.1rem;
 }
 
-.highlightIcon,
-.noticeIcon,
-.alertIcon {
+.noticeIcon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2154,16 +1580,7 @@ button.navPill {
   font-size: 0.92rem;
 }
 
-.loginPanelHeader {
-  display: grid;
-  gap: 0.45rem;
-  margin-bottom: 1rem;
-}
-
 .formStack,
-.editorStack,
-.coursePickerList,
-.detectedAssetList,
 .assetList,
 .editorPageSection {
   display: grid;
@@ -2206,20 +1623,8 @@ button.navPill {
   border: 1px solid rgba(var(--foreground-rgb), 0.08);
 }
 
-.courseWorkspaceGrid {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.coursePicker,
-.coursePickerActive,
-.detectedAssetItem,
-.previewPanel,
-.previewPanelStandalone,
 .assetPanel,
-.assetRow,
-.lessonOverviewItem {
+.assetRow {
   display: grid;
   gap: 0.55rem;
   padding: 0.85rem;
@@ -2229,33 +1634,10 @@ button.navPill {
   transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
 }
 
-.coursePicker,
-.coursePickerActive {
-  color: inherit;
-  text-decoration: none;
-}
-
-.coursePicker:hover,
-.coursePickerActive:hover {
-  transform: translateY(-1px);
-}
-
-.coursePickerActive {
-  background: rgba(var(--accent-color), 0.12);
-  border-color: rgba(var(--accent-color), 0.28);
-}
-
-.coursePickerHeader,
-.detectedAssetHeader,
-.editorHeader,
-.previewHeader,
 .editorTopLine,
-.toolbarRow,
-.tabRow,
 .assetPanelHeader,
 .assetRowHeader,
 .assetActions,
-.lessonOverviewHeader,
 .assetMetaRow {
   display: flex;
   align-items: center;
@@ -2276,77 +1658,6 @@ button.navPill {
   font-size: 1rem;
   font-weight: 600;
   color: rgb(var(--foreground-rgb));
-}
-
-.emptyStateText {
-  color: rgba(var(--foreground-rgb), 0.66);
-  font-size: 0.9rem;
-  line-height: 1.45;
-}
-
-.lessonEditorSection {
-  min-width: 0;
-}
-
-.editorField {
-  min-width: 0;
-}
-
-.previewPanel,
-.previewPanelStandalone {
-  min-width: 0;
-}
-
-.previewHeader h3 {
-  font-size: 1rem;
-  font-weight: 600;
-  color: rgb(var(--foreground-rgb));
-}
-
-.toolbarGroup {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  flex-wrap: wrap;
-}
-
-.editorTab,
-.editorTabActive {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: max(34px, var(--touch-target, 0px));
-  padding: 0.35rem 0.85rem;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  background: transparent;
-  color: rgba(var(--foreground-rgb), 0.66);
-  font: inherit;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
-}
-
-.editorTab:hover {
-  color: rgb(var(--foreground-rgb));
-}
-
-.editorTabActive {
-  border-color: var(--card-border);
-  background: var(--card-bg);
-  color: rgb(var(--foreground-rgb));
-  box-shadow: var(--card-shadow);
-}
-
-/* Write / Preview sit in a segmented control */
-.toolbarRow > .tabRow {
-  width: fit-content;
-  justify-content: flex-start;
-  gap: 0.15rem;
-  padding: 0.2rem;
-  border-radius: 10px;
-  background: var(--surface-2);
 }
 
 /* The same as a compact secondary button (AdminButton tone="secondary" size="compact"). */
@@ -2374,36 +1685,11 @@ button.navPill {
   border-color: rgba(var(--accent-color), 0.5);
 }
 
-.toolbarText {
-  display: inline-flex;
-  min-width: 0.8rem;
-  justify-content: center;
-  font-weight: 700;
-}
-
-.pendingAssetsBlock {
-  display: grid;
-  gap: 0.85rem;
-}
-
 .assetPanel {
   background: rgba(var(--foreground-rgb), 0.03);
 }
 
-.linkCreateForm,
-.memberLinkForm {
-  display: grid;
-  gap: 0.75rem;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: end;
-}
-
-.memberLinkForm {
-  flex: 1 1 360px;
-}
-
-.assetPanelHeader h3,
-.lessonOverviewHeader h3 {
+.assetPanelHeader h3 {
   font-size: 1rem;
   font-weight: 600;
   color: rgb(var(--foreground-rgb));
@@ -2422,245 +1708,19 @@ button.navPill {
   display: none;
 }
 
-.fileInputLabel {
-  margin: 0;
-  min-height: 44px;
-  display: inline-flex;
-  align-items: center;
-  padding: 0.7rem 0.9rem;
-  border: 1px dashed rgba(var(--foreground-rgb), 0.16);
-  border-radius: 14px;
-  background: rgba(var(--background-rgb), 0.72);
-  color: rgba(var(--foreground-rgb), 0.72);
-  font-size: 0.88rem;
-  line-height: 1.35;
-}
-
 .assetError {
   color: #e16f68;
   font-size: 0.84rem;
 }
 
-.detectedAssetItem {
-  padding: 0.8rem;
-}
-
-.markdownPreview {
-  min-height: 260px;
-  padding: 0.95rem;
-  border-radius: 16px;
-  border: 1px solid rgba(var(--foreground-rgb), 0.08);
-  background: rgba(var(--background-rgb), 0.78);
-  color: rgba(var(--foreground-rgb), 0.86);
-  overflow-wrap: anywhere;
-  /* Grid item: don't let wide tables stretch the column; they scroll in `.markdownTableScroll` */
-  min-width: 0;
-}
-
-.markdownPreviewEmpty {
-  display: grid;
-  place-items: center;
-  color: rgba(var(--foreground-rgb), 0.5);
-  text-align: center;
-}
-
-.markdownPreview h1,
-.markdownPreview h2,
-.markdownPreview h3,
-.markdownPreview h4,
-.markdownPreview h5,
-.markdownPreview h6 {
-  margin: 1rem 0 0.45rem;
-  font-weight: 600;
-  color: rgb(var(--foreground-rgb));
-}
-
-.markdownPreview h1:first-child,
-.markdownPreview h2:first-child,
-.markdownPreview h3:first-child,
-.markdownPreview h4:first-child,
-.markdownPreview h5:first-child,
-.markdownPreview h6:first-child,
-.markdownPreview p:first-child,
-.markdownPreview ul:first-child,
-.markdownPreview ol:first-child,
-.markdownPreview pre:first-child,
-.markdownPreview blockquote:first-child {
-  margin-top: 0;
-}
-
-.markdownPreview p,
-.markdownPreview ul,
-.markdownPreview ol,
-.markdownPreview pre,
-.markdownPreview blockquote {
-  margin: 0.75rem 0;
-  line-height: 1.6;
-}
-
-.markdownPreview ul,
-.markdownPreview ol {
-  padding-left: 1.2rem;
-}
-
-.markdownPreview code {
-  padding: 0.15rem 0.35rem;
-  border-radius: 8px;
-  background: rgba(var(--foreground-rgb), 0.06);
-  font-size: 0.88em;
-}
-
-.markdownPreview pre {
-  padding: 0.85rem;
-  border-radius: 14px;
-  background: rgba(var(--foreground-rgb), 0.06);
-  overflow-x: auto;
-}
-
-.markdownPreview pre code {
-  padding: 0;
-  background: transparent;
-}
-
-.markdownPreview blockquote {
-  padding-left: 0.9rem;
-  border-left: 3px solid rgba(var(--accent-color), 0.32);
-  color: rgba(var(--foreground-rgb), 0.68);
-}
-
-.markdownPreview a {
-  color: rgb(var(--accent-color));
-  text-decoration: underline;
-  text-underline-offset: 0.18rem;
-}
-
-/* Tables: mirror `.lessonContent` tables in `src/app/l/access.module.css` */
-.markdownTableScroll {
-  margin: 0.9rem 0;
-  min-width: 0;
-  max-width: 100%;
-  box-sizing: border-box;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  border-radius: 14px;
-  border: 1px solid rgba(var(--foreground-rgb), 0.08);
-  background: rgba(var(--foreground-rgb), 0.02);
-}
-
-.markdownPreview table {
-  width: 100%;
-  min-width: 100%;
-  border-collapse: collapse;
-  font-size: 0.92rem;
-  line-height: 1.5;
-}
-
-.markdownPreview th,
-.markdownPreview td {
-  min-width: 6rem;
-  padding: 0.55rem 0.85rem;
-  text-align: left;
-  vertical-align: top;
-  overflow-wrap: break-word;
-  word-break: normal;
-}
-
 /* GFM column alignment arrives as `align` attrs, which lose to the `text-align` above */
-.markdownPreview th[align='center'],
-.markdownPreview td[align='center'] {
-  text-align: center;
-}
-
-.markdownPreview th[align='right'],
-.markdownPreview td[align='right'] {
-  text-align: right;
-}
-
-.markdownPreview th {
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.06rem;
-  white-space: nowrap;
-  color: rgba(var(--foreground-rgb), 0.62);
-  background: rgba(var(--foreground-rgb), 0.04);
-  border-bottom: 1px solid rgba(var(--foreground-rgb), 0.08);
-}
-
-.markdownPreview tbody tr + tr td {
-  border-top: 1px solid rgba(var(--foreground-rgb), 0.06);
-}
-
-.markdownPreview tbody tr:hover {
-  background: rgba(var(--accent-color), 0.06);
-}
-
-.markdownPreview :global(.contains-task-list) {
-  padding-left: 0.2rem;
-  list-style: none;
-}
-
-.markdownPreview :global(.task-list-item) {
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-}
-
-.markdownPreview :global(.task-list-item) input[type='checkbox'] {
-  margin: 0;
-  flex-shrink: 0;
-  accent-color: var(--accent-color-hex);
-  transform: translateY(0.12rem);
-}
 
 .statusNotice {
   margin-bottom: 0.2rem;
 }
 
-.lessonOverviewList {
-  display: grid;
-  gap: 0.75rem;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-}
-
-.lessonOverviewItem {
-  padding: 0.8rem;
-}
-
-.memberAccessActions {
-  width: 100%;
-  justify-content: space-between;
-}
-
-.helperText {
-  font-size: 0.84rem;
-}
-
-.primaryButton {
-  width: 100%;
-  border: none;
-  cursor: pointer;
-  font: inherit;
-}
-
-.ghostButton {
-  width: 100%;
-  margin-top: 1rem;
-  cursor: pointer;
-  font: inherit;
-}
-
 @media (max-width: 1120px) {
-  .heroCard,
-  .contentGrid,
-  .managementGrid,
-  .lowerGrid,
-  .moduleGrid,
-  .courseWorkspaceGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .summaryStack,
-  .summaryStackWide {
+  .heroCard {
     grid-template-columns: 1fr;
   }
 }
@@ -2675,18 +1735,14 @@ button.navPill {
   }
 
   .cardSection,
-  .sectionCard,
-  .cardPanel,
-  .loginPanel {
+  .cardPanel {
     padding: 1rem;
   }
 
-  .heroTitle,
-  .loginTitle {
+  .heroTitle {
     max-width: 100%;
   }
 
-  .scopeList,
   .formGrid {
     grid-template-columns: 1fr;
   }
@@ -2714,57 +1770,22 @@ button.navPill {
     justify-content: center;
   }
 
-  .cardHeaderKickerRow .button {
-    width: auto;
-    flex: 0 0 auto;
-  }
-
-  .courseCardTopRow,
-  .moduleTopRow,
-  .lessonTopRow,
-  .uploadTopRow,
-  .cardHeader,
-  .sectionHeader,
-  .metaRow,
-  .coursePickerHeader,
-  .detectedAssetHeader,
-  .editorHeader,
-  .previewHeader,
   .editorTopLine,
-  .toolbarRow,
-  .tabRow,
   .assetPanelHeader,
   .assetRowHeader,
   .assetActions,
-  .lessonOverviewHeader,
   .assetMetaRow,
-  .entityRow,
-  .entityTitleRow,
-  .memberAccessRow,
-  .sectionNavHeader {
+  .entityRow {
     flex-direction: column;
     align-items: flex-start;
   }
 
-  .linkCreateForm,
-  .memberLinkForm,
   .memberPreviewList {
     grid-template-columns: 1fr;
   }
 }
 
 /* Curriculum version management */
-.inlineForm {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.inlineForm .textInput {
-  min-width: 12rem;
-  flex: 0 1 auto;
-}
 
 .inlineBadgeSpacing {
   margin-left: 0.5rem;
@@ -2900,16 +1921,6 @@ button.navPill {
 }
 
 /* Non-interactive placeholder pill matching the top-bar nav pills. */
-.skeletonNavPill {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  min-width: 6.5rem;
-  padding: 0.75rem 1.05rem;
-  border-radius: 999px;
-  border: 1px solid rgba(var(--foreground-rgb), 0.08);
-  background: rgba(var(--foreground-rgb), 0.04);
-}
 
 @media (prefers-reduced-motion: reduce) {
   .skeletonBlock {
@@ -2927,64 +1938,6 @@ button.navPill {
 }
 
 /* Course detail: a core version row with its expandable group forks underneath. */
-.versionRow {
-  flex-wrap: wrap;
-}
-
-.versionForks {
-  flex: 1 0 100%;
-  margin-top: 0.15rem;
-  padding-top: 0.6rem;
-  border-top: 1px solid rgba(var(--foreground-rgb), 0.08);
-}
-
-.versionForksSummary {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  cursor: pointer;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--accent-color-hex);
-  list-style: none;
-}
-
-.versionForksSummary::-webkit-details-marker {
-  display: none;
-}
-
-.versionForksSummary::after {
-  content: '▸';
-  font-size: 0.7rem;
-  transition: transform 120ms ease;
-}
-
-.versionForks[open] > .versionForksSummary::after {
-  transform: rotate(90deg);
-}
-
-.versionForkList {
-  list-style: none;
-  margin: 0.7rem 0 0;
-  padding: 0;
-  display: grid;
-  gap: 0.6rem;
-}
-
-.versionForkRow {
-  padding: 0.7rem 0.8rem;
-  border-radius: 10px;
-  border: 1px solid rgba(var(--foreground-rgb), 0.08);
-  background: rgba(var(--foreground-rgb), 0.025);
-}
-
-.versionForkHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
 
 .versionForkTitle {
   display: flex;
@@ -3010,43 +1963,6 @@ button.navPill {
   flex-wrap: wrap;
 }
 
-.versionForkStats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 0.5rem 1rem;
-  margin: 0.65rem 0 0;
-}
-
-.versionForkStats dt {
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: rgba(var(--foreground-rgb), 0.5);
-}
-
-.versionForkStats dd {
-  margin: 0.1rem 0 0;
-  font-size: 0.84rem;
-}
-
-.versionForkLessons {
-  margin-top: 0.6rem;
-  font-size: 0.82rem;
-}
-
-.versionForkLessons summary {
-  cursor: pointer;
-  color: rgba(var(--foreground-rgb), 0.7);
-  font-weight: 600;
-}
-
-.versionForkLessons ul {
-  margin: 0.4rem 0 0;
-  padding-left: 1.1rem;
-  display: grid;
-  gap: 0.25rem;
-}
-
 /* Fork card: tasks and proposals waiting on a decision, with one-click actions. */
 .forkDecisions {
   margin-top: 0.75rem;
@@ -3056,14 +1972,6 @@ button.navPill {
   background: rgb(var(--background-rgb));
   display: grid;
   gap: 0.6rem;
-}
-
-.forkDecisionsHeading {
-  margin: 0;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: rgba(var(--foreground-rgb), 0.55);
 }
 
 .forkDecisionGroup {
@@ -3104,23 +2012,6 @@ button.navPill {
    Users: card grid, filter toolbar, pager and the user detail page.
    --------------------------------------------------------------------------- */
 
-.usersToolbar {
-  display: flex;
-  flex-wrap: wrap;
-  /* Labels differ in height only when wrapped; align on the controls, not the labels. */
-  align-items: end;
-  gap: 0.6rem 0.75rem;
-}
-
-.usersToolbar[data-pending='true'] {
-  opacity: 0.7;
-}
-
-.usersToolbarSearch {
-  flex: 1 1 16rem;
-  min-width: 0;
-}
-
 .usersToolbarSearchControl {
   position: relative;
 }
@@ -3138,180 +2029,6 @@ button.navPill {
 .usersToolbarSearchControl .textInput {
   min-height: 2.75rem;
   padding-left: 2.4rem;
-}
-
-.usersToolbarSelect {
-  flex: 0 0 12rem;
-  min-width: 0;
-}
-
-.userCardGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16.5rem), 1fr));
-  gap: 0.85rem;
-}
-
-.userCard {
-  display: grid;
-  align-content: start;
-  gap: 0.6rem;
-  padding: 0.95rem;
-  border-radius: 18px;
-  border: 1px solid rgba(var(--foreground-rgb), 0.08);
-  background: rgba(var(--background-rgb), 0.68);
-  color: inherit;
-  text-decoration: none;
-  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.userCard:hover,
-.userCard:focus-visible {
-  border-color: rgba(var(--accent-color), 0.32);
-  transform: translateY(-2px);
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
-}
-
-/* Deactivated users stay listed but read as muted. */
-.userCardInactive {
-  opacity: 0.55;
-}
-
-.userCardHead {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  min-width: 0;
-}
-
-.userCardIdentity {
-  display: grid;
-  gap: 0.1rem;
-  min-width: 0;
-}
-
-.userCardName {
-  margin: 0;
-  font-size: 0.97rem;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.userCardEmail {
-  margin: 0;
-  color: rgba(var(--foreground-rgb), 0.6);
-  font-size: 0.82rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.userCardBadges {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.userCardMeta {
-  margin: 0;
-  color: rgba(var(--foreground-rgb), 0.55);
-  font-size: 0.78rem;
-}
-
-.usersPager {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-.usersPagerLinks {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.usersPagerStatus {
-  color: rgba(var(--foreground-rgb), 0.6);
-  font-size: 0.82rem;
-}
-
-.usersPagerLink,
-.usersPagerLinkDisabled {
-  padding: 0.4rem 0.75rem;
-  border-radius: 999px;
-  border: 1px solid rgba(var(--foreground-rgb), 0.12);
-  font-size: 0.82rem;
-  text-decoration: none;
-}
-
-.usersPagerLink {
-  color: inherit;
-  transition: border-color 0.2s ease, background 0.2s ease;
-}
-
-.usersPagerLink:hover {
-  border-color: rgba(var(--accent-color), 0.32);
-  background: rgba(var(--foreground-rgb), 0.04);
-}
-
-.usersPagerLinkDisabled {
-  color: rgba(var(--foreground-rgb), 0.35);
-  border-color: rgba(var(--foreground-rgb), 0.06);
-}
-
-.userDetailHead {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.userDetailIdentity {
-  flex: 1 1 14rem;
-  min-width: 0;
-  display: grid;
-  gap: 0.35rem;
-}
-
-.userDetailName {
-  margin: 0;
-  font-size: 1.15rem;
-  font-weight: 600;
-}
-
-.userDetailHeadActions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.userMetaGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
-  gap: 0.5rem 1.25rem;
-  padding-top: 0.6rem;
-  border-top: 1px solid rgba(var(--foreground-rgb), 0.08);
-}
-
-.userMetaRow {
-  display: grid;
-  gap: 0.1rem;
-  min-width: 0;
-}
-
-.userMetaLabel {
-  color: rgba(var(--foreground-rgb), 0.55);
-  font-size: 0.75rem;
-  letter-spacing: 0.02rem;
-}
-
-.userMetaValue {
-  font-size: 0.88rem;
-  overflow-wrap: anywhere;
 }
 
 /* The "⋯" menu (AdminMenu): rare and destructive actions, out of the way. */

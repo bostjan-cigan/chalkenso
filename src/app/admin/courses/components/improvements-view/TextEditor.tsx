@@ -41,11 +41,14 @@ export default function TextEditor({
   initial,
   assets,
   label,
+  placeholder,
   ref,
 }: {
   initial: string;
   assets: Map<string, string>;
   label: string;
+  /** What it shows while empty (else the lesson's own placeholder). */
+  placeholder?: string;
   ref: Ref<TextEditorHandle>;
 }) {
   const t = useTranslations('editor.workspace');
@@ -99,6 +102,7 @@ export default function TextEditor({
           }}
           onActivateNote={() => undefined}
           compact
+          placeholder={placeholder}
         />
       </div>
       {mode === 'markdown' ? (
@@ -107,6 +111,7 @@ export default function TextEditor({
           value={markdown}
           onChange={(event) => setMarkdown(event.target.value)}
           aria-label={label}
+          placeholder={placeholder}
           rows={Math.min(18, Math.max(6, markdown.split('\n').length + Math.ceil(markdown.length / 70)))}
           spellCheck={false}
           autoFocus

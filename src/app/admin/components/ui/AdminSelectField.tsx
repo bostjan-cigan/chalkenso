@@ -16,7 +16,6 @@ import AdminSearchableSelectField, {
 interface AdminSelectFieldProps
   extends Omit<SelectHTMLAttributes<HTMLSelectElement>, 'className'> {
   label: string;
-  hint?: ReactNode;
   className?: string;
   /** Reserved for API compatibility; searchable control uses shared field styling. */
   selectClassName?: string;
@@ -56,7 +55,6 @@ function optionsFromChildren(children: ReactNode): AdminSearchableSelectOption[]
  */
 export default function AdminSelectField({
   label,
-  hint,
   className,
   selectClassName: _selectClassName,
   fullWidth = false,
@@ -75,7 +73,6 @@ export default function AdminSelectField({
       className={cn(className)}
       disabled={disabled}
       fullWidth={fullWidth}
-      hint={hint}
       id={id ?? 'admin-select'}
       label={label}
       name={name ?? ''}

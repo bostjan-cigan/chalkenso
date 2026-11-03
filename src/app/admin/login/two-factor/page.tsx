@@ -32,11 +32,7 @@ export default async function AdminTwoFactorPage({
   const t = await getTranslations('auth.twoFactor');
 
   return (
-    <AuthShell
-      title={t('title')}
-      intro={t('intro')}
-      footer={<Link href="/admin/login">{t('back')}</Link>}
-    >
+    <AuthShell title={t('title')} footer={<Link href="/admin/login">{t('back')}</Link>}>
       <TwoFactorForm next={safeNext(params.next)} />
     </AuthShell>
   );

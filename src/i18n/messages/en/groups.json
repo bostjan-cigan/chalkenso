@@ -38,19 +38,13 @@
     "reads": "Reads {version}"
   },
   "list": {
-    "kicker": "Groups",
+    "title": "Groups",
     "all": "All groups",
     "mine": "My groups",
     "new": "New group",
     "lastOpened": "Last opened:",
-    "empty": {
-      "title": "No groups yet",
-      "text": "Create the first group from a pasted list of learners."
-    },
-    "emptyMine": {
-      "title": "You don’t teach any groups yet",
-      "text": "Groups you’re an instructor of show here. Whoever manages a group adds its instructors on its page."
-    }
+    "empty": "No groups yet",
+    "emptyMine": "You don’t teach any groups yet"
   },
   "directory": {
     "searchPlaceholder": "Find a group, course or instructor",
@@ -71,25 +65,18 @@
     "menuItem": "Delete group…",
     "button": "Delete group",
     "title": "Delete this group?",
-    "description": "This permanently deletes “{name}”, its learners and all of their access links. Existing links stop working immediately. Comments are kept. This action cannot be undone.",
-    "descriptionWithCopy": "This permanently deletes “{name}”, its learners and all of their access links. Existing links stop working immediately. Its own curriculum is deleted too, with its lessons and comments. This action cannot be undone."
+    "description": "Its learners and their links go too; their feedback stays.",
+    "descriptionWithCopy": "Its learners, their links and its own copy of the lessons, with its feedback, go too."
   },
   "courseTab": {
     "back": "Courses",
-    "suggested": {
-      "kicker": "Suggested by groups",
-      "text": "Changes groups made to their own lessons. Bring one to the course’s lessons, or keep it in the group."
-    },
-    "kicker": "Groups",
+    "suggested": "Suggested by groups",
+    "title": "Groups",
     "new": "New group",
-    "empty": {
-      "title": "No groups yet",
-      "text": "A group is one run of this course, with its learners and their links."
-    }
+    "empty": "No groups yet"
   },
   "newGroup": {
     "title": "New group",
-    "subtitle": "Lessons, a name and the learners are enough to start. The rest goes in the group's Settings.",
     "back": "Back to groups",
     "pending": "Creating group...",
     "submit": "Create group"
@@ -109,11 +96,9 @@
       },
       "taughtBy": "{count, plural, other {taught by {names}}}"
     },
-    "created": "Group created. Add its dates, description and more in <link>Settings</link>.",
     "readLessons": "Read the lessons",
     "openCourse": "Open the course",
     "openingCourse": "Opening…",
-    "openCourseHint": "The pages your learners read, through your instructor link: mark a passage to leave an instructor note.",
     "insights": "Insights",
     "tabs": {
       "label": "Group",
@@ -125,31 +110,18 @@
       "settings": "Settings"
     },
     "lessons": {
-      "kicker": "Lessons",
-      "closed": "This group has finished: its lessons are closed. Learners can still read them.",
-      "ownCopyFrom": "This group’s own copy, made from {version}. Changes reach only this group; to bring one to the course, open its improvement and choose Suggest for the course.",
-      "ownCopyFromCourse": "This group’s own copy, made from the course. Changes reach only this group; to bring one to the course, open its improvement and choose Suggest for the course.",
       "ownCopy": "This group’s own copy of the lessons.",
-      "none": "This group has no lessons yet. Pick the course version it starts from in Settings."
+      "none": "No lessons yet."
     },
     "feedback": {
-      "kicker": "Feedback",
       "export": "Export CSV",
-      "empty": "Nothing open. When learners in this group leave feedback on a passage, it shows here.",
-      "tasksEmpty": "Plan an improvement from a piece of feedback (Open) and it shows here until the change is made.",
-      "tasksHint": "An improvement that is done marks the feedback it came from done.",
-      "openBoard": "Open the board"
+      "empty": "No open feedback."
     },
     "people": {
       "learners": "Learners",
-      "empty": {
-        "title": "No learners yet",
-        "inSettings": "Paste the list of learners under <link>Settings</link>.",
-        "above": "Paste the list of learners above."
-      },
+      "empty": "No learners yet",
+      "addLearners": "Add learners",
       "instructors": "Instructors",
-      "givesNotes": "Adding them gives them notes on this group (guest instructor)",
-      "givesAccess": "Adding them adds this group to their access",
       "instructorLinks": "Instructor links",
       "groupLink": "Group link",
       "until": "Until {date}",
@@ -175,15 +147,8 @@
       "saving": "Saving…",
       "ownCopyOf": "Own copy of {version}",
       "ownCopyOfCourse": "Own copy of the course",
-      "copy": {
-        "kicker": "The group’s lessons",
-        "reads": "This group reads {version} of the course, as it is. Give it its own copy to change lessons from its feedback without changing the course.",
-        "footer": "{closed, select, yes {Closed: learners can still read it, and you can reopen it.} other {Close it when the group has finished: learners can still read it.}}"
-      },
-      "delete": {
-        "text": "Deletes the group, its learners and their links.",
-        "textWithCopy": "Deletes the group, its learners and their links, and its own copy of the lessons with its feedback."
-      }
+      "closed": "Closed",
+      "groupLessons": "The group’s lessons"
     }
   },
   "links": {
@@ -201,9 +166,6 @@
     "copyFailed": "Could not copy — copy manually"
   },
   "roster": {
-    "label": "Roster paste",
-    "hint": "Paste the raw learner list. Numbering and heading lines are cleaned automatically. Removed learners lose their links.",
-    "learners": "{count, plural, one {# learner} other {# learners}}",
     "saving": "Saving roster…",
     "save": "Save roster"
   },
@@ -212,12 +174,10 @@
   },
   "groupLink": {
     "modalTitle": "Group access link",
-    "modalText": "Shared link for everyone in this group. Creating a new link revokes the previous one.",
     "expires": "Expires {date}",
     "lastOpened": "Last opened {date}",
     "notOpened": "Not opened yet",
-    "emptyTitle": "No active group link",
-    "emptyText": "Create one shared public link for the whole group when the course is ready.",
+    "empty": "No active group link",
     "create": "Create group link"
   },
   "members": {
@@ -226,7 +186,6 @@
     "copiedAllMissing": "Copied {count, plural, one {# link} other {# links}} ({missing, plural, one {# learner has} other {# learners have}} no link yet)",
     "copyAllFailed": "Could not copy — copy each link instead",
     "unattached": "{count, plural, one {# piece} other {# pieces}} of feedback from learners no longer on the roster.",
-    "unattachedHint": "Move it to a learner so it shows on their link.",
     "moveFeedback": "Move feedback…",
     "copyAll": "Copy all links",
     "makeAll": "Make links for all learners",
@@ -239,26 +198,19 @@
     "failed": "Could not update expiry. Try again.",
     "groupTitle": "Edit group link expiry",
     "memberTitle": "Edit learner link expiry",
-    "groupText": "Change when this shared link stops working. The URL and token stay the same.",
-    "memberTextNamed": "{learner} — change when this link stops working. The URL and token stay the same.",
-    "memberText": "Change when this link stops working. The URL and token stay the same.",
     "saving": "Saving…",
     "save": "Save expiry"
   },
   "bulkLinks": {
     "failed": "Could not create links. Try again.",
-    "doneTitle": "Links created",
+    "doneTitle": "{count, plural, one {# link created} other {# links created}}",
     "title": "Links for all learners",
-    "doneText": "Generated {count, plural, one {# link} other {# links}}. “Copy all links” copies them in one go, each with its learner’s name.",
-    "text": "Creates one fresh link per learner ({count, plural, one {# member} other {# members}}), revoking older active links.",
+    "text": "Their current links stop working.",
     "create": "Create all links",
     "close": "Close"
   },
   "linkFeedback": {
     "title": "Link this feedback to a learner",
-    "olderLink": "It came through an older link of its learner. Link it to their current link, or choose who wrote it.",
-    "leftRoster": "Its learner is no longer on the roster. Choose who wrote it: it moves to them and shows on their link, as theirs.",
-    "anonymous": "The team still sees it as “A learner”.",
     "learner": "Learner",
     "choose": "Choose a learner",
     "linking": "Linking…",
@@ -266,11 +218,7 @@
   },
   "moveFeedback": {
     "title": "Move feedback to a learner",
-    "text": "From learners no longer on the roster, by the link it came from. It moves to the learner you choose and shows on their link, as theirs.",
     "pieces": "{count, plural, one {# piece} other {# pieces}} of feedback",
-    "linkMade": "link made {date}",
-    "linkGone": "link gone",
-    "lessons": "{count, plural, one {lesson} other {lessons}} {lessons}",
     "sample": "“{sample}”",
     "moveTo": "Move it to",
     "choose": "Choose a learner",
@@ -282,22 +230,21 @@
     "failed": "That didn’t work. Try again.",
     "start": "Give this group its own copy",
     "reopen": "Reopen the group’s lessons",
-    "close": "Close (the group has finished)",
+    "close": "Close the group’s lessons",
     "useCourse": "Use the course’s lessons instead",
     "enable": {
       "title": "Give this group its own copy?",
-      "text": "“{name}” gets its own copy of {version}, to change from its feedback. Its links keep working and show the copy; open feedback moves with it. The course’s own lessons don’t change.",
-      "textLessons": "“{name}” gets its own copy of its lessons, to change from its feedback. Its links keep working and show the copy; open feedback moves with it. The course’s own lessons don’t change.",
+      "text": "Its links keep working, and the course’s lessons stay as they are.",
       "confirm": "Make the copy"
     },
     "closeConfirm": {
       "title": "Close the group’s lessons?",
-      "text": "For when the group has finished. Learners can still read them and nothing is deleted, but they stop syncing to Obsidian. You can reopen them later.",
+      "text": "Learners can still read them; they stop syncing to Obsidian.",
       "confirm": "Close"
     },
     "disable": {
       "title": "Use the course’s lessons instead?",
-      "text": "Only while the copy is untouched: links and feedback move back to the course’s lessons and the copy is deleted. Once it has changes or improvements, close it instead.",
+      "text": "The copy is deleted; its links and feedback go back to the course’s lessons.",
       "confirm": "Use the course’s lessons"
     }
   },
@@ -318,7 +265,6 @@
     "minute": "Minute"
   },
   "instructorLinks": {
-    "intro": "Teach from the pages your learners read, here or on your own website. Mark a passage to leave an instructor note: the team sees it with your name, learners don’t, and you’re never counted as a learner.",
     "copied": "Copied to clipboard",
     "copyFailed": "Could not copy — copy manually",
     "yours": "Your link · expires {date}",
@@ -337,7 +283,6 @@
     "revokeFailed": "Could not revoke the link. Try again."
   },
   "instructors": {
-    "intro": "Learners see who teaches them. Instructors find the group on their Overview, with their instructor link, and its improvements are offered to them first.",
     "remove": "Remove",
     "removeFailed": "Could not remove them. Try again.",
     "none": "No instructors yet.",
@@ -347,7 +292,7 @@
     "add": "Add",
     "addFailed": "Could not add them. Try again.",
     "invite": {
-      "sendIt": "Send it to them: it works once and expires in 7 days.",
+      "sendIt": "Works once and expires in 7 days.",
       "done": "Done",
       "nameLabel": "Who it's for",
       "namePlaceholder": "Mia, guest lecturer for week 4",
@@ -355,7 +300,6 @@
       "send": "Send invite",
       "createLink": "Create invite link",
       "start": "Invite a guest instructor",
-      "startHint": "Someone who isn’t on the team yet: they join with notes on this group only, and teach it.",
       "pending": "Invited as a guest instructor · not used yet · expires {date}",
       "withdraw": "Withdraw",
       "withdrawFailed": "Could not withdraw it. Try again."
@@ -365,8 +309,7 @@
     "course": "Course",
     "selectCourse": "Select course",
     "lessonsFrom": "Lessons from",
-    "lessonsFromHintEdit": "The course version this group reads. Only published versions serve live links; changing it revokes existing links.",
-    "lessonsFromHintNew": "The course version the group starts from. Only published versions serve live links.",
+    "revokesLinks": "Saving revokes the group’s links.",
     "selectVersion": "Select version",
     "selectCourseFirst": "Select a course first",
     "published": "Published",
@@ -374,30 +317,17 @@
     "name": "Group name",
     "namePlaceholder": "Evening group · Autumn 2026",
     "slug": "Short name",
-    "slugHint": "Updates from the group name; you can change it.",
     "slugPlaceholder": "evening-autumn-2026",
-    "slugQuiet": "Short name: {slug}",
-    "slugQuietEmpty": "The short name follows the group name.",
-    "slugChange": "Change",
     "slack": "Slack handle",
-    "slackHint": "Optional channel or short handle for this group.",
     "slackPlaceholder": "#frontend-spring",
     "description": "Description",
-    "descriptionHint": "Optional. Keep it fit for learners: your own website can show it on their pages.",
     "descriptionPlaceholder": "Tuesdays and Thursdays, 18:00–21:00, room 2.",
     "partners": "Partners",
-    "partnersHint": "Learners in this group see these, in this order, instead of the course's partners. Leave it empty to show the course's.",
-    "roster": "Roster paste",
-    "rosterHint": "Paste the raw learner list. Numbering and heading lines are cleaned automatically.",
+    "roster": "Learner list",
+    "rosterPlaceholder": "Learners:\n\n1. Ana Novak\n2. Tom Baker",
     "parsed": "Parsed learners",
-    "parsedHint": "Stored exactly as pasted, in the order shown here.",
     "learners": "{count, plural, one {# learner} other {# learners}}",
-    "parsedEmpty": {
-      "title": "No learners parsed yet",
-      "text": "Paste the roster and the cleaned list of learners will appear here."
-    },
-    "ownCopy": "Give the group its own copy of the lessons",
-    "ownCopyHint": "Then changes made from its feedback reach only this group, and the course's own lessons stay as they are. Leave it off for a group that should follow the course as it changes."
+    "ownCopy": "Give the group its own copy of the lessons"
   },
   "actions": {
     "groupNotFound": "Select a valid group first.",

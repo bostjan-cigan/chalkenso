@@ -6,14 +6,13 @@ import { useTransition } from 'react';
 import { hideGettingStartedAction } from './actions';
 import styles from '@/app/admin/admin.module.css';
 
-/** On Home while Getting started is hidden and has steps left: a quiet line that brings it back. */
+/** On Home while Getting started is hidden and has steps left: a quiet button that brings it back. */
 export default function ShowGettingStarted() {
   const t = useTranslations('app.gettingStarted');
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   return (
-    <p className={styles.fieldHint} style={{ margin: 0 }} data-testid="getting-started-hidden">
-      {t('hidden')}{' '}
+    <p className={styles.quietText} style={{ margin: 0 }} data-testid="getting-started-hidden">
       <button
         type="button"
         disabled={pending}

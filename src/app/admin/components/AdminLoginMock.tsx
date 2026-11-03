@@ -74,12 +74,11 @@ export default function AdminLoginMock({ errorMessage, next }: AdminLoginMockPro
         type="password"
         autoComplete="current-password"
         label={t('fields.password')}
-        placeholder={t('login.form.passwordPlaceholder')}
         required
       />
 
       {/* Off: the session ends when the browser closes, or after two hours without activity. */}
-      <AdminCheckbox id="admin-remember" name="remember" label={t('login.form.remember')} hint={t('login.form.rememberHint')} />
+      <AdminCheckbox id="admin-remember" name="remember" label={t('login.form.remember')} />
 
       {error ? (
         <div data-testid="sign-in-error">

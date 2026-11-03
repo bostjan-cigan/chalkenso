@@ -30,8 +30,6 @@ export type ServerExtensions = {
   beforeLogin(): Promise<void>;
   /** Runs first on /signup, before anything renders (it may redirect). */
   beforeSignup(): void;
-  /** The words above the sign-up form, in a language (the page follows the visitor's pick). */
-  signupIntro(locale: Locale): Promise<{ kicker: string; intro: string }>;
   /**
    * Whether a public form's request (signing up, "Forgot your password?") comes from a bot, by the
    * edition's own check; the local edition never asks.
@@ -120,12 +118,10 @@ export type ServerExtensions = {
    */
   learnerPagesClosed(organizationId: string): Promise<boolean>;
   /**
-   * The plans someone picks from when signing up, in a language (null: no choice, the local
-   * edition), with the one picked first; `afterSignup` is where they go next.
+   * The plans someone can sign up for (null: no choice, the local edition); `afterSignup` is where
+   * they go next.
    */
-  signupPlans:
-    | ((locale: Locale) => Promise<{ options: Array<{ value: string; label: string; hint: string }>; defaultValue: string }>)
-    | null;
+  signupPlans: (() => Array<{ value: string }>) | null;
   afterSignup(plan: string): string;
   /**
    * The plan an organisation someone makes themselves starts on (sign-up, a new organisation): from
@@ -162,8 +158,8 @@ export type ServerExtensions = {
 /** A limit check: fine, or why not (a sentence for the person, with what to do). */
 export type LimitCheck = { ok: true } | { ok: false; code: string; message: string };
 
-/** Each role's name ("Instructor"), as part of a sentence ("an instructor") and what it can do. */
-export type TeamRoleWords = Record<OrgRole, { label: string; inSentence: string; hint: string }>;
+/** Each role's name ("Instructor"). */
+export type TeamRoleWords = Record<OrgRole, { label: string }>;
 
 export type TeamPolicy = {
   /** The roles' words in English (what isn't in the reader's language yet); `words` has them in any. */
@@ -173,17 +169,12 @@ export type TeamPolicy = {
    * pick (the app's own pages, in English, use `roles`).
    */
   rolesInSentence(locale: Locale): Promise<Record<OrgRole, string>>;
-  /**
-   * The roles' words and the Team page's line under its title, in a language (`account.team.policy`):
-   * the Team page's, in the reader's.
-   */
-  words(locale: Locale): Promise<{ roles: TeamRoleWords; description: string }>;
+  /** The roles' names in a language (`account.team.policy`): the Team page's, in the reader's. */
+  words(locale: Locale): Promise<{ roles: TeamRoleWords }>;
   /** The roles an invite can give, the default first. */
   inviteRoles: OrgRole[];
   /** Whether owners and admins can change someone's role after they joined. */
   roleChanges: boolean;
-  /** The line under the Team page's title, in English (`words` has it in any language). */
-  description: string;
 };
 
 /**

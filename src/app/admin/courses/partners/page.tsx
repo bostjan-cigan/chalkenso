@@ -3,7 +3,6 @@ import { getTranslations } from 'next-intl/server';
 import { FiAlertTriangle, FiPlus } from 'react-icons/fi';
 import AdminNotice from '../../components/ui/AdminNotice';
 import SettingsFrame from '../../settings/SettingsFrame';
-import InfoTip from '../../settings/ui/InfoTip';
 import { SettingsGroup, SettingsRow, settingsStyles } from '../../settings/ui/SettingsList';
 import { listPartnersForIndex } from '../data';
 import { courseFlashMessage } from '../messages';
@@ -23,13 +22,13 @@ export default async function PartnersPage({ searchParams }: { searchParams: Sea
   const flashMessage = await courseFlashMessage(search);
 
   return (
-    <SettingsFrame active="partners" title={t('title')} description={t('description')}>
+    <SettingsFrame active="partners" title={t('title')}>
       {flashMessage ? (
         <AdminNotice className={styles.statusNotice} icon={<FiAlertTriangle size={18} />} variant="banner">
           {flashMessage}
         </AdminNotice>
       ) : null}
-      <SettingsGroup title={t('title')} info={<InfoTip label={t('title')}>{t('description')}</InfoTip>}>
+      <SettingsGroup>
         {partners.map((partner) => {
           const courses = partner._count.coursePartners;
           const groups = partner._count.groupPartners;

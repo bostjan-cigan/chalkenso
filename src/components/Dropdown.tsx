@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactNode, useState } from 'react';
+import { useState } from 'react';
 import AdminSearchableSelectField, {
   type AdminSearchableSelectOption,
 } from '@/app/admin/components/ui/AdminSearchableSelectField';
@@ -22,7 +22,6 @@ export default function Dropdown({
   className,
   compact = false,
   disabled = false,
-  hint,
   onValueChange,
 }: {
   id: string;
@@ -36,7 +35,6 @@ export default function Dropdown({
   className?: string;
   compact?: boolean;
   disabled?: boolean;
-  hint?: ReactNode;
   /** Called after the value changes (the hidden input has it from the next render). */
   onValueChange?: (value: string) => void;
 }) {
@@ -59,7 +57,6 @@ export default function Dropdown({
       className={className}
       compact={compact}
       disabled={disabled}
-      hint={hint}
     />
   );
 }

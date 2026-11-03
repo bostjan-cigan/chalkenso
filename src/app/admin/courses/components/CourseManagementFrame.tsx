@@ -11,7 +11,7 @@ interface CourseManagementFrameProps {
   /** Which place the page belongs to (the sidebar marks it): Courses, Groups, or Settings (partners). */
   activeSection: CourseSection;
   children: ReactNode;
-  /** Slim strip at the top: title, optional subtitle, back link, actions. */
+  /** Slim strip at the top: title, back link, actions. */
   pageContext?: CoursePageContextProps;
   /** One course's tabs (Lessons, Groups, Feedback, Insights, Settings), under the page strip. */
   courseTabs?: { courseId: string; active: CourseTab };

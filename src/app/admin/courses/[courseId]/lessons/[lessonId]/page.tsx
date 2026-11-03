@@ -18,7 +18,6 @@ import {
   requireCourseAccess,
   requireCrmAccess,
 } from '@/lib/crm-access';
-import { hasUnpublishedChanges } from '@/lib/lesson-publishing';
 import { prisma } from '@/lib/prisma';
 import { ui } from '@/extensions/ui';
 
@@ -95,7 +94,7 @@ export default async function EditLessonPage({
     listArcsForVersion(lesson.curriculumVersionId),
     prisma.curriculumVersion.findUnique({
       where: { id: lesson.curriculumVersionId },
-      select: { label: true, ownerGroup: { select: { id: true, name: true } } },
+      select: { label: true, ownerGroup: { select: { name: true } } },
     }),
     canImprove ? countImprovementWork(viewer, { id: lesson.id, ownerGroupId: versionRef.ownerGroupId }) : Promise.resolve(0),
     instructorNoteContext(viewer, versionRef, null),
@@ -108,17 +107,8 @@ export default async function EditLessonPage({
         courseId={lesson.course.id}
         courseTitle={lesson.course.title}
         courseHref={canOnCourse(viewer, lesson.course.id, [Permission.READ]) ? `/admin/courses/${lesson.course.id}` : null}
-        level={
-          version?.ownerGroup
-            ? {
-                kind: 'copy',
-                groupName: version.ownerGroup.name,
-                groupHref: `/admin/courses/groups/${version.ownerGroup.id}`,
-              }
-            : { kind: 'course' }
-        }
         curriculumVersionId={lesson.curriculumVersionId}
-        versionLabel={version?.ownerGroup ? version.ownerGroup.name : version?.label ?? t('version')}
+        versionLabel={version?.ownerGroup ? t('copyLabel', { group: version.ownerGroup.name }) : version?.label ?? t('version')}
         backHref={versionHref}
         previewHref={`${versionHref}/preview`}
         lessonId={lesson.id}
@@ -133,7 +123,6 @@ export default async function EditLessonPage({
           markdown: lesson.markdownContent,
         }}
         publishedAt={lesson.publishedAt ? lesson.publishedAt.toISOString() : null}
-        hasUnpublishedChanges={hasUnpublishedChanges(lesson)}
         arcs={arcs.map((arc) => ({ id: arc.id, title: arc.title }))}
         initialUploadedAssets={mapUploadedAssets(lesson.assetReferences)}
         improveHref={canImprove ? improvePath : null}

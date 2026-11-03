@@ -27,7 +27,7 @@ export default async function SettingsPage() {
     select: { logoKey: true, iconName: true, iconColor: true },
   });
   return (
-    <SettingsFrame active="general" title={t('title')} description={t('description')}>
+    <SettingsFrame active="general" title={t('title')}>
       <SettingsGroup title={t('organization')}>
         <SettingsBlock>
           <OrganizationNameForm name={viewer.organization.name} />

@@ -30,7 +30,6 @@ export default function GroupAccessLinkModal({
 }: GroupAccessLinkModalProps) {
   const t = useTranslations('groups');
   const titleId = useId();
-  const descriptionId = useId();
   const [expiry, setExpiry] = useState(defaultExpiryValue);
   const { notice, isPending, run, setNotice } = useActionNotice({ refresh: false });
 
@@ -63,15 +62,11 @@ export default function GroupAccessLinkModal({
       open={open}
       onClose={onClose}
       titleId={titleId}
-      descriptionId={descriptionId}
     >
       <header className={styles.modalHeader}>
         <h2 id={titleId} className={styles.modalTitle}>
           {t('groupLink.modalTitle')}
         </h2>
-        <p id={descriptionId} className={styles.modalDescription}>
-          {t('groupLink.modalText')}
-        </p>
       </header>
 
       <div className={styles.modalBody}>

@@ -523,17 +523,21 @@ export type TaskLane = {
   /** Stable lane identity: `course:${courseId}` | `group:${groupId}` | 'unscoped'. Drag containment + deep links. */
   id: string;
   kind: string;
-  /** The course's title (its own lessons), or the group's name. */
+  /**
+   * The course's title (its own lessons), or the group's name, with its course's title only when
+   * another lane has the same name (`distinctLabels`).
+   */
   label: string;
-  /** Course title, plus "Closed" for an archived group curriculum (in the viewer's language). */
-  sublabel: string | null;
+  /** The course the lane belongs to, by title: what tells two groups of the same name apart. */
+  courseTitle: string | null;
+  /** An archived group curriculum, shown with its finished work only. */
+  closed: boolean;
   /** The group this lane belongs to, when it has one. */
   href: string | null;
   versionRef: TaskLaneVersionRef | null;
   /** The lane's group and course (for who may work on its tasks); null for the core and untied lanes. */
   groupId: string | null;
   courseId: string | null;
-  emptyHint: string;
   /** TODO + IN_PROGRESS: what the board collapses a quiet lane on. */
   openCount: number;
   tasks: TaskListItem[];
@@ -552,19 +556,18 @@ export function courseTaskLaneId(courseId: string): string {
 const laneWords = () => getTranslations('tasks');
 type LaneWords = Awaited<ReturnType<typeof laneWords>>;
 
-/** A course's own lessons, as a lane (even with no tasks: its empty hint says where tasks come from). */
-function courseLane(kind: string, course: { id: string; title: string }, tasks: TaskListItem[], t: LaneWords): TaskLane {
-  const definition = taskKindDefinition(kind);
+/** A course's own lessons, as a lane (even with no tasks). */
+function courseLane(kind: string, course: { id: string; title: string }, tasks: TaskListItem[]): TaskLane {
   return {
     id: courseTaskLaneId(course.id),
     kind,
     label: course.title,
-    sublabel: t('lanes.courseOwn'),
+    courseTitle: course.title,
+    closed: false,
     href: `/admin/courses/${course.id}/feedback?show=change`,
     versionRef: null,
     groupId: null,
     courseId: course.id,
-    emptyHint: definition ? t(`kinds.${definition.kind}.emptyHint`) : '',
     openCount: openTaskCount(tasks),
     tasks,
   };
@@ -647,7 +650,7 @@ async function listAllTaskLanes(kind: string, t: LaneWords, doneLimit?: number):
   };
 
   // Each course's own lessons, then the groups' copies.
-  const coreLanes: TaskLane[] = courses.map((course) => courseLane(kind, course, takeLaneTasks(courseTaskLaneId(course.id)), t));
+  const coreLanes: TaskLane[] = courses.map((course) => courseLane(kind, course, takeLaneTasks(courseTaskLaneId(course.id))));
 
   const activeLanes: TaskLane[] = [];
   const closedLanes: TaskLane[] = [];
@@ -666,12 +669,12 @@ async function listAllTaskLanes(kind: string, t: LaneWords, doneLimit?: number):
       id: groupTaskLaneId(group.id),
       kind,
       label: group.name,
-      sublabel: [group.course.title, closed ? t('lanes.closed') : null].filter(Boolean).join(' · '),
+      courseTitle: group.course.title,
+      closed,
       href: `/admin/courses/groups/${group.id}`,
       versionRef: { id: curriculum.id, courseId: curriculum.courseId, ownerGroupId: group.id },
       groupId: group.id,
       courseId: group.course.id,
-      emptyHint: t('lanes.groupEmpty'),
       openCount: openTaskCount(laneTasks),
       tasks: laneTasks,
     });
@@ -684,7 +687,21 @@ async function listAllTaskLanes(kind: string, t: LaneWords, doneLimit?: number):
   if (unscopedLane) {
     lanes.push(unscopedLane);
   }
-  return lanes;
+  return distinctLabels(lanes);
+}
+
+/**
+ * Lanes read by their names; two of the same name (a "Spring" group in two courses, a group named
+ * like a course) also say their course's title, in the board and its filter.
+ */
+function distinctLabels(lanes: TaskLane[]): TaskLane[] {
+  const counts = new Map<string, number>();
+  for (const lane of lanes) counts.set(lane.label, (counts.get(lane.label) ?? 0) + 1);
+  return lanes.map((lane) =>
+    (counts.get(lane.label) ?? 0) > 1 && lane.courseTitle && lane.courseTitle !== lane.label
+      ? { ...lane, label: `${lane.label} · ${lane.courseTitle}` }
+      : lane
+  );
 }
 
 async function listScopedTaskLanes(
@@ -742,7 +759,7 @@ async function listScopedTaskLanes(
     return laneTasks;
   };
 
-  const lanes: TaskLane[] = courses.map((course) => courseLane(kind, course, takeLaneTasks(courseTaskLaneId(course.id)), t));
+  const lanes: TaskLane[] = courses.map((course) => courseLane(kind, course, takeLaneTasks(courseTaskLaneId(course.id))));
 
   const closedLanes: TaskLane[] = [];
   for (const group of groups) {
@@ -757,13 +774,13 @@ async function listScopedTaskLanes(
         id: groupTaskLaneId(group.id),
         kind,
         label: group.name,
-        sublabel: [group.course.title, closed ? t('lanes.closed') : null].filter(Boolean).join(' · '),
+        courseTitle: group.course.title,
+        closed,
         href: `/admin/courses/groups/${group.id}`,
         versionRef: { id: curriculum.id, courseId: curriculum.courseId, ownerGroupId: group.id },
         groupId: group.id,
         courseId: group.course.id,
-        emptyHint: t('lanes.groupEmpty'),
-        openCount: openTaskCount(laneTasks),
+          openCount: openTaskCount(laneTasks),
         tasks: laneTasks,
       });
     } else if (scope.groups.includes(group.id) && !wholeCourse(group.course.id)) {
@@ -772,12 +789,12 @@ async function listScopedTaskLanes(
         id: groupTaskLaneId(group.id),
         kind,
         label: group.name,
-        sublabel: t('lanes.readsCourse', { course: group.course.title }),
+        courseTitle: group.course.title,
+        closed: false,
         href: `/admin/courses/groups/${group.id}`,
         versionRef: null,
         groupId: group.id,
         courseId: group.course.id,
-        emptyHint: t('lanes.groupFeedbackEmpty'),
         openCount: openTaskCount(laneTasks),
         tasks: laneTasks,
       });
@@ -786,7 +803,7 @@ async function listScopedTaskLanes(
 
   // Limited viewers never see untied tasks (the filter leaves them out).
   const { orphanLanes } = leftoverLanes(kind, tasksByLane, t);
-  return [...lanes, ...closedLanes, ...orphanLanes];
+  return distinctLabels([...lanes, ...closedLanes, ...orphanLanes]);
 }
 
 /** Lanes for tasks without a skeleton row: orphans (a deleted curriculum) and untied tasks. */
@@ -799,12 +816,12 @@ function leftoverLanes(kind: string, tasksByLane: Map<string, TaskListItem[]>, t
         id: laneId,
         kind,
         label: t('lanes.untied'),
-        sublabel: null,
+        courseTitle: null,
+        closed: false,
         href: null,
         versionRef: null,
         groupId: null,
         courseId: null,
-        emptyHint: '',
         openCount: openTaskCount(laneTasks),
         tasks: laneTasks,
       };
@@ -816,7 +833,8 @@ function leftoverLanes(kind: string, tasksByLane: Map<string, TaskListItem[]>, t
       id: laneId,
       kind,
       label: scope?.kind === 'group' ? scope.groupName : refs.course?.title ?? t('lanes.deletedCourse'),
-      sublabel: refs.course?.title ?? null,
+      courseTitle: refs.course?.title ?? null,
+      closed: false,
       href: groupId ? `/admin/courses/groups/${groupId}` : null,
       versionRef:
         refs.version && refs.course
@@ -828,7 +846,6 @@ function leftoverLanes(kind: string, tasksByLane: Map<string, TaskListItem[]>, t
           : null,
       groupId,
       courseId: refs.course?.id ?? null,
-      emptyHint: t('lanes.groupEmpty'),
       openCount: openTaskCount(laneTasks),
       tasks: laneTasks,
     });

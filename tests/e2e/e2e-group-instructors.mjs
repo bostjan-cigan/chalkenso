@@ -97,12 +97,11 @@ try {
   await settle(owner, `/admin/courses/groups/${summerId}?tab=people`);
   await expand(owner, 'Instructors');
   await owner.locator(`#group-instructor-add-${summerId}`).click();
-  const option = owner.locator('[role=option]:visible', { hasText: memberName }).first();
-  check('the picker says adding them adds the group to their access', (await option.innerText()).includes('adds this group to their access'));
-  await option.click();
+  await owner.locator('[role=option]:visible', { hasText: memberName }).first().click();
   await owner.locator('[data-testid=group-instructors]').getByRole('button', { name: 'Add', exact: true }).click();
   await owner.locator('[data-testid=group-instructor]', { hasText: memberName }).waitFor();
   check('they are the group’s instructor', assigned() === '1');
+  check('adding them says the group was added to their access', (await owner.locator('[data-testid=group-instructors]').innerText()).includes('added to their access'));
   check('the group is added to their access, at their level', grantRow() === 'READ,WRITE,DELETE,TASKS', grantRow());
   await settle(owner, `/admin/courses/groups/${summerId}`);
   check('the group page says who teaches it', (await owner.locator('body').innerText()).includes(`taught by`) && (await owner.locator('body').innerText()).includes(memberName));
@@ -148,8 +147,9 @@ try {
     await owner.locator('[role=option]:visible', { hasText: memberName }).first().waitFor();
     const options = await owner.locator('[role=option]:visible').allInnerTexts();
     const firstPerson = options.find((text) => !text.startsWith('Unassigned')) ?? '';
-    check('a group task offers its instructors first', firstPerson.includes('Teaches this group'), options.slice(0, 3).join(' | '));
-    check('marked as teaching it', options.some((text) => text.includes(memberName) && text.includes('Teaches this group')));
+    const teachers = sql(`select string_agg(u.name, '|') from courses.course_group_instructors i join public.users u on u.id = i.user_id
+      where i.group_id = ${quote(summerId)}`).split('|');
+    check('a group task offers its instructors first', teachers.some((name) => name && firstPerson.includes(name)), options.slice(0, 3).join(' | '));
     await owner.keyboard.press('Escape');
   }
 

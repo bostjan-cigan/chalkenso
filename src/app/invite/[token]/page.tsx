@@ -46,11 +46,8 @@ export default async function InvitePage({
     return (
       <AuthShell
         title={t('invite.invalid.title')}
-        intro={t('invite.invalid.intro')}
         footer={t.rich('links.haveAccount', { link: (chunks: ReactNode) => <Link href="/admin/login">{chunks}</Link> })}
-      >
-        <span />
-      </AuthShell>
+      />
     );
   }
 
@@ -78,14 +75,18 @@ export default async function InvitePage({
       )
     : null;
   const organization = invite.organization.name;
-  const intro = teaches
-    ? t('invite.introTeach', { group: teaches.name, course: teaches.course.title, organization })
-    : t('invite.introJoin', {
-        organization,
-        role: (await serverExtensions.team.rolesInSentence(locale))[invite.orgRole],
-        lessons: access?.lessons ?? 'full',
-        scope: access ? scopeWords(access.scope) : '',
-      });
+  // What the invite is for, first in the card: the role and where it reaches, or the group to teach.
+  const about = (
+    <p style={{ margin: 0 }}>
+      {teaches
+        ? t('invite.aboutTeach', { group: teaches.name, course: teaches.course.title })
+        : t('invite.aboutJoin', {
+            role: (await serverExtensions.team.rolesInSentence(locale))[invite.orgRole],
+            lessons: access?.lessons ?? 'full',
+            scope: access ? scopeWords(access.scope) : '',
+          })}
+    </p>
+  );
 
   if (session) {
     // Someone already on the team keeps their role and access.
@@ -98,15 +99,16 @@ export default async function InvitePage({
       )
     );
     return (
-      <AuthShell kicker={t('invite.kicker')} title={t('invite.title', { organization })} intro={intro}>
+      <AuthShell title={t('invite.title', { organization })}>
+        {about}
         <form action={acceptInviteAction} className={styles.loginForm}>
           <input type="hidden" name="token" value={token} />
           {teamFull ? (
-            <p className={styles.fieldHint} style={{ margin: 0, fontWeight: 600 }} data-testid="invite-team-full">
+            <p className={styles.quietText} style={{ margin: 0, fontWeight: 600 }} data-testid="invite-team-full">
               {t('invite.teamFull')}
             </p>
           ) : null}
-          <p className={styles.fieldHint} style={{ margin: 0 }}>
+          <p className={styles.quietText} style={{ margin: 0 }}>
             {t('invite.signedInAs', { name: displayName(session.user) })}
             {alreadyMember
               ? ` ${teaches ? t('invite.alreadyMemberTeach', { group: teaches.name }) : t('invite.alreadyMember')}`
@@ -122,13 +124,12 @@ export default async function InvitePage({
 
   return (
     <AuthShell
-      kicker={t('invite.kicker')}
       title={t('invite.title', { organization })}
-      intro={intro}
       footer={t.rich('invite.signInToJoin', {
         link: (chunks: ReactNode) => <Link href={`/admin/login?next=${encodeURIComponent(`/invite/${token}`)}`}>{chunks}</Link>,
       })}
     >
+      {about}
       <InviteSignupForm token={token} minPasswordLength={MIN_PASSWORD_LENGTH} />
     </AuthShell>
   );

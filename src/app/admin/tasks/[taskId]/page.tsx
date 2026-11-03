@@ -24,12 +24,7 @@ export default async function TaskDetailPage({ params }: PageProps) {
   }
 
   return (
-    <AdminFrame
-      eyebrow={t('eyebrow')}
-      title={t('title')}
-      description={t('description')}
-      navItems={adminNavItems('tasks')}
-    >
+    <AdminFrame title={t('title')} navItems={adminNavItems('tasks')}>
       <section className={styles.editorPageSection}>
         <TaskDetailPanel {...data} variant="page" />
       </section>

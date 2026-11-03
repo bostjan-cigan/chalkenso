@@ -76,15 +76,12 @@ export default async function CourseGroupsPage({ params }: { params: PageParams 
   return (
     <CourseManagementFrame
       activeSection="courses"
-      pageContext={{ title: course.title, subtitle: course.summary ?? undefined, back: { href: '/admin/courses', label: t('back') } }}
+      pageContext={{ title: course.title, back: { href: '/admin/courses', label: t('back') } }}
       courseTabs={{ courseId, active: 'groups' }}
     >
       <section className={styles.editorPageSection}>
         {canWork && deciding.length ? (
-          <AdminSectionCard kicker={t('suggested.kicker')} title="">
-            <p className={styles.fieldHint} style={{ margin: '0 0 0.75rem' }}>
-              {t('suggested.text')}
-            </p>
+          <AdminSectionCard title={t('suggested')}>
             <div style={{ display: 'grid', gap: '1rem' }}>
               {deciding.map((fork) => (
                 <div key={fork.id}>
@@ -99,9 +96,8 @@ export default async function CourseGroupsPage({ params }: { params: PageParams 
         ) : null}
 
         <AdminSectionCard
-          kicker={t('kicker')}
-          title=""
-          kickerAction={
+          title={t('title')}
+          action={
             canOnCourse(viewer, courseId, [Permission.WRITE]) ? (
               <AdminButton href={`/admin/courses/groups/new?course=${courseId}`} size="compact">
                 <FiPlus size={15} />
@@ -114,8 +110,7 @@ export default async function CourseGroupsPage({ params }: { params: PageParams 
             <GroupDirectory rows={rows} />
           ) : (
             <div className={styles.emptyState}>
-              <h3 className={styles.emptyStateTitle}>{t('empty.title')}</h3>
-              <p className={styles.emptyStateText}>{t('empty.text')}</p>
+              <h3 className={styles.emptyStateTitle}>{t('empty')}</h3>
             </div>
           )}
         </AdminSectionCard>

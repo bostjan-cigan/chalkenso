@@ -14,15 +14,13 @@ import { normalizeHandle } from '@/lib/handle-format';
 import { passwordProblem } from '@/lib/password-strength';
 import own from './signup.module.css';
 
-type PlanOption = { value: string; label: string; hint: string };
-
 const STEPS = 2;
 
 /**
  * Signing up in two steps (fewer fields at once, so more people finish): the email and a safe password;
  * then the organisation and the handles, suggested from both as they type. Their name waits for
- * Profile. A line shows how far along they are, with a note in red pen. One form underneath: the steps only show its parts in turn, and a problem the server
- * finds takes them back to the step it's about.
+ * Profile. A line shows how far along they are. One form underneath: the steps only show its parts in
+ * turn, and a problem the server finds takes them back to the step it's about.
  */
 export default function SignupForm({
   minPasswordLength,
@@ -31,7 +29,7 @@ export default function SignupForm({
 }: {
   minPasswordLength: number;
   /** The edition's plan they picked, sent with the form; null where there are none. */
-  plan: PlanOption | null;
+  plan: { value: string } | null;
   /** Say whether a handle is free as they type (`/api/handles`, where the edition has it). */
   checkHandles: boolean;
 }) {
@@ -109,29 +107,19 @@ export default function SignupForm({
       data-testid="signup-form"
       data-current-step={step}
     >
-      <div className={own.top}>
-        <div
-          className={own.progress}
-          role="progressbar"
-          aria-valuemin={1}
-          aria-valuemax={STEPS}
-          aria-valuenow={step}
-          aria-label={t('signup.steps.progress', { step, steps: STEPS })}
-          data-testid="signup-step"
-          data-step-now={step}
-        >
-          {Array.from({ length: STEPS }, (_, index) => (
-            <span key={index} className={index < step ? own.progressDone : own.progressStep} />
-          ))}
-        </div>
-        {/* A note in red pen on the right, its arrow curling from the left down to the step's first field (drawn again each step). */}
-        <div className={own.noteRow} aria-hidden>
-          <svg key={step} className={own.arrow} viewBox="0 0 56 40" width="56" height="40">
-            <path d="M3 9c11-7 29-8 37 1 6 7 5 16 3 24" />
-            <path d="M36 28l7 7 6-9" />
-          </svg>
-          <p className={own.note}>{t(`signup.steps.note${step}` as 'signup.steps.note1')}</p>
-        </div>
+      <div
+        className={own.progress}
+        role="progressbar"
+        aria-valuemin={1}
+        aria-valuemax={STEPS}
+        aria-valuenow={step}
+        aria-label={t('signup.steps.progress', { step, steps: STEPS })}
+        data-testid="signup-step"
+        data-step-now={step}
+      >
+        {Array.from({ length: STEPS }, (_, index) => (
+          <span key={index} className={index < step ? own.progressDone : own.progressStep} />
+        ))}
       </div>
 
       <div {...part(1)}>
@@ -152,6 +140,7 @@ export default function SignupForm({
           type="password"
           label={t('fields.password')}
           autoComplete="new-password"
+          minLength={minPasswordLength}
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           aria-describedby={weakText ? 'signup-password-problem' : undefined}
@@ -170,7 +159,6 @@ export default function SignupForm({
           name="organization"
           label={t('fields.organization')}
           placeholder={t('fields.organizationPlaceholder')}
-          hint={t('signup.form.organizationHint')}
           value={organization}
           onChange={(event) => setOrganization(event.target.value)}
           required
@@ -182,7 +170,6 @@ export default function SignupForm({
           name="handle"
           label={t('fields.handle')}
           from={emailName}
-          hint={t('fields.handleHint')}
           check={checkHandles}
           optional
         />
@@ -191,7 +178,6 @@ export default function SignupForm({
           name="organizationHandle"
           label={t('signup.form.organizationHandle')}
           from={organizationFrom}
-          hint={t('signup.form.organizationHandleHint')}
           check={checkHandles}
           optional
         />

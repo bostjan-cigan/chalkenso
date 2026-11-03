@@ -34,7 +34,6 @@ export default function LinkFeedbackModal({
   const t = useTranslations('groups');
   const router = useRouter();
   const titleId = useId();
-  const descriptionId = useId();
   const known = currentMemberId && roster.learners.some((learner) => learner.id === currentMemberId) ? currentMemberId : '';
   const [memberId, setMemberId] = useState(known);
   const [error, setError] = useState<string | null>(null);
@@ -52,14 +51,11 @@ export default function LinkFeedbackModal({
     });
 
   return (
-    <AccessLinkModalPortal open={open} onClose={onClose} titleId={titleId} descriptionId={descriptionId}>
+    <AccessLinkModalPortal open={open} onClose={onClose} titleId={titleId}>
       <header className={styles.modalHeader}>
         <h2 id={titleId} className={styles.modalTitle}>
           {t('linkFeedback.title')}
         </h2>
-        <p id={descriptionId} className={styles.modalDescription}>
-          {known ? t('linkFeedback.olderLink') : t('linkFeedback.leftRoster')} {t('linkFeedback.anonymous')}
-        </p>
       </header>
       <div className={styles.modalBody}>
         <Dropdown

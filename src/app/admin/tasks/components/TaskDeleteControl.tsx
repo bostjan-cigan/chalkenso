@@ -44,8 +44,8 @@ export default function TaskDeleteControl({
       </AdminButton>
       <ConfirmDialog
         open={confirming}
-        title={withFeedback ? td('title') : t('titleIgnored')}
-        description={withFeedback ? td('description', { title }) : t('description', { what: t('quoted', { title }), mode: 'ignored', count: 1 })}
+        title={withFeedback ? td('title') : t('title', { what: t('quoted', { title }) })}
+        description={withFeedback ? td('description') : t('description')}
         confirmLabel={withFeedback ? td('confirm') : t('deleteOne')}
         cancelLabel={t('cancel')}
         tone="danger"

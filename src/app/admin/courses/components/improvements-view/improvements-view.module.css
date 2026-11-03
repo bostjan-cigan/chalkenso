@@ -1112,17 +1112,6 @@ button.tick:hover:not(:disabled) {
   }
 }
 
-/* On the main course's lesson: what a group's copy did that didn't fit here, to do by hand. One calm line. */
-.didntFitNote {
-  margin: 0;
-  padding: 0.75rem 1rem;
-  border-radius: 12px;
-  background: var(--surface-2);
-  font-size: 0.9rem;
-  line-height: 1.5;
-  color: rgba(var(--foreground-rgb), 0.8);
-}
-
 /* A plan written before more feedback was ticked: said once, in the colour of what waits on you. */
 .staleNote {
   margin: 0;

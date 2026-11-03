@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { FiAlertTriangle, FiBookOpen } from 'react-icons/fi';
+import { FiAlertTriangle } from 'react-icons/fi';
 import AdminNotice from '../../components/ui/AdminNotice';
 import AdminSectionCard from '../../components/ui/AdminSectionCard';
 import CourseManagementFrame from '../components/CourseManagementFrame';
@@ -33,7 +33,6 @@ export default async function NewCoursePage({
       activeSection="courses"
       pageContext={{
         title: t('title'),
-        subtitle: t('subtitle'),
         back: { href: '/admin/courses', label: t('back') },
       }}
       notice={
@@ -49,11 +48,7 @@ export default async function NewCoursePage({
       }
     >
       <section className={styles.editorPageSection}>
-        <AdminSectionCard
-          kicker={t('kicker')}
-          title=""
-          icon={<FiBookOpen size={18} />}
-        >
+        <AdminSectionCard title="">
           <CourseForm
             action={createCourseAction}
             partnerOptions={partnerOptions}

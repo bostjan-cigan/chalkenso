@@ -70,15 +70,17 @@ export default function BulkMemberLinksModal({
       open={open}
       onClose={dismiss}
       titleId={titleId}
-      descriptionId={descriptionId}
+      descriptionId={success == null ? descriptionId : undefined}
     >
       <header className={styles.modalHeader}>
         <h2 id={titleId} className={styles.modalTitle}>
-          {success != null ? t('bulkLinks.doneTitle') : t('bulkLinks.title')}
+          {success != null ? t('bulkLinks.doneTitle', { count: success }) : t('bulkLinks.title')}
         </h2>
-        <p id={descriptionId} className={styles.modalDescription}>
-          {success != null ? t('bulkLinks.doneText', { count: success }) : t('bulkLinks.text', { count: memberCount })}
-        </p>
+        {success == null ? (
+          <p id={descriptionId} className={styles.modalDescription}>
+            {t('bulkLinks.text')}
+          </p>
+        ) : null}
       </header>
 
       {success == null ? (

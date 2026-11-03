@@ -1,7 +1,4 @@
 {
-  "meta": {
-    "title": "{product} · AI-assisted curriculum design"
-  },
   "nav": {
     "label": "Admin navigation",
     "places": {
@@ -60,27 +57,12 @@
       }
     }
   },
-  "roles": {
-    "platformAdmin": "Platform admin",
-    "local": {
-      "OWNER": "Manager",
-      "ADMIN": "Admin",
-      "MEMBER": "Instructor"
-    },
-    "cloud": {
-      "OWNER": "Owner",
-      "ADMIN": "Admin",
-      "MEMBER": "Member"
-    }
-  },
   "frame": {
     "home": "Home",
     "platformAdmin": "Platform admin",
-    "acrossOrganizations": "Across all organisations",
     "account": "Account",
     "accountLink": "Account and security ({name})",
     "signOut": "Sign out",
-    "platformStrip": "<strong>Platform admin.</strong> You’re outside every organisation: what you change here applies across the platform. To see an organisation from the inside, use <em>Log in as</em> on one of its people.",
     "loading": "Loading",
     "needYou": "{count} need you"
   },
@@ -91,7 +73,6 @@
   "organizations": {
     "switch": "{name}: switch organisation or open its settings",
     "menu": "Organisations",
-    "yours": "Your organisations",
     "settings": "Organisation settings",
     "inviteLink": "Invite link",
     "inviteLinkInvalid": "Paste the whole invite link you were sent.",
@@ -100,7 +81,7 @@
     "create": "Create organisation",
     "leave": "Leave {name}",
     "leaveTitle": "Leave {name}?",
-    "leaveDescription": "You lose access to its courses, groups, feedback and improvements, and your sync tokens and Claude connections for it stop. An owner or admin can invite you again.",
+    "leaveDescription": "You lose access to its courses and groups until you’re invited again.",
     "leaveConfirm": "Leave organisation",
     "errors": {
       "oneOrganization": "This installation runs one organisation.",
@@ -113,8 +94,8 @@
   "session": {
     "idleTitle": "Are you still there?",
     "maxTitle": "Sign in again soon",
-    "idleText": "For your security, you’ll be signed out at {time}.",
-    "maxText": "Your session ends at {time}. Save your work, then sign in again.",
+    "idleText": "You’ll be signed out at {time}.",
+    "maxText": "Your session ends at {time}: save your work.",
     "signOut": "Sign out",
     "stay": "Stay signed in",
     "working": "Working…",
@@ -137,13 +118,12 @@
       "keep": "Keep editing"
     },
     "loading": "Loading",
-    "previewEmpty": "Preview updates as you type.",
     "failed": "Something went wrong. Try again."
   },
   "invite": {
-    "sendIt": "Send it",
-    "justLink": "Just the link: I’ll send it",
-    "email": "Email it to them",
+    "by": "Invite by",
+    "link": "Link",
+    "email": "Email",
     "theirEmail": "Their email"
   },
   "feedback": {
@@ -165,16 +145,15 @@
     "note": "Note",
     "lesson": "Lesson {position}: {title}",
     "actions": "Feedback actions",
-    "replyShownLearner": "Your reply · shown to this learner",
-    "replyShownName": "Your reply · shown to {name}",
+    "yourReply": "Your reply",
     "editYourReply": "Edit your reply",
     "replyToLearner": "Reply to this learner",
     "replyToName": "Reply to {name}",
-    "notePlaceholder": "Write a reply…",
-    "learnerPlaceholder": "They see it next to this passage, in their lesson.",
+    "replyPlaceholder": "Write a reply…",
     "sending": "Sending…",
     "updateReply": "Update reply",
     "sendReply": "Send reply",
+    "sendReplyDone": "Send and mark done",
     "cancel": "Cancel",
     "editReply": "Edit reply",
     "reply": "Reply",
@@ -182,7 +161,7 @@
     "seeWhatChanged": "See what changed",
     "reopen": "Reopen",
     "deleteTitle": "Delete this feedback?",
-    "deleteText": "It's deleted for good, and stops counting on Insights. This can't be undone.",
+    "deleteText": "It stops counting on Insights too.",
     "deleteConfirm": "Delete",
     "list": {
       "show": "Show",
@@ -195,10 +174,9 @@
       "copyOf": "{group}’s copy",
       "copyOfUnnamed": "a group’s copy"
     },
-    "markDone": "Mark done (no change needed)",
+    "markDone": "Mark done",
     "use": "Use",
-    "used": "In the lesson’s improvement · {status}",
-    "replyMarksDone": "Sending marks it done. To change the lesson for it, use it instead."
+    "used": "In the lesson’s improvement · {status}"
   },
   "needsYou": {
     "groupFeedback": "{count, plural, one {# new piece} other {# new pieces}} of feedback in {group}",
@@ -212,20 +190,14 @@
   },
   "home": {
     "title": "Home",
-    "welcome": "Welcome. Let’s design your first course.",
-    "description": "What needs you, your groups and your courses. Learners’ feedback shapes each group’s lessons; you approve every change.",
     "newCourse": "New course",
     "newGroup": "New group",
-    "nowIn": "You are now in {organization}.",
     "joined": "You joined {organization}.",
-    "joinedFull": "Your groups and courses are in the sidebar.",
-    "joinedGuest": "You’re a guest instructor: open your group below and mark what happens in class.",
-    "joinedLimited": "You work on the courses and groups an owner or admin chose for you.",
     "needsYou": "Needs you",
-    "nothingWaits": "Nothing waits on you right now. New feedback and drafts to review show here.",
+    "nothingWaits": "Nothing needs you right now.",
     "yourGroups": "Your groups",
     "readLessons": "Read the lessons",
-    "noAccess": "You don't have any courses or groups here yet. Ask an owner or admin to give you access.",
+    "noAccess": "No courses or groups here yet: ask an owner or admin for access.",
     "groupsYouTeach": "Groups you teach",
     "runningNow": "Running now",
     "allGroups": "All groups →",
@@ -236,16 +208,16 @@
     "allCourses": "All courses →",
     "groups": "{count, plural, one {# group} other {# groups}}",
     "ai": {
-      "keyInvalid": "Anthropic refused your organisation’s API key. An owner or admin can replace it in Settings → AI.",
-      "keyRefusedHosted": "Anthropic refused your organisation’s API key, so AI is running on your plan’s included AI, and calls count against it. Replace the key in Settings → AI.",
-      "keyRefusedInstallation": "Anthropic refused your organisation’s API key, so AI is running on this installation’s key. Replace your key in Settings → AI.",
-      "cap": "This month’s included AI is used up. An owner or admin can top up in Settings → AI.",
-      "paused": "AI is off while your organisation is paused; it’s back when an owner or admin resumes the plan.",
-      "plan": "On your plan, AI works in your own Claude: open any AI request there (“Use with Claude”).",
-      "mock": "AI is in sample mode (AI_MOCK=1): drafts are canned examples. Add an Anthropic API key and remove AI_MOCK to use Claude.",
-      "offUntilKey": "AI in the app is off until an owner or admin adds an Anthropic API key in Settings → AI.",
-      "offInstallation": "AI drafting is off on this installation. Set ANTHROPIC_API_KEY (or AI_MOCK=1 to try it with sample output) to turn it on.",
-      "connector": "Meanwhile, every AI request can be opened in your own Claude (“Use with Claude”)."
+      "keyInvalid": "Anthropic refused your organisation’s API key.",
+      "keyRefusedHosted": "Anthropic refused your organisation’s API key, so AI is running on your plan’s included AI.",
+      "keyRefusedInstallation": "Anthropic refused your organisation’s API key, so AI is running on this installation’s key.",
+      "cap": "This month’s included AI is used up.",
+      "paused": "AI is off while your organisation is paused.",
+      "plan": "On your plan, AI works in your own Claude.",
+      "mock": "AI gives sample answers (AI_MOCK=1).",
+      "offUntilKey": "AI is off until an owner or admin adds an Anthropic API key.",
+      "offInstallation": "AI is off: set ANTHROPIC_API_KEY to turn it on.",
+      "connector": "Meanwhile, use your own Claude."
     }
   },
   "impersonation": {
@@ -253,21 +225,15 @@
   },
   "gettingStarted": {
     "title": "Getting started",
-    "note": "A few steps, then you’re teaching.",
-    "nearly": "Nearly there!",
-    "allDone": "All set. Class is in session!",
     "progress": "{done} of {total} done",
     "open": "Getting started: {done} of {total} steps",
-    "hint": "Finish setting up here",
     "close": "Close",
     "markDone": "Mark as done",
     "markNotDone": "Mark as not done",
     "notForMe": "Not for me",
     "doneByItself": "Done",
-    "footer": "Ticks itself as you go.",
     "hide": "Hide getting started",
-    "hidden": "Getting started is hidden.",
-    "show": "Show it",
+    "show": "Show getting started",
     "notNow": "Not now",
     "booked": "Booked for {when}",
     "steps": {
@@ -275,43 +241,35 @@
         "title": "Create your account"
       },
       "how": {
-        "title": "Two minutes on how it works",
-        "hint": "The loop every group goes through, and where AI helps."
+        "title": "See how it works"
       },
       "profile": {
-        "title": "Complete your profile",
-        "hint": "Your name and a photo, so learners know who wrote what."
+        "title": "Complete your profile"
       },
       "course": {
-        "title": "Create your first course",
-        "hint": "Its title and a line on who it’s for."
+        "title": "Create your first course"
       },
       "lesson": {
-        "title": "Write a lesson",
-        "hint": "With its objectives and concepts."
+        "title": "Write a lesson"
       },
       "group": {
-        "title": "Start a group",
-        "hint": "And share its learner links."
+        "title": "Start a group"
       },
       "invite": {
-        "title": "Invite a colleague",
-        "hint": "To design the course with you."
+        "title": "Invite a colleague"
       },
       "obsidian": {
         "section": "If you write in Obsidian",
-        "title": "Connect your vault",
-        "hint": "Install the Chalkenso plugin and your lessons sync both ways."
+        "title": "Connect your vault"
       }
     }
   },
   "howItWorks": {
     "title": "How Chalkenso works",
-    "description": "The loop every group goes through, where AI helps on your plan, and who decides.",
     "markDone": "Mark as done",
     "profileOpen": "Open",
     "loop": {
-      "title": "One loop, every group",
+      "title": "The loop",
       "teach": {
         "title": "Teach",
         "text": "Learners open their link; you note in class on the passage."
@@ -331,9 +289,8 @@
     },
     "decide": {
       "title": "You decide",
-      "text": "Every draft waits in the lesson’s Improve view, whoever made it. Tick the changes to keep, then save and publish. Nothing reaches learners before that."
+      "text": "Every draft waits in the lesson’s Improve view: nothing reaches learners until you publish."
     },
-    "membersNote": "Your organisation’s owners and admins set up AI, the team and the plan.",
     "action": {
       "connect": "Connect your Claude",
       "lesson": "Try it on a lesson"

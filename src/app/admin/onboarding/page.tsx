@@ -37,14 +37,13 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
   return (
     <AuthShell
       title={canCreate ? t('title.create') : t('title.none')}
-      intro={canCreate ? t('intro.create') : t('intro.none')}
       footer={<Link href="/admin/logout">{t('signOut')}</Link>}
     >
       {notice ? <AdminNotice>{orgNoticeText(notice, (await getLocale()) as Locale)}</AdminNotice> : null}
       {canCreate ? (
         <>
           <OrganizationForm />
-          <p className={styles.fieldHint} style={{ margin: 0, textAlign: 'center' }}>
+          <p className={styles.quietText} style={{ margin: 0, textAlign: 'center' }}>
             {t('or')}
           </p>
         </>

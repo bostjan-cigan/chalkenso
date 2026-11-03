@@ -1,21 +1,18 @@
 {
   "access": {
     "unavailableTitle": "Dostop ni na voljo",
-    "unavailableDescription": "Ta povezava za dostop ni na voljo. Preverite, ali je naslov celoten, ali pa prosite za novo povezavo.",
+    "unavailableDescription": "Preverite, ali je povezava celotna, ali pa prosite za novo.",
     "expiredTitle": "Dostop je potekel",
     "revokedTitle": "Dostop je preklican",
-    "restrictedDescription": "Povezava do gradiv tega tečaja je potekla. Če še želite dostop, se obrnite na avtorja tečaja.",
+    "restrictedDescription": "Za novo povezavo prosite avtorja tečaja.",
     "usedTitle": "Povezava za predogled je že uporabljena",
-    "usedDescription": "Ta enkratna povezava za predogled je že bila odprta. Za novo povezavo prosite avtorja tečaja.",
     "closedTitle": "Ta tečaj ni več na voljo",
-    "closedDescription": "Njegove strani so zaprte. Če gradivo še potrebujete, se obrnite na osebo, ki vam je poslala povezavo.",
     "unclaimedTitle": "Enkratni predogled",
-    "unclaimedDescription": "To je enkratna povezava za predogled: deluje samo v brskalniku, ki jo prvi odpre, zato jo odprite na napravi, na kateri jo želite brati.",
+    "unclaimedDescription": "Deluje samo v brskalniku, ki jo prvi odpre.",
     "openPreview": "Odpri predogled",
     "draftPreview": "Predogled osnutka",
-    "instructorView": "Pogled predavatelja · vaše oznake so opombe, udeleženci jih ne vidijo",
-    "pausedTitle": "Zaenkrat samo za branje",
-    "pausedDescription": "Ta tečaj ima premor med skupinami. Vse lekcije lahko berete; povratne informacije, opombe in vprašanja bodo spet na voljo, ko se tečaj nadaljuje."
+    "instructorView": "Pogled predavatelja",
+    "paused": "Zaenkrat samo za branje: povratne informacije, opombe in vprašanja so izklopljeni."
   },
   "instructorNote": {
     "label": "Opomba predavatelja",
@@ -23,7 +20,6 @@
     "submit": "Shrani opombo"
   },
   "course": {
-    "eyebrow": "Dostop do tečaja",
     "lessons": "{count, plural, one {# lekcija} two {# lekciji} few {# lekcije} other {# lekcij}}",
     "parts": "{count, plural, one {# sklop} two {# sklopa} few {# sklopi} other {# sklopov}}",
     "starts": "Začetek {date}",
@@ -35,7 +31,6 @@
     "partnership": "Partnerji",
     "visitSite": "Obiščite spletno mesto →",
     "noLessonsTitle": "Lekcij še ni",
-    "noLessonsDescription": "Ta tečaj trenutno nima nobene lekcije.",
     "materialsNote": "Gradiva tečaja so na voljo samo tej skupini. Vsebina in slike ostajajo last organizacije, ki jih je pripravila.",
     "madeWith": "Narejeno z orodjem <link>{product}</link>."
   },
@@ -43,7 +38,7 @@
     "loading": "Nalaganje vsebine lekcije",
     "loadError": "Lekcije trenutno ni mogoče naložiti. Poskusite znova.",
     "copyCode": "Kopiraj kodo",
-    "copied": "Kopirano!"
+    "copied": "Kopirano"
   },
   "annotations": {
     "showFeedback": "Prikaži povratne informacije",
@@ -66,10 +61,9 @@
     "toolbarNote": "Opomba",
     "askAi": "Vprašaj AI",
     "askProvider": "Vprašaj {provider}",
-    "aiContextPlaceholder": "Dodajte ozadje ali vprašanje (neobvezno)",
-    "aiTooLong": "Vprašanje je predolgo, da bi ga poslali s povezavo, zato ga bomo kopirali v odložišče: prilepite ga v {provider}.",
-    "aiCopied": "Vprašanje bomo kopirali tudi v odložišče, če se {provider} odpre brez njega.",
+    "aiContextPlaceholder": "Vaše vprašanje (neobvezno)",
     "openProvider": "Odpri {provider}",
+    "copyAndOpen": "Kopiraj in odpri {provider}",
     "aiPrompt": "Pomagaj mi razumeti tole iz gradiva mojega tečaja:\n\n„{text}“",
     "aiPromptWithContext": "{context}\n\nTo je iz gradiva mojega tečaja:\n\n„{text}“",
     "quote": "„{text}“",

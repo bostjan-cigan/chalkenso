@@ -38,19 +38,13 @@
     "reads": "Uporablja različico {version}"
   },
   "list": {
-    "kicker": "Skupine",
+    "title": "Skupine",
     "all": "Vse skupine",
     "mine": "Moje skupine",
     "new": "Nova skupina",
     "lastOpened": "Nazadnje odprta:",
-    "empty": {
-      "title": "Še ni skupin",
-      "text": "Ustvarite prvo skupino iz prilepljenega seznama udeležencev."
-    },
-    "emptyMine": {
-      "title": "Še ne poučujete nobene skupine",
-      "text": "Tu so skupine, pri katerih ste predavatelj. Predavatelje skupine na njeni strani doda tisti, ki jo upravlja."
-    }
+    "empty": "Še ni skupin",
+    "emptyMine": "Še ne poučujete nobene skupine"
   },
   "directory": {
     "searchPlaceholder": "Poiščite skupino, tečaj ali predavatelja",
@@ -71,25 +65,18 @@
     "menuItem": "Izbriši skupino …",
     "button": "Izbriši skupino",
     "title": "Želite izbrisati to skupino?",
-    "description": "S tem trajno izbrišete „{name}“, njene udeležence in vse njihove povezave. Obstoječe povezave takoj prenehajo delovati. Komentarji ostanejo. Tega ni mogoče razveljaviti.",
-    "descriptionWithCopy": "S tem trajno izbrišete „{name}“, njene udeležence in vse njihove povezave. Obstoječe povezave takoj prenehajo delovati. Izbriše se tudi njen lastni učni načrt, z lekcijami in komentarji. Tega ni mogoče razveljaviti."
+    "description": "Izbrišejo se tudi njeni udeleženci in njihove povezave; njihove povratne informacije ostanejo.",
+    "descriptionWithCopy": "Izbrišejo se tudi njeni udeleženci, njihove povezave in lastna kopija lekcij z njenimi povratnimi informacijami."
   },
   "courseTab": {
     "back": "Tečaji",
-    "suggested": {
-      "kicker": "Predlogi skupin",
-      "text": "Spremembe, ki so jih skupine naredile v svojih lekcijah. Vsako lahko prenesete v lekcije tečaja ali jo pustite v skupini."
-    },
-    "kicker": "Skupine",
+    "suggested": "Predlogi skupin",
+    "title": "Skupine",
     "new": "Nova skupina",
-    "empty": {
-      "title": "Še ni skupin",
-      "text": "Skupina je ena izvedba tega tečaja, z udeleženci in njihovimi povezavami."
-    }
+    "empty": "Še ni skupin"
   },
   "newGroup": {
     "title": "Nova skupina",
-    "subtitle": "Za začetek zadoščajo lekcije, ime in udeleženci. Vse drugo uredite v nastavitvah skupine.",
     "back": "Nazaj na skupine",
     "pending": "Ustvarjanje skupine …",
     "submit": "Ustvari skupino"
@@ -109,11 +96,9 @@
       },
       "taughtBy": "{count, plural, one {predavatelj: {names}} two {predavatelja: {names}} few {predavatelji: {names}} other {predavatelji: {names}}}"
     },
-    "created": "Skupina je ustvarjena. Datume, opis in drugo dodate v <link>Nastavitvah</link>.",
     "readLessons": "Preberi lekcije",
     "openCourse": "Odpri tečaj",
     "openingCourse": "Odpiranje …",
-    "openCourseHint": "Strani, ki jih berejo vaši udeleženci, prek vaše povezave za predavatelja: označite odlomek in pustite opombo predavatelja.",
     "insights": "Vpogledi",
     "tabs": {
       "label": "Skupina",
@@ -125,31 +110,18 @@
       "settings": "Nastavitve"
     },
     "lessons": {
-      "kicker": "Lekcije",
-      "closed": "Ta skupina se je končala: njene lekcije so zaprte. Udeleženci jih še vedno lahko berejo.",
-      "ownCopyFrom": "Lastna kopija te skupine, narejena iz različice {version}. Spremembe veljajo samo za to skupino; če želite spremembo prenesti v tečaj, odprite njeno izboljšavo in izberite Predlagaj za tečaj.",
-      "ownCopyFromCourse": "Lastna kopija te skupine, narejena iz tečaja. Spremembe veljajo samo za to skupino; če želite spremembo prenesti v tečaj, odprite njeno izboljšavo in izberite Predlagaj za tečaj.",
       "ownCopy": "Lastna kopija lekcij te skupine.",
-      "none": "Ta skupina še nima lekcij. V Nastavitvah izberite različico tečaja, s katero začne."
+      "none": "Še ni lekcij."
     },
     "feedback": {
-      "kicker": "Povratne informacije",
       "export": "Izvozi CSV",
-      "empty": "Nič ni odprto. Ko udeleženci te skupine pri odlomku pustijo povratno informacijo, se prikaže tukaj.",
-      "tasksEmpty": "Iz povratne informacije (Odprte) načrtujte izboljšavo in tu bo, dokler sprememba ni narejena.",
-      "tasksHint": "Ko je izboljšava opravljena, je opravljena tudi povratna informacija, iz katere je nastala.",
-      "openBoard": "Odpri tablo"
+      "empty": "Ni odprtih povratnih informacij."
     },
     "people": {
       "learners": "Udeleženci",
-      "empty": {
-        "title": "Še ni udeležencev",
-        "inSettings": "Seznam udeležencev prilepite v <link>Nastavitvah</link>.",
-        "above": "Seznam udeležencev prilepite zgoraj."
-      },
+      "empty": "Še ni udeležencev",
+      "addLearners": "Dodaj udeležence",
       "instructors": "Predavatelji",
-      "givesNotes": "Ob dodajanju dobi opombe v tej skupini (gostujoči predavatelj)",
-      "givesAccess": "Ob dodajanju dobi dostop do te skupine",
       "instructorLinks": "Povezave za predavatelje",
       "groupLink": "Povezava za skupino",
       "until": "Do {date}",
@@ -175,15 +147,8 @@
       "saving": "Shranjevanje …",
       "ownCopyOf": "Lastna kopija različice {version}",
       "ownCopyOfCourse": "Lastna kopija tečaja",
-      "copy": {
-        "kicker": "Lekcije skupine",
-        "reads": "Ta skupina uporablja različico {version} tečaja, takšno, kot je. Dajte ji lastno kopijo, da boste lahko lekcije spreminjali na podlagi njenih povratnih informacij, ne da bi spremenili tečaj.",
-        "footer": "{closed, select, yes {Zaprta: udeleženci jo lahko še vedno berejo, vi pa jo lahko znova odprete.} other {Zaprite jo, ko se skupina konča: udeleženci jo bodo še vedno lahko brali.}}"
-      },
-      "delete": {
-        "text": "Izbriše skupino, njene udeležence in njihove povezave.",
-        "textWithCopy": "Izbriše skupino, njene udeležence in njihove povezave ter lastno kopijo lekcij z njenimi povratnimi informacijami."
-      }
+      "closed": "Zaprta",
+      "groupLessons": "Lekcije skupine"
     }
   },
   "links": {
@@ -201,9 +166,6 @@
     "copyFailed": "Kopiranje ni uspelo — kopirajte ročno"
   },
   "roster": {
-    "label": "Seznam udeležencev",
-    "hint": "Prilepite seznam udeležencev, kakršen je. Oštevilčenje in naslovne vrstice se počistijo samodejno. Odstranjeni udeleženci izgubijo svoje povezave.",
-    "learners": "{count, plural, one {# udeleženec} two {# udeleženca} few {# udeleženci} other {# udeležencev}}",
     "saving": "Shranjevanje seznama …",
     "save": "Shrani seznam"
   },
@@ -212,12 +174,10 @@
   },
   "groupLink": {
     "modalTitle": "Povezava za skupino",
-    "modalText": "Skupna povezava za vse v tej skupini. Nova povezava prekliče prejšnjo.",
     "expires": "Poteče {date}",
     "lastOpened": "Nazadnje odprta {date}",
     "notOpened": "Še ni bila odprta",
-    "emptyTitle": "Ni aktivne povezave za skupino",
-    "emptyText": "Ko bo tečaj pripravljen, ustvarite eno skupno javno povezavo za vso skupino.",
+    "empty": "Ni aktivne povezave za skupino",
     "create": "Ustvari povezavo za skupino"
   },
   "members": {
@@ -226,7 +186,6 @@
     "copiedAllMissing": "Kopirano: {count, plural, one {# povezava} two {# povezavi} few {# povezave} other {# povezav}} ({missing, plural, one {# udeleženec še nima povezave} two {# udeleženca še nimata povezave} few {# udeleženci še nimajo povezave} other {# udeležencev še nima povezave}})",
     "copyAllFailed": "Kopiranje ni uspelo — kopirajte vsako povezavo posebej",
     "unattached": "{count, plural, one {# povratna informacija} two {# povratni informaciji} few {# povratne informacije} other {# povratnih informacij}} od udeležencev, ki niso več na seznamu.",
-    "unattachedHint": "Prenesite povratne informacije k udeležencu, da se prikažejo na njegovi povezavi.",
     "moveFeedback": "Prenesi povratne informacije …",
     "copyAll": "Kopiraj vse povezave",
     "makeAll": "Ustvari povezave za vse udeležence",
@@ -239,26 +198,19 @@
     "failed": "Veljavnosti ni bilo mogoče posodobiti. Poskusite znova.",
     "groupTitle": "Uredi veljavnost povezave za skupino",
     "memberTitle": "Uredi veljavnost povezave za udeleženca",
-    "groupText": "Spremenite, kdaj ta skupna povezava preneha delovati. Naslov URL in žeton ostaneta enaka.",
-    "memberTextNamed": "{learner} — spremenite, kdaj ta povezava preneha delovati. Naslov URL in žeton ostaneta enaka.",
-    "memberText": "Spremenite, kdaj ta povezava preneha delovati. Naslov URL in žeton ostaneta enaka.",
     "saving": "Shranjevanje …",
     "save": "Shrani veljavnost"
   },
   "bulkLinks": {
     "failed": "Povezav ni bilo mogoče ustvariti. Poskusite znova.",
-    "doneTitle": "Povezave so ustvarjene",
+    "doneTitle": "{count, plural, one {Ustvarjena je # povezava} two {Ustvarjeni sta # povezavi} few {Ustvarjene so # povezave} other {Ustvarjenih je # povezav}}",
     "title": "Povezave za vse udeležence",
-    "doneText": "{count, plural, one {Ustvarjena je # povezava} two {Ustvarjeni sta # povezavi} few {Ustvarjene so # povezave} other {Ustvarjenih je # povezav}}. „Kopiraj vse povezave“ jih kopira naenkrat, vsako z imenom njenega udeleženca.",
-    "text": "Ustvari novo povezavo za vsakega udeleženca ({count, plural, one {# udeleženec} two {# udeleženca} few {# udeleženci} other {# udeležencev}}) in prekliče starejše aktivne povezave.",
+    "text": "Njihove sedanje povezave prenehajo delovati.",
     "create": "Ustvari vse povezave",
     "close": "Zapri"
   },
   "linkFeedback": {
     "title": "Povežite povratno informacijo z udeležencem",
-    "olderLink": "Prišla je prek starejše povezave svojega udeleženca. Povežite jo z njegovo trenutno povezavo ali izberite, kdo jo je napisal.",
-    "leftRoster": "Njenega udeleženca ni več na seznamu. Izberite, kdo jo je napisal: prenese se k njemu in se prikaže na njegovi povezavi, kot njegova.",
-    "anonymous": "Ekipa še vedno ne vidi, kdo jo je napisal.",
     "learner": "Udeleženec",
     "choose": "Izberite udeleženca",
     "linking": "Povezovanje …",
@@ -266,11 +218,7 @@
   },
   "moveFeedback": {
     "title": "Prenesite povratne informacije k udeležencu",
-    "text": "Od udeležencev, ki niso več na seznamu, po povezavi, prek katere so prišle. Prenesejo se k udeležencu, ki ga izberete, in se prikažejo na njegovi povezavi, kot njegove.",
     "pieces": "{count, plural, one {# povratna informacija} two {# povratni informaciji} few {# povratne informacije} other {# povratnih informacij}}",
-    "linkMade": "povezava ustvarjena {date}",
-    "linkGone": "povezave ni več",
-    "lessons": "{count, plural, one {lekcija} two {lekciji} few {lekcije} other {lekcije}} {lessons}",
     "sample": "„{sample}“",
     "moveTo": "Prenesi k",
     "choose": "Izberite udeleženca",
@@ -282,22 +230,21 @@
     "failed": "Ni uspelo. Poskusite znova.",
     "start": "Ustvari lastno kopijo za skupino",
     "reopen": "Znova odpri lekcije skupine",
-    "close": "Zapri (skupina se je končala)",
+    "close": "Zapri lekcije skupine",
     "useCourse": "Uporabi lekcije tečaja",
     "enable": {
       "title": "Želite skupini dati lastno kopijo?",
-      "text": "„{name}“ dobi lastno kopijo različice {version}, ki jo lahko spreminjate na podlagi njenih povratnih informacij. Njene povezave delujejo naprej in prikazujejo kopijo; odprte povratne informacije se prenesejo z njo. Lekcije tečaja se ne spremenijo.",
-      "textLessons": "„{name}“ dobi lastno kopijo svojih lekcij, ki jo lahko spreminjate na podlagi njenih povratnih informacij. Njene povezave delujejo naprej in prikazujejo kopijo; odprte povratne informacije se prenesejo z njo. Lekcije tečaja se ne spremenijo.",
+      "text": "Njene povezave delujejo naprej, lekcije tečaja pa ostanejo, kakršne so.",
       "confirm": "Ustvari kopijo"
     },
     "closeConfirm": {
       "title": "Želite zapreti lekcije skupine?",
-      "text": "Za takrat, ko se skupina konča. Udeleženci jih še vedno lahko berejo in nič se ne izbriše, vendar se ne sinhronizirajo več z Obsidianom. Pozneje jih lahko znova odprete.",
+      "text": "Udeleženci jih še vedno lahko berejo; ne sinhronizirajo se več z Obsidianom.",
       "confirm": "Zapri"
     },
     "disable": {
       "title": "Želite namesto tega uporabiti lekcije tečaja?",
-      "text": "Samo dokler je kopija nespremenjena: povezave in povratne informacije se vrnejo na lekcije tečaja, kopija pa se izbriše. Ko ima spremembe ali izboljšave, jo raje zaprite.",
+      "text": "Kopija se izbriše; njene povezave in povratne informacije se vrnejo na lekcije tečaja.",
       "confirm": "Uporabi lekcije tečaja"
     }
   },
@@ -318,7 +265,6 @@
     "minute": "Minuta"
   },
   "instructorLinks": {
-    "intro": "Poučujte iz istih strani, ki jih berejo vaši udeleženci, tukaj ali na svojem spletnem mestu. Označite odlomek in pustite opombo predavatelja: ekipa jo vidi z vašim imenom, udeleženci ne, in nikoli ne štejete kot udeleženec.",
     "copied": "Kopirano v odložišče",
     "copyFailed": "Kopiranje ni uspelo — kopirajte ročno",
     "yours": "Vaša povezava · poteče {date}",
@@ -337,7 +283,6 @@
     "revokeFailed": "Povezave ni bilo mogoče preklicati. Poskusite znova."
   },
   "instructors": {
-    "intro": "Udeleženci vidijo, kdo jih poučuje. Predavatelji najdejo skupino na strani Domov, skupaj s svojo povezavo za predavatelja, njene izboljšave pa so najprej ponujene njim.",
     "remove": "Odstrani",
     "removeFailed": "Odstranitev ni uspela. Poskusite znova.",
     "none": "Še ni predavateljev.",
@@ -347,7 +292,7 @@
     "add": "Dodaj",
     "addFailed": "Dodajanje ni uspelo. Poskusite znova.",
     "invite": {
-      "sendIt": "Pošljite jo naprej: deluje enkrat in poteče v 7 dneh.",
+      "sendIt": "Deluje enkrat in poteče v 7 dneh.",
       "done": "Končano",
       "nameLabel": "Za koga je",
       "namePlaceholder": "npr. Mia, gostujoča predavateljica v 4. tednu",
@@ -355,7 +300,6 @@
       "send": "Pošlji povabilo",
       "createLink": "Ustvari povezavo za povabilo",
       "start": "Povabi gostujočega predavatelja",
-      "startHint": "Nekdo, ki še ni v ekipi: pridruži se z opombami samo v tej skupini in jo poučuje.",
       "pending": "Povabilo za gostujočega predavatelja · še ni uporabljeno · poteče {date}",
       "withdraw": "Umakni",
       "withdrawFailed": "Povabila ni bilo mogoče umakniti. Poskusite znova."
@@ -365,8 +309,7 @@
     "course": "Tečaj",
     "selectCourse": "Izberite tečaj",
     "lessonsFrom": "Lekcije iz",
-    "lessonsFromHintEdit": "Različica tečaja, ki jo ta skupina uporablja. Povezave delujejo samo z objavljenimi različicami; sprememba prekliče obstoječe povezave.",
-    "lessonsFromHintNew": "Različica tečaja, s katero skupina začne. Povezave delujejo samo z objavljenimi različicami.",
+    "revokesLinks": "Ob shranjevanju se povezave skupine prekličejo.",
     "selectVersion": "Izberite različico",
     "selectCourseFirst": "Najprej izberite tečaj",
     "published": "Objavljena",
@@ -374,30 +317,17 @@
     "name": "Ime skupine",
     "namePlaceholder": "npr. Večerna skupina · jesen 2026",
     "slug": "Kratko ime",
-    "slugHint": "Sledi imenu skupine, lahko pa ga spremenite.",
     "slugPlaceholder": "vecerna-jesen-2026",
-    "slugQuiet": "Kratko ime: {slug}",
-    "slugQuietEmpty": "Kratko ime sledi imenu skupine.",
-    "slugChange": "Spremeni",
     "slack": "Oznaka v Slacku",
-    "slackHint": "Neobvezno: kanal ali kratka oznaka te skupine.",
     "slackPlaceholder": "#frontend-pomlad",
     "description": "Opis",
-    "descriptionHint": "Neobvezno. Napišite ga za udeležence: vaše spletno mesto ga lahko prikaže na njihovih straneh.",
     "descriptionPlaceholder": "Ob torkih in četrtkih, 18.00–21.00, učilnica 2.",
     "partners": "Partnerji",
-    "partnersHint": "Udeleženci te skupine vidijo te partnerje v tem vrstnem redu, namesto partnerjev tečaja. Pustite prazno, da se prikažejo partnerji tečaja.",
     "roster": "Seznam udeležencev",
-    "rosterHint": "Prilepite seznam udeležencev, kakršen je. Oštevilčenje in naslovne vrstice se počistijo samodejno.",
+    "rosterPlaceholder": "Seznam tečajnikov:\n\n1. Ana Novak\n2. Miha Sterle",
     "parsed": "Prepoznani udeleženci",
-    "parsedHint": "Shranjeni točno tako, kot so prilepljeni, v vrstnem redu, prikazanem tukaj.",
     "learners": "{count, plural, one {# udeleženec} two {# udeleženca} few {# udeleženci} other {# udeležencev}}",
-    "parsedEmpty": {
-      "title": "Še ni prepoznanih udeležencev",
-      "text": "Prilepite seznam in tukaj se prikaže počiščen seznam udeležencev."
-    },
-    "ownCopy": "Skupina dobi lastno kopijo lekcij",
-    "ownCopyHint": "Tako spremembe na podlagi njenih povratnih informacij veljajo samo za to skupino, lekcije tečaja pa ostanejo, kakršne so. Izklopite za skupino, ki naj sledi tečaju, ko se ta spreminja."
+    "ownCopy": "Skupina dobi lastno kopijo lekcij"
   },
   "actions": {
     "groupNotFound": "Najprej izberite veljavno skupino.",

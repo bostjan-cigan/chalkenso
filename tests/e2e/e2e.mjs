@@ -53,20 +53,14 @@ try {
   const { ctx: ctxA, page: a } = await newPage();
   await signUp(a, { email: ownerEmail, password, organization: `Test School ${run}`, plan: 'studio', name: 'Olga Owner' });
   check('sign-up lands on the dashboard', a.url().includes('/admin'), a.url());
-  // Getting started: a ring in the corner, closed, with a note in red pen pointing at it on Home.
+  // Getting started: a ring in the corner, closed.
   const ring = a.locator('[data-testid=getting-started]:visible');
   await ring.waitFor();
-  check(
-    'Home has Getting started in the corner, closed, with a note pointing at it',
-    (await a.locator('[data-testid=getting-started-panel]:visible').count()) === 0 && (await a.locator('[data-testid=getting-started-hint]:visible').count()) === 1
-  );
+  check('Home has Getting started in the corner, closed', (await a.locator('[data-testid=getting-started-panel]:visible').count()) === 0);
   await ring.click();
   const checklist = a.locator('[data-testid=getting-started-panel]:visible');
   const stepDone = (id) => checklist.locator(`[data-testid=getting-started-${id}]`).getAttribute('data-done');
-  check(
-    'it opens the steps: the account done, the course to do',
-    (await stepDone('account')) === 'true' && (await stepDone('course')) === 'false' && (await a.locator('[data-testid=getting-started-hint]:visible').count()) === 0
-  );
+  check('it opens the steps: the account done, the course to do', (await stepDone('account')) === 'true' && (await stepDone('course')) === 'false');
   // A step ticked by hand is kept, and ticked again it comes back.
   const ownerId = sql(`select id from public.users where email = ${quote(ownerEmail)}`);
   const groupTicked = () => sql(`select count(*) from public.settings where key = ${quote(`hidden:getting-started-group:${ownerId}`)}`) === '1';
@@ -164,7 +158,7 @@ try {
   check(
     edition === 'local' ? 'local: invites make instructors, no role to choose' : 'cloud: invites offer member or admin',
     edition === 'local'
-      ? (await a.locator('#invite-role').count()) === 0 && (await a.locator('[aria-modal=true]:visible').innerText()).includes('They join as an instructor')
+      ? (await a.locator('#invite-role').count()) === 0
       : await (async () => {
           // Our own dropdown: the options exist only while it is open.
           await a.click('#invite-role:visible');

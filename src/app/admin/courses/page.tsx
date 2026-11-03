@@ -31,9 +31,8 @@ export default async function CoursesPage() {
     >
       <section className={styles.editorPageSection}>
         <AdminSectionCard
-          kicker={t('kicker')}
-          title=""
-          kickerAction={
+          title={t('title')}
+          action={
             canCreate ? (
               <AdminButton href="/admin/courses/new" size="compact">
                 <FiPlus size={15} />
@@ -87,7 +86,6 @@ export default async function CoursesPage() {
           ) : (
             <div className={styles.emptyState}>
               <h3 className={styles.emptyStateTitle}>{t('emptyTitle')}</h3>
-              <p className={styles.emptyStateText}>{t('emptyText')}</p>
             </div>
           )}
         </AdminSectionCard>

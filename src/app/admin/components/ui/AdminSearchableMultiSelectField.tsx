@@ -2,7 +2,6 @@
 
 import { autoUpdate, computePosition, flip, offset, shift, size } from '@floating-ui/dom';
 import {
-  type ReactNode,
   useEffect,
   useId,
   useLayoutEffect,
@@ -25,7 +24,6 @@ type AdminSearchableMultiSelectFieldProps = {
   className?: string;
   disabled?: boolean;
   fullWidth?: boolean;
-  hint?: ReactNode;
   id: string;
   label: string;
   name: string;
@@ -44,7 +42,6 @@ export default function AdminSearchableMultiSelectField({
   className,
   disabled = false,
   fullWidth = false,
-  hint,
   id,
   label,
   name,
@@ -292,7 +289,6 @@ export default function AdminSearchableMultiSelectField({
         ) : null}
       </div>
 
-      {hint ? <span className={adminStyles.fieldHint}>{hint}</span> : null}
     </label>
   );
 }

@@ -66,16 +66,8 @@ export default function AccessEditor({
 }) {
   const t = useTranslations('account.access');
   const preset = value.kind === 'limited' ? value.preset : DEFAULT_LIMITED;
-  const scopeChoice = (option: (typeof SCOPES)[number]) => ({
-    value: option.value,
-    label: t(`editor.scopes.${option.key}.label`),
-    hint: t(`editor.scopes.${option.key}.hint`),
-  });
-  const lessonsChoice = (option: (typeof LESSONS)[number] | typeof GUEST) => ({
-    value: option.value,
-    label: t(`editor.lessons.${option.key}.label`),
-    hint: t(`editor.lessons.${option.key}.hint`),
-  });
+  const scopeChoice = (option: (typeof SCOPES)[number]) => ({ value: option.value, label: t(`editor.scopes.${option.key}`) });
+  const lessonsChoice = (option: (typeof LESSONS)[number] | typeof GUEST) => ({ value: option.value, label: t(`editor.lessons.${option.key}`) });
   const set = (patch: Partial<AccessPreset>) => onChange({ kind: 'limited', preset: { ...preset, ...patch } });
   const toggle = (ids: string[], id: string, on: boolean) => (on ? Array.from(new Set([...ids, id])) : ids.filter((entry) => entry !== id));
   const groupsByCourse = options.groups.reduce<Map<string, typeof options.groups>>((byCourse, group) => {
@@ -88,10 +80,10 @@ export default function AccessEditor({
 
   return (
     <div style={{ display: 'grid', gap: '0.85rem' }} data-testid="access-editor">
-      <div role="radiogroup" aria-label={t('editor.label')} style={{ display: 'grid', gap: '0.5rem', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+      <div role="radiogroup" aria-label={t('editor.label')} style={{ display: 'grid', gap: '0.5rem', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))' }}>
         {[
-          { kind: 'full' as const, title: t('editor.full.title'), text: t('editor.full.text') },
-          { kind: 'limited' as const, title: t('editor.limited.title'), text: t('editor.limited.text') },
+          { kind: 'full' as const, title: t('editor.full') },
+          { kind: 'limited' as const, title: t('editor.limited') },
         ].map((option) => (
           <button
             key={option.kind}
@@ -102,8 +94,7 @@ export default function AccessEditor({
             style={card(value.kind === option.kind)}
             onClick={() => onChange(option.kind === 'full' ? { kind: 'full' } : { kind: 'limited', preset })}
           >
-            <strong style={{ display: 'block', fontSize: '0.92rem' }}>{option.title}</strong>
-            <span style={{ fontSize: '0.82rem', opacity: 0.7 }}>{option.text}</span>
+            <strong style={{ fontSize: '0.92rem' }}>{option.title}</strong>
           </button>
         ))}
       </div>
@@ -153,7 +144,7 @@ export default function AccessEditor({
                 ))}
               </div>
             ) : (
-              <p className={styles.fieldHint} style={{ margin: 0 }}>{t('editor.noCourses')}</p>
+              <p className={styles.quietText} style={{ margin: 0 }}>{t('editor.noCourses')}</p>
             )
           ) : null}
 
@@ -162,7 +153,7 @@ export default function AccessEditor({
               <div style={pickList} data-testid="access-groups">
                 {Array.from(groupsByCourse.entries()).map(([courseTitle, groups]) => (
                   <div key={courseTitle} style={{ display: 'grid', gap: '0.3rem' }}>
-                    <span className={styles.fieldHint} style={{ fontWeight: 600 }}>{courseTitle}</span>
+                    <span className={styles.quietText} style={{ fontWeight: 600 }}>{courseTitle}</span>
                     {groups.map((group) => (
                       <AdminCheckbox
                         key={group.id}
@@ -175,14 +166,13 @@ export default function AccessEditor({
                 ))}
               </div>
             ) : (
-              <p className={styles.fieldHint} style={{ margin: 0 }}>{t('editor.noGroups')}</p>
+              <p className={styles.quietText} style={{ margin: 0 }}>{t('editor.noGroups')}</p>
             )
           ) : null}
 
           {preset.lessons === 'notes' ? null : (
             <AdminCheckbox
-              label={t('editor.feedback.label')}
-              hint={t('editor.feedback.hint')}
+              label={t('editor.feedback')}
               checked={preset.feedback}
               onChange={(event) => set({ feedback: event.target.checked })}
             />
@@ -190,7 +180,7 @@ export default function AccessEditor({
         </>
       ) : null}
 
-      <p className={styles.fieldHint} style={{ margin: 0 }} data-testid="access-summary">
+      <p className={styles.quietText} style={{ margin: 0 }} data-testid="access-summary">
         {missing
           ? preset.scope === 'courses'
             ? t('editor.pickCourse')

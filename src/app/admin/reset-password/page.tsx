@@ -19,18 +19,14 @@ export default async function ResetPasswordPage({ searchParams }: { searchParams
   const [check, t] = await Promise.all([checkResetToken(token), getTranslations('auth.resetPassword')]);
   if (!check.ok) {
     return (
-      <AuthShell
-        title={t('expired.title')}
-        intro={t('expired.intro')}
-        footer={<Link href="/admin/forgot-password">{t('expired.sendNew')}</Link>}
-      >
+      <AuthShell title={t('expired.title')} footer={<Link href="/admin/forgot-password">{t('expired.sendNew')}</Link>}>
         <span />
       </AuthShell>
     );
   }
   return (
-    <AuthShell title={t('title')} intro={t('intro', { email: check.email })}>
-      <ResetPasswordForm token={token} minPasswordLength={MIN_PASSWORD_LENGTH} />
+    <AuthShell title={t('title')}>
+      <ResetPasswordForm token={token} email={check.email} minPasswordLength={MIN_PASSWORD_LENGTH} />
     </AuthShell>
   );
 }

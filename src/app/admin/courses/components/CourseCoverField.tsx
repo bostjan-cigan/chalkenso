@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { ChangeEvent, useState } from 'react';
 import AdminButton from '../../components/ui/AdminButton';
+import AdminField from '../../components/ui/AdminField';
 import { getAdminAssetUrl } from '@/lib/asset-urls';
 import styles from '../../admin.module.css';
 
@@ -76,18 +77,12 @@ export default function CourseCoverField({
           </AdminButton>
         ) : null}
       </div>
-      <span className={styles.fieldHint}>
-        {error || t('hint')}
-      </span>
-      {assetId ? (
-        <input
-          className={styles.textInput}
-          name="coverAlt"
-          aria-label={t('altLabel')}
-          placeholder={t('altPlaceholder')}
-          defaultValue={initialAlt}
-        />
+      {error ? (
+        <span className={styles.fieldError} role="alert">
+          {error}
+        </span>
       ) : null}
+      {assetId ? <AdminField id="course-cover-alt" name="coverAlt" label={t('altLabel')} defaultValue={initialAlt} /> : null}
     </div>
   );
 }

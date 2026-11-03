@@ -33,7 +33,6 @@ export default async function CourseVersionsSection({
     return (
       <div className={styles.emptyState}>
         <h3 className={styles.emptyStateTitle}>{t('emptyTitle')}</h3>
-        <p className={styles.emptyStateText}>{t('emptyText')}</p>
       </div>
     );
   }
@@ -63,7 +62,7 @@ export default async function CourseVersionsSection({
                       {isPublished ? t('published') : t('draft')}
                     </AdminBadge>
                   </h3>
-                  <span className={styles.fieldHint}>{versionMeta(version, copies)}</span>
+                  <span className={styles.quietText}>{versionMeta(version, copies)}</span>
                 </div>
               </div>
             </Link>

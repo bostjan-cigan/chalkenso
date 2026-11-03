@@ -160,12 +160,7 @@ export default function LessonAssetUploadList({
   return (
     <div className={styles.assetPanel}>
       <div className={styles.assetPanelHeader}>
-        <div>
-          <h3>{t('title')}</h3>
-          <p className={styles.helperText}>
-            {t('hint')}
-          </p>
-        </div>
+        <h3>{t('title')}</h3>
         <AdminBadge variant="warning">{t('missing', { count: references.length })}</AdminBadge>
       </div>
 
@@ -178,12 +173,7 @@ export default function LessonAssetUploadList({
           return (
             <div key={reference.sourcePath} className={styles.assetRow}>
               <div className={styles.assetRowHeader}>
-                <div>
-                  <strong>{reference.sourcePath}</strong>
-                  <p className={styles.helperText}>
-                    {reference.syntax === 'obsidian' ? t('obsidianEmbed') : t('markdownImage')}
-                  </p>
-                </div>
+                <strong>{reference.sourcePath}</strong>
                 {uploadedAsset ? (
                   <AdminBadge>{t('uploaded')}</AdminBadge>
                 ) : (
@@ -222,15 +212,6 @@ export default function LessonAssetUploadList({
                   disabled={Boolean(uploadState?.isUploading)}
                   onChange={(event) => handleFileChange(reference.sourcePath, event)}
                 />
-                <p className={styles.fileInputLabel}>
-                  {
-                    uploadState?.isUploading
-                      ? t('uploadingSelection')
-                      : uploadedAsset
-                        ? t('pickReplacement')
-                        : t('selectToUpload')
-                  }
-                </p>
                 <AdminButton
                   type="button"
                   tone={uploadedAsset ? 'secondary' : 'primary'}

@@ -1,13 +1,14 @@
 'use client';
 
-import { InputHTMLAttributes, ReactNode } from 'react';
+import { InputHTMLAttributes } from 'react';
 import { cn } from '@/utils/cn';
 import styles from '../../admin.module.css';
 
 interface AdminFieldProps
   extends Omit<InputHTMLAttributes<HTMLInputElement>, 'className'> {
   label: string;
-  hint?: ReactNode;
+  /** What's wrong with the value, under the field. A field says nothing else. */
+  error?: string | null;
   className?: string;
   inputClassName?: string;
   fullWidth?: boolean;
@@ -15,7 +16,7 @@ interface AdminFieldProps
 
 export default function AdminField({
   label,
-  hint,
+  error,
   className,
   inputClassName,
   fullWidth = false,
@@ -25,8 +26,8 @@ export default function AdminField({
   return (
     <label className={cn(styles.field, fullWidth && styles.fieldFullWidth, className)} htmlFor={id}>
       <span className={styles.inputLabel}>{label}</span>
-      <input id={id} className={cn(styles.textInput, inputClassName)} {...props} />
-      {hint ? <span className={styles.fieldHint}>{hint}</span> : null}
+      <input id={id} className={cn(styles.textInput, inputClassName)} aria-invalid={error ? true : undefined} {...props} />
+      {error ? <span className={styles.fieldError} role="alert">{error}</span> : null}
     </label>
   );
 }

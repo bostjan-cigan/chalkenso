@@ -143,7 +143,7 @@ export default function ImprovementPlaces({
           >
             {t('leaveCourse')}
           </AdminButton>
-          <span style={{ fontSize: '0.82rem', opacity: 0.65 }}>{t('leaveCourseHint')}</span>
+          <span style={{ fontSize: '0.82rem', opacity: 0.65 }}>{t('leaveCourseLoses')}</span>
         </div>
       ) : null}
 

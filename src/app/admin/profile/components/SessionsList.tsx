@@ -59,7 +59,7 @@ function RowContent({ row }: { row: SessionRow }) {
  * details, where Sign out ends it. "Sign out of all devices" ends every one, this one too. While a
  * platform admin is logged in as them it only lists them.
  */
-export default function SessionsList({ rows, policy, readOnly }: { rows: SessionRow[]; policy: string; readOnly: string | null }) {
+export default function SessionsList({ rows, readOnly }: { rows: SessionRow[]; readOnly: string | null }) {
   const t = useTranslations('account.profile.sessions');
   const { notice, isPending, run } = useActionNotice();
   // The session shown, or 'all' of them.
@@ -102,7 +102,6 @@ export default function SessionsList({ rows, policy, readOnly }: { rows: Session
             {t('signOutAll')}
           </AdminButton>
         ) : null}
-        <p className={styles.note}>{policy}</p>
       </div>
       <ConfirmDialog
         open={asking !== null}

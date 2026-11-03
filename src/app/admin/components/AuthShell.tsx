@@ -8,32 +8,26 @@ import { type Locale, homePath } from '@/i18n/config';
 import IntlProvider from '@/i18n/IntlProvider';
 import { EDITION } from '@/lib/site';
 
-import AdminBadge from './ui/AdminBadge';
-import LearningNoteCard from './LearningNoteCard';
 import styles from '../admin.module.css';
 
 /**
- * Sign-in, sign-up, password reset, invites and onboarding: on the ruled paper, the product name and
- * a learning quote or bit of trivia on the left (the quote on wide screens only), and the page's card
- * on the right, with room inside it: a title, a line under it, the form, and the ways elsewhere at its
- * foot. In the language picked in its corner (the theme switch's neighbour), English until then:
- * its client components get `common` and `auth` words. The product name leads to the landing page in
- * that language (the local edition has none: its `/` is signing in).
+ * Sign-in, sign-up, password reset, invites and onboarding: on the ruled paper, the product name over
+ * the page's card: its title, the form, and the ways elsewhere at its foot. In the language picked in
+ * its corner (the theme switch's neighbour), English until then: its client components get `common`
+ * and `auth` words. The product name leads to the landing page in that language (the local edition
+ * has none: its `/` is signing in).
  */
 export default async function AuthShell({
-  kicker,
   title,
-  intro,
   children,
   footer,
   hideTitle = false,
 }: {
-  kicker?: string;
   title: string;
   /** Keep the title for screen readers only. */
   hideTitle?: boolean;
-  intro?: ReactNode;
-  children: ReactNode;
+  /** None: the title says it all (a link that ran out), with the ways elsewhere under it. */
+  children?: ReactNode;
   footer?: ReactNode;
 }) {
   const home = EDITION === 'cloud' ? homePath((await getLocale()) as Locale) : '/';
@@ -44,24 +38,19 @@ export default async function AuthShell({
         <LanguageMenu variant="floating" />
         <ThemeToggle />
         <div className={styles.authLayout}>
-          <aside className={styles.authAside}>
-            <Link href={home} className={styles.authBrand}>
-              <BrandName detail={1} />
-            </Link>
-            <LearningNoteCard />
-          </aside>
+          <Link href={home} className={styles.authBrand}>
+            <BrandName detail={1} />
+          </Link>
           <main className={styles.authMain}>
             <section className={styles.authCard}>
               {hideTitle ? (
                 <h1 className="sr-only">{title}</h1>
               ) : (
                 <header className={styles.authHeader}>
-                  {kicker ? <AdminBadge variant="kicker">{kicker}</AdminBadge> : null}
                   <h1 className={styles.authTitle}>{title}</h1>
-                  {intro ? <p className={styles.authIntro}>{intro}</p> : null}
                 </header>
               )}
-              <div className={styles.authBody}>{children}</div>
+              {children ? <div className={styles.authBody}>{children}</div> : null}
               {footer ? <footer className={styles.authFooter}>{footer}</footer> : null}
             </section>
           </main>

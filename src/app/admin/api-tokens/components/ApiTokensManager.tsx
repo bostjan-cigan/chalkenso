@@ -8,7 +8,6 @@ import AdminButton from '@/app/admin/components/ui/AdminButton';
 import AdminField from '@/app/admin/components/ui/AdminField';
 import ActionNotice from '@/app/admin/components/ui/ActionNotice';
 import { useActionNotice } from '@/app/admin/components/ui/useActionNotice';
-import InfoTip from '@/app/admin/settings/ui/InfoTip';
 import { SettingsBlock, SettingsGroup, SettingsRow, settingsStyles } from '@/app/admin/settings/ui/SettingsList';
 import ConfirmDialog from '@/app/admin/courses/components/ConfirmDialog';
 import { createApiTokenAction, deleteApiTokenAction, revokeApiTokenAction } from '../actions';
@@ -138,15 +137,13 @@ export default function ApiTokensManager({ tokens }: ApiTokensManagerProps) {
 
   return (
     <>
-      <SettingsGroup
-        title={t('activeKicker', { count: activeTokens.length })}
-        info={<InfoTip label={t('activeKicker', { count: activeTokens.length })}>{t('about')}</InfoTip>}
-      >
+      <SettingsGroup title={t('activeTitle', { count: activeTokens.length })}>
         {activeTokens.length > 0 ? activeTokens.map(renderTokenRow) : <SettingsRow label={t('emptyTitle')} />}
       </SettingsGroup>
 
       <div id="create-token" style={{ scrollMarginTop: '1.5rem' }}>
-        <SettingsGroup title={t('createKicker')}>
+        {/* What a token can do, and that it is shown once: said before one is made. */}
+        <SettingsGroup title={t('createTitle')} footer={t('about')}>
           {revealed ? (
             <SettingsBlock>
               <strong>{t('createdTitle')}</strong>
@@ -171,7 +168,7 @@ export default function ApiTokensManager({ tokens }: ApiTokensManagerProps) {
                 <button type="button" className={settingsStyles.action} onClick={() => setRevealed(null)}>
                   {t('done')}
                 </button>
-                {copyHint ? <span className={adminStyles.fieldHint}>{copyHint}</span> : null}
+                {copyHint ? <span className={adminStyles.quietText}>{copyHint}</span> : null}
               </div>
             </SettingsBlock>
           ) : null}
@@ -198,12 +195,7 @@ export default function ApiTokensManager({ tokens }: ApiTokensManagerProps) {
       </div>
 
       {revokedTokens.length > 0 ? (
-        <SettingsGroup
-          title={t('revokedKicker', { count: revokedTokens.length })}
-          info={<InfoTip label={t('revokedKicker', { count: revokedTokens.length })}>{t('revokedHint')}</InfoTip>}
-        >
-          {revokedTokens.map(renderTokenRow)}
-        </SettingsGroup>
+        <SettingsGroup title={t('revokedTitle', { count: revokedTokens.length })}>{revokedTokens.map(renderTokenRow)}</SettingsGroup>
       ) : null}
 
       <ConfirmDialog

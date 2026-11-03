@@ -1,4 +1,4 @@
-/* Getting started: a ring in the corner, its checklist above it, and a note in red pen pointing at it. */
+/* Getting started: a ring in the corner, and its checklist above it. */
 
 .spacer {
   height: 5rem;
@@ -96,66 +96,6 @@
   opacity: 0;
 }
 
-/* The note in red pen, faint, with an arrow down to the ring (on Home, until it's opened once). */
-.hint {
-  position: fixed;
-  right: 1.9rem;
-  bottom: 5.1rem;
-  z-index: 899;
-  display: grid;
-  justify-items: end;
-  color: var(--red-pen);
-  opacity: 0.62;
-  pointer-events: none;
-  transition: opacity 0.25s ease;
-}
-
-.ring:hover ~ .hint,
-.ring:focus-visible ~ .hint {
-  opacity: 0.25;
-}
-
-/* A halo the colour of the page keeps it readable over whatever is under it. */
-.hint span {
-  font-family: var(--font-hand), 'Comic Sans MS', cursive;
-  font-size: 1.55rem;
-  line-height: 1;
-  white-space: nowrap;
-  rotate: -4deg;
-  translate: -2.1rem 0;
-  text-shadow:
-    0 0 4px rgb(var(--background-rgb)),
-    0 0 8px rgb(var(--background-rgb)),
-    0 0 14px rgb(var(--background-rgb));
-}
-
-.hint svg {
-  margin-top: 2px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2.2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-/* Drawn in, as if by hand: the line, then its head. */
-.hint path {
-  stroke-dasharray: 90;
-  stroke-dashoffset: 90;
-  animation: draw 0.6s ease-out 0.4s forwards;
-}
-
-.hint path + path {
-  animation-delay: 1s;
-  animation-duration: 0.25s;
-}
-
-@keyframes draw {
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
 /* The checklist, above the ring. */
 .panel {
   position: fixed;
@@ -189,15 +129,6 @@
   margin: 0;
   font-size: 1.05rem;
   font-weight: 700;
-}
-
-.note {
-  margin: 0.1rem 0 0;
-  font-family: var(--font-hand), 'Comic Sans MS', cursive;
-  font-size: 1.3rem;
-  line-height: 1.15;
-  color: var(--red-pen);
-  rotate: -1.5deg;
 }
 
 .close {
@@ -294,7 +225,7 @@
   outline-offset: 2px;
 }
 
-/* Centred in its row, with or without the line underneath (done steps drop it). */
+/* Centred in its row, with or without the line underneath (only a booked call has one). */
 .go {
   display: flex;
   flex-direction: column;
@@ -416,8 +347,6 @@ span.go {
 .foot {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
   padding: 0.5rem 1.1rem 0.75rem;
   border-top: 1px solid var(--line-subtle);
   font-size: 0.8rem;
@@ -439,11 +368,6 @@ span.go {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hint path {
-    animation: none;
-    stroke-dashoffset: 0;
-  }
-
   .label,
   .fill,
   .bar span {
@@ -456,11 +380,6 @@ span.go {
   .ring {
     right: 1rem;
     bottom: 1rem;
-  }
-
-  .hint {
-    right: 1.4rem;
-    bottom: 4.6rem;
   }
 
   .panel {

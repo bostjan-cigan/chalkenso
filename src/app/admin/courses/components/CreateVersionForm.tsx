@@ -17,8 +17,10 @@ type VersionOption = {
 interface CreateVersionFormProps {
   action: (formData: FormData) => void;
   courseId: string;
-  /** Existing versions offered as "duplicate lessons from" sources. */
+  /** Existing versions whose lessons the new one can start from. */
   versions: VersionOption[];
+  /** What the version is called when no label is given (the next number, `v<n>`). */
+  nextLabel: string;
   pendingText?: string;
   submitLabel?: string;
 }
@@ -35,6 +37,7 @@ export default function CreateVersionForm({
   action,
   courseId,
   versions,
+  nextLabel,
   pendingText,
   submitLabel,
 }: CreateVersionFormProps) {
@@ -54,8 +57,7 @@ export default function CreateVersionForm({
           id="version-label"
           name="label"
           label={t('label')}
-          hint={t('labelHint')}
-          placeholder="v2"
+          placeholder={nextLabel}
           value={label}
           onChange={(event) => setLabel(event.target.value)}
         />
@@ -63,8 +65,7 @@ export default function CreateVersionForm({
         <AdminSelectField
           id="version-duplicate-from"
           name="duplicateFromVersionId"
-          label={t('duplicate')}
-          hint={t('duplicateHint')}
+          label={t('lessons')}
           value={duplicateFromVersionId}
           onChange={(event) => setDuplicateFromVersionId(event.target.value)}
         >

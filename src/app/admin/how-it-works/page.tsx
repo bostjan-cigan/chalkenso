@@ -14,12 +14,12 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 export const dynamic = 'force-dynamic';
 
-/** How Chalkenso works as a page, for any time after the card on Home (Profile links here). */
+/** How Chalkenso works as a page, for any time after Getting started's sheet (Profile links here). */
 export default async function HowItWorksPage() {
   const viewer = await requireMember();
   const [t, action] = await Promise.all([getTranslations('app.howItWorks'), howItWorksAction(viewer)]);
   return (
-    <AdminFrame navItems={adminNavItems('overview')} eyebrow={viewer.organization.name} title={t('title')} description={t('description')}>
+    <AdminFrame navItems={adminNavItems('overview')} title={t('title')}>
       <section className={adminStyles.editorPageSection} style={{ display: 'grid', gap: '1.25rem', maxWidth: '48rem' }}>
         <HowItWorksContent organizationId={viewer.organization.id} admin={isOrgAdmin(viewer)} />
         <div className={styles.footer} style={{ justifyContent: 'flex-end' }}>

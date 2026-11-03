@@ -58,7 +58,7 @@ export default function GroupDirectory({ rows }: { rows: GroupDirectoryRow[] }) 
       ) : null}
 
       {shown.length === 0 ? (
-        <p className={styles.helperText}>{t('noMatch', { query })}</p>
+        <p className={styles.quietText}>{t('noMatch', { query })}</p>
       ) : (
         SECTIONS.map((section) => {
           const sectionRows = shown.filter((row) => row.state === section);

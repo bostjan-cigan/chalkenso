@@ -33,7 +33,7 @@ export default function OpenGroupCourseButton({
 
   if (token) {
     return (
-      <AdminButton href={learnerLinkUrl(token, { template: learnerLinkTemplate, origin })} target="_blank" rel="noreferrer" title={t('openCourseHint')} data-testid="open-group-course">
+      <AdminButton href={learnerLinkUrl(token, { template: learnerLinkTemplate, origin })} target="_blank" rel="noreferrer" data-testid="open-group-course">
         <FiExternalLink aria-hidden size={15} />
         {t('openCourse')}
       </AdminButton>
@@ -44,7 +44,6 @@ export default function OpenGroupCourseButton({
       <AdminButton
         type="button"
         disabled={pending}
-        title={t('openCourseHint')}
         data-testid="open-group-course"
         onClick={() => {
           setError(null);

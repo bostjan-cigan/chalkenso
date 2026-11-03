@@ -66,6 +66,8 @@ type Props = {
   readOnly?: boolean;
   /** Inside a card (a passage edited in Improve): the toolbar stays at the top of the card, not the page. */
   compact?: boolean;
+  /** What an empty document shows (a lesson's own, unless it's another text, like a plan). */
+  placeholder?: string;
 };
 
 /** The selected text and its paragraph; collapses the selection so the menu closes. */
@@ -93,6 +95,7 @@ export default function LessonDocumentEditor({
   describeImages = false,
   readOnly = false,
   compact = false,
+  placeholder,
 }: Props) {
   const textStyleId = useId();
   const t = useTranslations('editor.document');
@@ -116,7 +119,7 @@ export default function LessonDocumentEditor({
         underline: false,
         link: { openOnClick: false, autolink: true, defaultProtocol: 'https' },
       }),
-      Placeholder.configure({ placeholder: t('placeholder') }),
+      Placeholder.configure({ placeholder: placeholder ?? t('placeholder') }),
       TableKit.configure({ table: { resizable: false } }),
       TaskList,
       TaskItem.configure({ nested: true }),

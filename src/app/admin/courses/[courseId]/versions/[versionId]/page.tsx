@@ -81,11 +81,6 @@ export default async function VersionEditPage({
         ownerGroup
           ? {
               title: version.label,
-              subtitle: `${version.course.title} · ${
-                version.baseVersion
-                  ? t('groupCopyFrom', { version: version.baseVersion.label })
-                  : t('groupCopyFromDeleted')
-              }`,
               badge: version.archivedAt
                 ? { label: t('closed'), variant: 'warning' }
                 : { label: t('groupCopy'), variant: 'accent' },
@@ -96,7 +91,6 @@ export default async function VersionEditPage({
             }
           : {
               title: version.label,
-              subtitle: version.course.title,
               badge: {
                 label: isPublished ? t('published') : t('draft'),
                 variant: isPublished ? 'accent' : 'warning',

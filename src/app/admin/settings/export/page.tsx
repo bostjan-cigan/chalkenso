@@ -8,8 +8,7 @@ import { canExport, loadExportScope, type ExportViewer } from '@/lib/export/scop
 import { prisma } from '@/lib/prisma';
 import { cn } from '@/utils/cn';
 import AdminNotice from '../../components/ui/AdminNotice';
-import InfoTip from '../ui/InfoTip';
-import { SettingsGroup, SettingsRow } from '../ui/SettingsList';
+import { SettingsBlock, SettingsGroup, SettingsRow } from '../ui/SettingsList';
 import SettingsFrame from '../SettingsFrame';
 import adminStyles from '../../admin.module.css';
 
@@ -66,19 +65,12 @@ export default async function ExportPage({ searchParams }: { searchParams: Promi
   const nothing = rows.every((row) => row.count === 0);
 
   return (
-    <SettingsFrame active="export" title={t('title')} description={t('description')}>
+    <SettingsFrame active="export" title={t('title')}>
       {params.error === 'limit' ? <AdminNotice>{t('page.limit')}</AdminNotice> : null}
       {user.impersonator ? <AdminNotice>{t('page.impersonating')}</AdminNotice> : null}
 
       <SettingsGroup
         title={t('page.title')}
-        info={
-          <InfoTip label={t('page.title')}>
-            <p>{t('page.intro')}</p>
-            <p>{t('page.obsidian.text', { folder: scope.vaultFolder })}</p>
-            <p>{t('page.never.text')}</p>
-          </InfoTip>
-        }
         footer={scope.admin ? undefined : <span data-testid="export-own">{t('page.own', { organization: scope.organization.name })}</span>}
         testId="export-everything"
       >
@@ -92,11 +84,17 @@ export default async function ExportPage({ searchParams }: { searchParams: Promi
         {nothing ? (
           <SettingsRow label={t('page.nothing')} />
         ) : user.impersonator ? null : (
-          <SettingsRow label={<span style={{ fontWeight: 400, fontSize: '0.84rem', opacity: 0.7 }}>{t('page.hint')}</span>}>
-            <a href={DOWNLOAD} className={cn(adminStyles.button, adminStyles.buttonPrimary)} data-button="" data-testid="export-download">
+          <SettingsBlock>
+            <a
+              href={DOWNLOAD}
+              className={cn(adminStyles.button, adminStyles.buttonPrimary)}
+              style={{ justifySelf: 'start' }}
+              data-button=""
+              data-testid="export-download"
+            >
               {t('page.download')}
             </a>
-          </SettingsRow>
+          </SettingsBlock>
         )}
       </SettingsGroup>
     </SettingsFrame>

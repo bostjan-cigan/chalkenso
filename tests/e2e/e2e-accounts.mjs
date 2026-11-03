@@ -76,12 +76,6 @@ try {
   step = 'forgot password';
   const visitor = await newPage();
   await visitor.goto(`${BASE}/admin/login`);
-  // Beside the form, a learning quote or bit of trivia in the red-pen hand; "Another one" draws the next.
-  const noteBefore = await visitor.getByTestId('learning-note').textContent();
-  await visitor.getByRole('button', { name: 'Another one' }).click();
-  await visitor.waitForFunction((before) => document.querySelector('[data-testid=learning-note]')?.textContent !== before, noteBefore);
-  const noteFont = await visitor.getByTestId('learning-note').locator('blockquote, p:last-child').first().evaluate((node) => getComputedStyle(node).fontFamily);
-  check('sign-in shows a learning note, and Another one draws the next', Boolean(noteBefore?.trim()) && /caveat/i.test(noteFont), noteFont);
   await visitor.getByRole('link', { name: 'Forgot your password?' }).click();
   await visitor.fill('#forgot-email', `nobody-${run}@example.com`);
   await visitor.getByRole('button', { name: 'Email me a link' }).click();

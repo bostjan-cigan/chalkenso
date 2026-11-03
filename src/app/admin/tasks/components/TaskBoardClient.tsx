@@ -46,11 +46,10 @@ export type TaskLaneView = {
   /** 'core' | `group:${groupId}` | 'unscoped'. Identity for drag containment and collapse state. */
   id: string;
   label: string;
-  /** Course title, plus 'Closed' for an archived group curriculum. */
-  sublabel: string | null;
+  /** An archived group curriculum: marked Closed beside its name. */
+  closed: boolean;
   /** The group this lane belongs to, when it has one. */
   href: string | null;
-  emptyHint: string;
   /** Server-computed: open lanes first, quiet ones collapsed. Only seeds the initial state. */
   defaultOpen: boolean;
   /** Server-computed triage permission for this lane's curriculum. */
@@ -99,12 +98,6 @@ const laneToggleStyle: CSSProperties = {
   textAlign: 'left',
 };
 
-const laneSubStyle: CSSProperties = {
-  fontSize: '0.75rem',
-  fontWeight: 500,
-  color: 'rgba(var(--foreground-rgb), 0.55)',
-};
-
 const laneCountStyle: CSSProperties = {
   fontSize: '0.75rem',
   fontWeight: 600,
@@ -115,12 +108,6 @@ const laneLinkStyle: CSSProperties = {
   marginLeft: 'auto',
   fontSize: '0.75rem',
   color: 'rgba(var(--foreground-rgb), 0.6)',
-};
-
-const laneHintStyle: CSSProperties = {
-  margin: '0 0 0.6rem',
-  fontSize: '0.78rem',
-  color: 'rgba(var(--foreground-rgb), 0.55)',
 };
 
 const columnStyle: CSSProperties = {
@@ -239,10 +226,7 @@ function laneOpenState(lanes: TaskLaneView[]) {
   return Object.fromEntries(lanes.map((lane) => [lane.id, lane.defaultOpen]));
 }
 
-/**
- * The board itself. Its words are `tasks.board` and `tasks.status`: `TaskBoard` gives them, so a page
- * whose provider has no `tasks` (a course's or a group's) can show it too.
- */
+/** The board itself, in the words of `tasks.board` and `tasks.status` (the Tasks layout gives them). */
 export default function TaskBoardClient({
   lanes,
   variant = 'page',
@@ -376,7 +360,7 @@ export default function TaskBoardClient({
                 >
                   <span aria-hidden>{open ? '▾' : '▸'}</span>
                   <span>{lane.label}</span>
-                  {lane.sublabel ? <span style={laneSubStyle}>{lane.sublabel}</span> : null}
+                  {lane.closed ? <span style={laneCountStyle}>{t('closed')}</span> : null}
                   <span style={laneCountStyle}>
                     {t('laneCount', { open: openTaskCount(lane.tasks), total: lane.tasks.length })}
                   </span>
@@ -405,10 +389,6 @@ export default function TaskBoardClient({
             )}
 
             <div hidden={!open}>
-              {lane.tasks.length === 0 && lane.emptyHint ? (
-                <p style={laneHintStyle}>{t('noTasksYet', { hint: lane.emptyHint })}</p>
-              ) : null}
-
               <div
                 style={{
                   display: 'grid',
@@ -551,10 +531,7 @@ export default function TaskBoardClient({
                                 <span style={footDotStyle} aria-hidden>
                                   ·
                                 </span>
-                                <span
-                                  style={planIconStyle}
-                                  title={t('planTitle')}
-                                >
+                                <span style={planIconStyle}>
                                   <FiFileText size={11} aria-hidden />
                                   {t('plan')}
                                 </span>
@@ -608,18 +585,6 @@ export default function TaskBoardClient({
                         ) : null}
                         </div>
                       ))}
-
-                      {columnTasks.length === 0 ? (
-                        <p
-                          style={{
-                            margin: 0,
-                            fontSize: '0.75rem',
-                            color: 'rgba(var(--foreground-rgb), 0.4)',
-                          }}
-                        >
-                          {lane.canDrag ? t('dropHere') : t('nothingHere')}
-                        </p>
-                      ) : null}
                     </div>
                   );
                 })}
@@ -631,16 +596,14 @@ export default function TaskBoardClient({
 
       <ConfirmDialog
         open={pendingDelete !== null}
-        title={pendingDelete?.mode === 'ignored' ? t('confirm.titleIgnored') : t('confirm.title')}
-        description={
+        title={
           pendingDelete
-            ? t('confirm.description', {
+            ? t('confirm.title', {
                 what: pendingDelete.ids.length === 1 ? t('confirm.quoted', { title: pendingDelete.title }) : pendingDelete.title,
-                mode: pendingDelete.mode,
-                count: pendingDelete.ids.length,
               })
             : ''
         }
+        description={t('confirm.description')}
         confirmLabel={
           pendingDelete && pendingDelete.ids.length > 1
             ? t('confirm.deleteMany', { count: pendingDelete.ids.length })

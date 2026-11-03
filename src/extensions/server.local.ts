@@ -28,10 +28,6 @@ export const localServer: ServerExtensions = {
   // A self-hosted installation has no bot check of its own; its forms have the limits only.
   isBot: async () => false,
   authBotCheck: null,
-  signupIntro: async (locale) => {
-    const t = await getTranslations({ locale, namespace: 'auth.signup.installation' });
-    return { kicker: t('kicker'), intro: t('intro') };
-  },
   // Bring your own key: each installation pays for its own AI.
   aiOrganizationKeys: true,
   ownAiKeyAllowed: async () => true,
@@ -59,9 +55,9 @@ export const localServer: ServerExtensions = {
   // so there is always exactly one manager.
   team: {
     roles: {
-      OWNER: { label: 'Manager', inSentence: 'the manager', hint: 'runs this installation and its team' },
-      ADMIN: { label: 'Admin', inSentence: 'an admin', hint: 'also manages the team' },
-      MEMBER: { label: 'Instructor', inSentence: 'an instructor', hint: 'designs courses, teaches groups, works through feedback (all, or what you choose under Access)' },
+      OWNER: { label: 'Manager' },
+      ADMIN: { label: 'Admin' },
+      MEMBER: { label: 'Instructor' },
     },
     rolesInSentence: async (locale) => {
       const t = await getTranslations({ locale, namespace: 'auth.invite.roles' });
@@ -69,17 +65,11 @@ export const localServer: ServerExtensions = {
     },
     words: async (locale) => {
       const t = await getTranslations({ locale, namespace: 'account.team.policy' });
-      const role = (key: 'manager' | 'admin' | 'instructor') => ({
-        label: t(`roles.${key}.label`),
-        inSentence: t(`roles.${key}.inSentence`),
-        hint: t(`roles.${key}.hint`),
-      });
-      return { roles: { OWNER: role('manager'), ADMIN: role('admin'), MEMBER: role('instructor') }, description: t('description.installation') };
+      const role = (key: 'manager' | 'admin' | 'instructor') => ({ label: t(`roles.${key}`) });
+      return { roles: { OWNER: role('manager'), ADMIN: role('admin'), MEMBER: role('instructor') } };
     },
     inviteRoles: ['MEMBER'],
     roleChanges: false,
-    description:
-      'You manage this installation. Instructors you invite design and edit courses, run groups and work through feedback: all of them, or only the courses or groups you give them.',
   },
   onLessonsPublished: () => {},
   onLessonsUnpublished: () => {},

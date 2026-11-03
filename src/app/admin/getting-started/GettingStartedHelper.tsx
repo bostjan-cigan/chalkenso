@@ -8,7 +8,7 @@ import { type ReactNode, useEffect, useId, useRef, useState } from 'react';
 import { TbCheck, TbChevronDown, TbChevronRight } from 'react-icons/tb';
 import HowItWorksSheet from '../how-it-works/HowItWorksSheet';
 import type { HowItWorksAction } from '../how-it-works/data';
-import { hideGettingStartedAction, openedGettingStartedAction, tickGettingStartedAction } from './actions';
+import { hideGettingStartedAction, tickGettingStartedAction } from './actions';
 import type { GettingStartedCall, GettingStartedStep, TickableStep } from './data';
 import styles from './getting-started.module.css';
 
@@ -17,16 +17,15 @@ const RING = 2 * Math.PI * 15;
 
 /**
  * Getting started in the corner: a ring with how many steps are done (the words slide out on hover),
- * and above it, when asked, the checklist. Never opens by itself; on Home, until it has been opened
- * once, a note in red pen points at it. Ticks show at once and are saved behind; with the last one
- * it says so, and it's gone from the next page.
+ * and above it, when asked, the checklist: each step its title alone, and where it's done one click
+ * away. Never opens by itself. Ticks show at once and are saved behind; with the last one the ring
+ * says so, and it's gone from the next page.
  */
 export default function GettingStartedHelper({
   steps,
   call,
   callButton,
   how,
-  hint,
 }: {
   steps: GettingStartedStep[];
   call: GettingStartedCall | null;
@@ -34,8 +33,6 @@ export default function GettingStartedHelper({
   callButton: ReactNode;
   /** How it works' sheet: its one action and contents (only while it's a step left to do). */
   how: { action: HowItWorksAction; content: ReactNode } | null;
-  /** Show the note pointing at it (on Home, until it's first opened). */
-  hint: boolean;
 }) {
   const t = useTranslations('app.gettingStarted');
   const locale = useLocale();
@@ -44,7 +41,6 @@ export default function GettingStartedHelper({
   const titleId = useId();
   const [open, setOpen] = useState(false);
   const [howOpen, setHowOpen] = useState(false);
-  const [showHint, setShowHint] = useState(hint);
   const [gone, setGone] = useState(false);
   // Ticks by hand, shown at once; the server's word (a new page) replaces them.
   const [ticks, setTicks] = useState<Partial<Record<TickableStep, boolean>>>({});
@@ -59,7 +55,6 @@ export default function GettingStartedHelper({
   const counted = steps.filter((step) => !step.optional);
   const doneCount = counted.filter(isDone).length;
   const allDone = doneCount === counted.length;
-  const left = counted.length - doneCount;
 
   // Closed by Escape or a click elsewhere, but not while a sheet it opened is over the page.
   useEffect(() => {
@@ -84,16 +79,6 @@ export default function GettingStartedHelper({
   }, [open]);
 
   if (gone) return null;
-
-  function toggle() {
-    const next = !open;
-    setOpen(next);
-    if (next && showHint) {
-      // Found it: the note isn't needed again.
-      setShowHint(false);
-      void openedGettingStartedAction();
-    }
-  }
 
   function tick(id: TickableStep, done: boolean) {
     setTicks((current) => ({ ...current, [id]: done }));
@@ -123,14 +108,9 @@ export default function GettingStartedHelper({
         <div ref={panel} id={panelId} className={styles.panel} role="dialog" aria-labelledby={titleId} data-testid="getting-started-panel">
           <div className={styles.head}>
             <div className={styles.headTop}>
-              <div>
-                <h2 id={titleId} className={styles.title}>
-                  {t('title')}
-                </h2>
-                <p className={styles.note} aria-hidden>
-                  {allDone ? t('allDone') : left <= 2 ? t('nearly') : t('note')}
-                </p>
-              </div>
+              <h2 id={titleId} className={styles.title}>
+                {t('title')}
+              </h2>
               <button type="button" className={styles.close} onClick={() => setOpen(false)} aria-label={t('close')}>
                 <TbChevronDown aria-hidden size={18} />
               </button>
@@ -146,7 +126,8 @@ export default function GettingStartedHelper({
               const done = isDone(step);
               const label = title(step);
               const tickable = step.id !== 'account' && !(step.auto && done);
-              const sub = step.id === 'call' ? booked : !done && step.id !== 'account' ? t(`steps.${step.id}.hint` as 'steps.how.hint') : null;
+              // Only the booked call has a line under its title: when.
+              const sub = step.id === 'call' ? booked : null;
               // The call, while it's to do: a card of its own, with the photo and the button.
               if (step.id === 'call' && call && !done) {
                 return (
@@ -212,7 +193,6 @@ export default function GettingStartedHelper({
           </ul>
 
           <div className={styles.foot}>
-            <span>{t('footer')}</span>
             <button type="button" onClick={hide} data-testid="getting-started-hide">
               {t('hide')}
             </button>
@@ -227,7 +207,7 @@ export default function GettingStartedHelper({
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
         aria-label={t('open', { done: doneCount, total: counted.length })}
-        onClick={toggle}
+        onClick={() => setOpen(!open)}
         data-testid="getting-started"
       >
         <span className={styles.ringBox} aria-hidden>
@@ -241,16 +221,6 @@ export default function GettingStartedHelper({
           {t('title')}
         </span>
       </button>
-
-      {showHint && !open ? (
-        <div className={styles.hint} aria-hidden data-testid="getting-started-hint">
-          <span>{t('hint')}</span>
-          <svg width="64" height="54" viewBox="0 0 64 54">
-            <path d="M6 4c22 0 40 10 44 38" />
-            <path d="M42 36l8 9 7-10" />
-          </svg>
-        </div>
-      ) : null}
 
       {how ? (
         <HowItWorksSheet open={howOpen} onClose={() => setHowOpen(false)} action={how.action}>

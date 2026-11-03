@@ -104,7 +104,6 @@ export default function ArcManagerPanel({ courseId, versionId, arcs }: ArcManage
           id="arc-description"
           name="description"
           label={t('description')}
-          hint={t('descriptionHint')}
           placeholder={t('descriptionPlaceholder')}
           fullWidth
           rows={2}
@@ -226,7 +225,7 @@ export default function ArcManagerPanel({ courseId, versionId, arcs }: ArcManage
           })}
         </div>
       ) : (
-        <p className={styles.helperText}>
+        <p className={styles.quietText}>
           {t('empty')}
         </p>
       )}
@@ -235,11 +234,7 @@ export default function ArcManagerPanel({ courseId, versionId, arcs }: ArcManage
         open={Boolean(pendingDelete)}
         tone="danger"
         title={t('deleteTitle')}
-        description={
-          pendingDelete && pendingDelete.lessonCount > 0
-            ? t('deleteWithLessons', { count: pendingDelete.lessonCount })
-            : t('deleteDescription')
-        }
+        description={pendingDelete && pendingDelete.lessonCount > 0 ? t('deleteWithLessons', { count: pendingDelete.lessonCount }) : undefined}
         confirmLabel={t('deleteConfirm')}
         pending={isPending}
         onConfirm={handleDelete}

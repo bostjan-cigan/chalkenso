@@ -7,7 +7,8 @@ import AdminSearchableSelectField from '../../components/ui/AdminSearchableSelec
 import UserAvatar from '../../components/ui/UserAvatar';
 import { setTaskAssigneeAction } from '../actions';
 
-type AssignableUser = { id: string; name: string; avatarUrl: string | null; teachesGroup?: boolean };
+/** Someone who may work on the task: whoever teaches its group comes first (`listAssignableUsers`). */
+type AssignableUser = { id: string; name: string; avatarUrl: string | null };
 
 type TaskAssigneeControlProps = {
   taskId: string;
@@ -34,7 +35,7 @@ export default function TaskAssigneeControl({
   const options = useMemo(
     () => [
       { label: t('unassigned'), value: '' },
-      ...users.map((user) => ({ label: user.name, value: user.id, ...(user.teachesGroup ? { hint: t('teachesGroup') } : {}) })),
+      ...users.map((user) => ({ label: user.name, value: user.id })),
     ],
     [users, t]
   );

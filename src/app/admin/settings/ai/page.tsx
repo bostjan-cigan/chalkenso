@@ -7,12 +7,9 @@ import { requireOrgAdmin } from '@/lib/admin-auth';
 import { serverExtensions } from '@/extensions/server';
 import { ui } from '@/extensions/ui';
 import { organizationAiKeyHint, resolveAiKeyState, showsAiMockNote } from '@/lib/ai-key';
-import { modelFor } from '@/lib/ai';
-import { modelName } from '@/lib/ai-pricing';
 import { usageThisMonth, type UsageSummary } from '@/lib/ai-usage';
 import SettingsFrame from '../SettingsFrame';
 import { AiKeyForm } from '../SettingsForms';
-import InfoTip from '../ui/InfoTip';
 import { SettingsBlock, SettingsGroup, SettingsRow, SettingsStatus, UsageBar } from '../ui/SettingsList';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -57,12 +54,12 @@ function nextMonthStart(now = new Date()) {
 }
 
 /**
- * Settings → AI, as Apple's settings are: no paragraphs, explanations behind ⓘ.
+ * Settings → AI, as Apple's settings are: rows, no paragraphs.
  * - The AI the edition includes (`aiAllowance`): how much of it this month has used, as a bar
  *   (percent and money, about how many drafts it covers), whether it's the one running, and the
  *   edition's own below it (`ui.AiTopUp`).
  * - The organisation's own Anthropic key: active or not, set it, replace it, remove it (where the
- *   edition allows it; otherwise a line saying so).
+ *   edition allows it; otherwise a line saying so), and under it that nothing is trained on.
  * - The edition's own panels.
  * - This month's calls per source.
  */
@@ -99,11 +96,10 @@ export default async function AiSettingsPage() {
             : { on: false, warning: false, text: t('plan.off') };
 
   return (
-    <SettingsFrame active="ai" title={t('title')} description={t('description')}>
+    <SettingsFrame active="ai" title={t('title')}>
       {allowance ? (
         <SettingsGroup
           title={t('plan.title')}
-          info={<InfoTip label={t('plan.title')}>{t('plan.info')}</InfoTip>}
           testId="ai-in-use"
           footer={showsAiMockNote() ? t('sample') : undefined}
         >
@@ -149,20 +145,16 @@ export default async function AiSettingsPage() {
       <SettingsGroup
         title={t('key.title')}
         testId="ai-own-key"
-        info={
-          <InfoTip label={t('key.title')}>
-            <p>{t('key.info')}</p>
-            <p>{t('key.models', { revise: modelName(modelFor('revise')), plan: modelName(modelFor('plan')) })}</p>
-            <p>
-              {t.rich('noTraining', {
-                terms: (chunks) => (
-                  <a href={ANTHROPIC_COMMERCIAL_TERMS} target="_blank" rel="noreferrer">
-                    {chunks}
-                  </a>
-                ),
-              })}
-            </p>
-          </InfoTip>
+        footer={
+          <span data-testid="ai-no-training">
+            {t.rich('noTraining', {
+              terms: (chunks) => (
+                <a href={ANTHROPIC_COMMERCIAL_TERMS} target="_blank" rel="noreferrer">
+                  {chunks}
+                </a>
+              ),
+            })}
+          </span>
         }
       >
         {ownKeyAllowed ? (

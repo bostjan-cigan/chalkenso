@@ -2,60 +2,48 @@ import type { ReactNode } from 'react';
 import styles from './settings-ui.module.css';
 
 /**
- * Settings as inset grouped lists, like Apple's: a short heading (with ⓘ for the explanation),
- * rows with their name on the left and value or control on the right, and at most a line under the
- * group. No paragraphs: what something does goes behind ⓘ (`InfoTip`).
+ * Settings as inset grouped lists, like Apple's: a short heading, rows with their name on the left
+ * and value or control on the right, and at most a line under the group. No explanations: a row's
+ * name says what it is.
  */
 export function SettingsGroup({
   title,
-  info,
   footer,
   children,
   testId,
 }: {
   title?: string;
-  /** ⓘ next to the heading. */
-  info?: ReactNode;
-  /** One short line under the group. */
+  /** One short line under the group, for a fact that matters ("shown once"), never what it's for. */
   footer?: ReactNode;
   children: ReactNode;
   testId?: string;
 }) {
   return (
     <section className={styles.group} data-testid={testId}>
-      {title || info ? (
-        <h2 className={styles.groupHead}>
-          {title}
-          {info}
-        </h2>
-      ) : null}
+      {title ? <h2 className={styles.groupHead}>{title}</h2> : null}
       <div className={styles.groupBody}>{children}</div>
       {footer ? <p className={styles.groupFoot}>{footer}</p> : null}
     </section>
   );
 }
 
-/** One row: its name (and a short detail under it) on the left, its value or controls on the right. */
+/** One row: its name (and its data under it: dates, counts) on the left, its value or controls on the right. */
 export function SettingsRow({
   label,
   detail,
-  info,
   children,
   testId,
 }: {
   label: ReactNode;
+  /** Data only ("Created 3 Oct · last used today"), never what the row is for. */
   detail?: ReactNode;
-  info?: ReactNode;
   children?: ReactNode;
   testId?: string;
 }) {
   return (
     <div className={styles.row} data-testid={testId}>
       <span className={styles.rowText}>
-        <span className={styles.rowLabel}>
-          {label}
-          {info}
-        </span>
+        <span className={styles.rowLabel}>{label}</span>
         {detail ? <span className={styles.rowDetail}>{detail}</span> : null}
       </span>
       {children ? <span className={styles.rowEnd}>{children}</span> : null}

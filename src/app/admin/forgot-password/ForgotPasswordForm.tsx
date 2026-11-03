@@ -46,7 +46,7 @@ export default function ForgotPasswordForm() {
 
   if (sent) {
     return (
-      <p className={styles.fieldHint} style={{ margin: 0 }} data-testid="reset-sent">
+      <p style={{ margin: 0 }} data-testid="reset-sent">
         {t('sent')}
       </p>
     );

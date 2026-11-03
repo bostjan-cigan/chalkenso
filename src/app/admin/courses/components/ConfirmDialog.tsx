@@ -8,8 +8,10 @@ import modalStyles from '@/app/admin/courses/groups/components/MemberLinkModal.m
 
 interface ConfirmDialogProps {
   open: boolean;
+  /** The question ("Delete this version?"). */
   title: string;
-  description: string;
+  /** At most one short line: what is lost, when the title doesn't make it plain. */
+  description?: string;
   /** More than a sentence (details of what it acts on), under the description. */
   children?: ReactNode;
   confirmLabel: string;
@@ -48,15 +50,17 @@ export default function ConfirmDialog({
       open={open}
       onClose={onClose}
       titleId={titleId}
-      descriptionId={descriptionId}
+      descriptionId={description ? descriptionId : undefined}
     >
       <header className={modalStyles.modalHeader}>
         <h2 id={titleId} className={modalStyles.modalTitle}>
           {title}
         </h2>
-        <p id={descriptionId} className={modalStyles.modalDescription}>
-          {description}
-        </p>
+        {description ? (
+          <p id={descriptionId} className={modalStyles.modalDescription}>
+            {description}
+          </p>
+        ) : null}
       </header>
 
       {children ? <div className={modalStyles.modalBody}>{children}</div> : null}

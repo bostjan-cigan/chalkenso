@@ -1,14 +1,12 @@
 {
   "team": {
     "metaTitle": "Team",
-    "eyebrow": "Team",
+    "title": "Team",
     "invite": {
       "button": "Invite",
-      "title": "Bring in a colleague",
-      "intro": "Create a link and send it however you like. They sign up (or sign in) and join right away."
+      "title": "Invite a colleague"
     },
     "members": {
-      "kicker": "Members",
       "title": "{count, plural, one {# person} other {# people}}",
       "you": "(you)",
       "lastSignedIn": "{email} · last signed in {date}",
@@ -16,8 +14,7 @@
       "customAccess": "Their access was set up by hand. Saving here replaces it."
     },
     "invites": {
-      "kicker": "Pending invites",
-      "title": "{count} open",
+      "title": "{count, plural, one {# pending invite} other {# pending invites}}",
       "details": "{access} · expires {date}",
       "withdraw": "Withdraw"
     },
@@ -25,7 +22,6 @@
       "label": "Who it's for",
       "placeholder": "Ana, instructor for the spring group",
       "role": "Role",
-      "joinsAs": "They join as {role}: {hint}.",
       "access": "Access",
       "sending": "Sending…",
       "creating": "Creating link…",
@@ -37,7 +33,6 @@
     "accessDialog": {
       "open": "Access",
       "title": "What {name} may reach",
-      "description": "Owners and admins always have full access; this is for members.",
       "cancel": "Cancel",
       "saving": "Saving…",
       "save": "Save access"
@@ -50,22 +45,22 @@
       "removeTitle": "Remove {name} from the team?",
       "signOutTitle": "Sign {name} out?",
       "removeDescription": "They lose {organization} right away, and their sync tokens and connected apps stop working. Their notes stay.",
-      "signOutDescription": "They’ll need to sign in again to open {organization}. Their work stays, and so does their access.",
+      "signOutDescription": "They’ll need to sign in again to open {organization}.",
       "remove": "Remove",
       "signOut": "Sign out",
       "cancel": "Cancel"
     },
     "actions": {
       "emailMissing": "Enter the email to send the invite to.",
-      "emailed": "Invite emailed to {email}. It works once and expires in 7 days; the link is here too.",
-      "emailFailed": "The invite is made, but the email didn’t go out. Send them the link yourself: it works once and expires in 7 days.",
-      "linkCreated": "Invite link created. Send it to your colleague: it works once and expires in 7 days.",
+      "emailed": "Invite emailed to {email}. It works once, for 7 days.",
+      "emailFailed": "The email didn’t go out: send them the link yourself. It works once, for 7 days.",
+      "linkCreated": "Invite link created. It works once, for 7 days.",
       "chooseRole": "Choose a role.",
       "roleUpdated": "Role updated.",
       "removed": "Removed from the team.",
-      "signedOut": "Signed out. They’ll need to sign in again to open this organisation.",
+      "signedOut": "Signed out.",
       "chooseAccess": "Choose what they may reach.",
-      "accessSaved": "Access saved. It applies from their next click."
+      "accessSaved": "Access saved."
     },
     "errors": {
       "pickCourse": "Pick at least one course.",
@@ -84,35 +79,11 @@
     },
     "policy": {
       "roles": {
-        "manager": {
-          "label": "Manager",
-          "inSentence": "the manager",
-          "hint": "runs this installation and its team"
-        },
-        "owner": {
-          "label": "Owner",
-          "inSentence": "an owner",
-          "hint": "runs the organisation"
-        },
-        "admin": {
-          "label": "Admin",
-          "inSentence": "an admin",
-          "hint": "also manages the team"
-        },
-        "instructor": {
-          "label": "Instructor",
-          "inSentence": "an instructor",
-          "hint": "designs courses, teaches groups, works through feedback (all, or what you choose under Access)"
-        },
-        "member": {
-          "label": "Member",
-          "inSentence": "a member",
-          "hint": "works on courses: all, or the ones you choose"
-        }
-      },
-      "description": {
-        "installation": "You manage this installation. Instructors you invite design and edit courses, run groups and work through feedback: all of them, or only the courses or groups you give them.",
-        "organization": "Members design and edit courses, run groups and work through feedback: every course, or only the courses or groups you give them. Owners and admins see everything and manage the team."
+        "manager": "Manager",
+        "owner": "Owner",
+        "admin": "Admin",
+        "instructor": "Instructor",
+        "member": "Member"
       }
     }
   },
@@ -134,50 +105,23 @@
     "readsFeedback": "reads feedback",
     "editor": {
       "label": "Access",
-      "full": {
-        "title": "Everything",
-        "text": "Every course and group, now and later"
-      },
-      "limited": {
-        "title": "Limited",
-        "text": "Only the courses or groups you choose"
-      },
+      "full": "Everything",
+      "limited": "Limited",
       "scopeLabel": "Courses",
       "lessonsLabel": "Lessons",
       "scopes": {
-        "allCourses": {
-          "label": "All courses",
-          "hint": "Every course and its groups, now and later"
-        },
-        "courses": {
-          "label": "Chosen courses",
-          "hint": "These courses and their groups"
-        },
-        "groups": {
-          "label": "Chosen groups",
-          "hint": "Only the groups they teach: their learners, links, feedback and improvements"
-        }
+        "allCourses": "All courses",
+        "courses": "Chosen courses",
+        "groups": "Chosen groups"
       },
       "lessons": {
-        "edit": {
-          "label": "Can edit",
-          "hint": "Edit lessons and publish versions"
-        },
-        "view": {
-          "label": "View only",
-          "hint": "Read lessons, change nothing"
-        },
-        "guest": {
-          "label": "Guest instructor",
-          "hint": "Reads the lessons and adds notes through their instructor link. No learners, feedback or improvements."
-        }
+        "edit": "Can edit",
+        "view": "View only",
+        "guest": "Guest instructor"
       },
       "noCourses": "There are no courses yet.",
       "noGroups": "There are no groups yet.",
-      "feedback": {
-        "label": "Can work on feedback and improvements",
-        "hint": "Reply, resolve, plan and move improvements, add class notes. Off: they can still read them."
-      },
+      "feedback": "Can work on feedback and improvements",
       "pickCourse": "Pick at least one course.",
       "pickGroup": "Pick at least one group."
     }
@@ -185,14 +129,11 @@
   "export": {
     "metaTitle": "Export",
     "title": "Export",
-    "description": "Everything in Chalkenso, in one file you keep.",
     "downloadFirst": "Download everything first",
     "page": {
       "title": "Download everything",
-      "intro": "One .zip file with all of this. README.txt in it explains every file.",
-      "own": "It has what you can open in {organization}. Owners and admins export the whole organisation.",
+      "own": "It has what you can open in {organization}.",
       "download": "Download everything",
-      "hint": "The download starts right away. For a large organisation it takes a few minutes.",
       "limit": "You’ve exported several times in the last hour. Try again in a little while.",
       "nothing": "There’s nothing here you can export yet.",
       "impersonating": "You are logged in as someone else. Only they can export their organisation’s data.",
@@ -205,12 +146,6 @@
         "feedback": "Feedback and instructor notes",
         "tasks": "Tasks",
         "team": "People in the team"
-      },
-      "obsidian": {
-        "text": "The lessons are laid out the way the Chalkenso plugin for Obsidian keeps them. Copy the folder “{folder}” from the .zip into your vault’s Chalkenso folder, and the plugin reads every note as synced."
-      },
-      "never": {
-        "text": "Passwords, sync tokens, site keys, AI keys and learner links, and nothing from another organisation. Learners are named only on their group’s roster, and next to a survey answer they chose to sign."
       }
     },
     "file": {
@@ -350,28 +285,20 @@
   },
   "profile": {
     "page": {
-      "twoFactorRequired": "Set up two-factor authentication below to continue. It is required for your account; until it is on, the rest of the admin and your API tokens stay locked.",
+      "twoFactorRequired": "Two-factor authentication is required for your account: set it up below to continue.",
       "back": "Back to Home",
-      "subtitle": "Account security",
       "title": "Profile",
       "details": "Profile details",
       "photo": "Profile photo",
       "photoRow": "Photo"
     },
     "details": {
-      "signedInAs": "Signed in as {identifier}",
-      "roles": {
-        "superadmin": "Super admin",
-        "user": "Account"
-      },
       "firstName": "First name",
       "firstNamePlaceholder": "Ada",
       "lastName": "Last name",
       "lastNamePlaceholder": "Lovelace",
       "handle": "Your handle",
-      "handleHint": "Yours alone, like a username; people and organisations share one list.",
       "email": "Email address",
-      "emailHint": "You sign in with this address.",
       "emailPlaceholder": "you@example.com",
       "saving": "Saving…",
       "save": "Save",
@@ -383,25 +310,15 @@
     "photo": {
       "alt": "Profile",
       "choose": "Choose image",
-      "formats": "PNG, JPG or WEBP · up to 5 MB",
       "uploading": "Uploading…",
       "save": "Save photo",
       "working": "Working…",
       "remove": "Remove photo"
     },
     "twoFactor": {
-      "kicker": "Two-factor authentication",
-      "active": "TOTP active",
-      "inactive": "Not active",
-      "manage": "Manage",
+      "title": "Two-factor authentication",
       "setUp": "Set up authenticator",
-      "on": "Your account requires a code from your authenticator app when you sign in.",
-      "onRequired": "Your account requires a code from your authenticator app when you sign in. It is required for your account and cannot be turned off.",
-      "off": "Add a second step after your password using a TOTP authenticator (e.g. 1Password, Google Authenticator).",
-      "offRequired": "Required for your account: set up a TOTP authenticator (e.g. 1Password, Google Authenticator) to continue. Until then you can only use this page.",
       "codesTitle": "Save your backup codes",
-      "passwordStep": "Confirm your password to start.",
-      "scanStep": "Scan the QR code or enter the secret manually, then enter the 6-digit code to confirm.",
       "codesStep": "Each one signs you in once if you lose your authenticator. Keep them somewhere safe: they won’t be shown again.",
       "password": "Password",
       "secret": "Secret key (manual entry)",
@@ -412,7 +329,6 @@
       "continue": "Continue",
       "enabling": "Enabling…",
       "enable": "Enable",
-      "manageDescription": "Turn off only if you can sign in without this device. You will need your password.",
       "close": "Close",
       "turningOff": "Turning off…",
       "turnOff": "Turn off two-factor",
@@ -420,14 +336,12 @@
       "rowOff": "Off"
     },
     "sessions": {
-      "kicker": "Security",
       "title": "Where you’re signed in",
       "lastActive": "{unit, select, now {Now} minutes {{count} min ago} hours {{count} h ago} yesterday {yesterday} other {{count} days ago}}",
       "activeNow": "Active now",
       "active": "Active {when}",
       "staysKept": "Up to {days} days (Keep me signed in)",
       "staysShort": "Until the browser closes",
-      "policy": "Sessions end after {idle} hours without activity ({max} hours at most), or {keptIdle} days with Keep me signed in ({keptMax} days at most).",
       "readOnly": "You’re logged in as this person: only they can sign their sessions out.",
       "device": {
         "on": "{browser} on {system}",
@@ -436,8 +350,8 @@
       "thisBrowser": "This browser",
       "signOutAll": "Sign out of all devices",
       "signOutAllTitle": "Sign out of all devices?",
-      "signOutAllDescription": "Every browser, this one too, will need your password again. Use this if you’ve lost a device or think someone else got in.",
-      "signOutDescription": "Signing out means this browser needs your password again. If you don’t recognise it, reset your password too.",
+      "signOutAllDescription": "Every browser, this one too, will need your password again.",
+      "signOutDescription": "This browser will need your password again.",
       "signOutAllConfirm": "Sign out of all",
       "signOut": "Sign out",
       "cancel": "Cancel",
@@ -475,9 +389,7 @@
     }
   },
   "deleteAccount": {
-    "kicker": "Danger zone",
     "panelTitle": "Delete your account",
-    "intro": "Deletes your sign-in and profile right away, with any organisation only you are in. Organisations with other people stay, and your notes there keep your name. It can’t be undone.",
     "impersonating": "You are logged in as this person: only they can delete their account.",
     "delete": "Delete my account",
     "title": "Delete your account?",
@@ -500,9 +412,8 @@
     }
   },
   "deleteOrganization": {
-    "kicker": "Danger zone",
+    "groupTitle": "Danger zone",
     "delete": "Delete this organisation",
-    "intro": "Deletes its courses, groups, learner data, feedback, improvements, files and settings for everyone, right away. Members keep their accounts. It can’t be undone.",
     "ownersOnly": "Only an owner can delete the organisation.",
     "title": "Delete {name}?",
     "sureTitle": "Are you sure?",
@@ -533,7 +444,6 @@
     "general": {
       "metaTitle": "Settings",
       "title": "General",
-      "description": "How your organisation appears to your team and your learners.",
       "organization": "Organisation",
       "lookTitle": "Logo and icon",
       "name": "Organisation name",
@@ -546,10 +456,8 @@
     "ai": {
       "metaTitle": "AI settings",
       "title": "AI",
-      "description": "The key AI in the app runs on, and what it cost this month.",
       "plan": {
         "title": "Included in your plan",
-        "info": "AI in the app runs on Chalkenso’s Anthropic key, included in your plan, up to its monthly amount; top-ups add more at Anthropic’s prices. With your own key active, your plan’s AI stands by and isn’t used.",
         "state": "Status",
         "inUse": "In use",
         "inUseTopUp": "In use, from your top-up",
@@ -562,7 +470,7 @@
         "spent": "Spent this month",
         "usedUpTrial": "Used up for your free group",
         "moneyTrial": "{spent} of {cap} for your free group",
-        "draftsTrial": "About {drafts, plural, one {# draft} other {# drafts}} for your free group. Need more? Ask in Settings → Plan.",
+        "draftsTrial": "About {drafts, plural, one {# draft} other {# drafts}} for your free group.",
         "spentTrial": "Spent in your free group"
       },
       "installation": {
@@ -570,8 +478,6 @@
       },
       "key": {
         "title": "Your own Anthropic key",
-        "info": "With your organisation’s own key active, AI in the app runs on it and Anthropic bills you directly. Tip: in the Anthropic Console, make a workspace for Chalkenso with a monthly spend limit and create the key there. It’s checked with Anthropic when you save it, and kept encrypted.",
-        "models": "Lesson revisions use {revise}; plans, check questions, themes, summaries and wording checks use {plan}.",
         "notInPlan": "Comes with Team and Academy",
         "seePlans": "See plans"
       },
@@ -603,6 +509,7 @@
       "cancel": "Cancel",
       "saving": "Saving…",
       "save": "Save key",
+      "checked": "It’s checked with Anthropic when you save it, and kept encrypted.",
       "errors": {
         "refusedMock": "This key was refused by Anthropic.",
         "refused": "This key was refused by Anthropic. Check that you copied all of it and that it is active.",
@@ -613,14 +520,11 @@
       }
     },
     "identity": {
-      "shown": "Shown at the top of the sidebar, and when someone switches organisations.",
       "chooseAnother": "Choose another logo",
       "choose": "Choose a logo",
-      "formats": "PNG, JPG or WEBP · up to 2 MB · square works best",
       "saving": "Saving…",
       "saveLogo": "Save logo",
       "removeLogo": "Remove logo",
-      "iconUnderLogo": "Icon (shown if you remove the logo)",
       "icon": "Icon",
       "colour": "Colour",
       "icons": {
@@ -661,11 +565,9 @@
   "apiTokens": {
     "page": {
       "you": "You",
-      "eyebrow": "Integrations",
-      "title": "API Tokens",
-      "description": "Personal tokens for syncing lessons with an Obsidian vault (and other tools). A token works in this organisation and acts as you: it can do exactly what your account can, and changes to your access apply to every token immediately."
+      "title": "Tokens"
     },
-    "about": "Tokens connect the Obsidian sync plugin and other tools to this organisation. A token acts as you: it can do exactly what your account can, and changes to your access apply to every token at once. It’s shown only once, when you create it.",
+    "about": "A token acts as you, with your access, and is shown only once.",
     "errors": {
       "create": "Could not create the token. Try again.",
       "revoke": "Could not revoke the token. Try again.",
@@ -682,12 +584,11 @@
     "revokedOn": "Revoked {date}",
     "delete": "Delete",
     "revoke": "Revoke",
-    "activeKicker": "Active tokens ({count})",
+    "activeTitle": "Active tokens ({count})",
     "new": "New token",
     "emptyTitle": "No active tokens",
-    "revokedKicker": "Revoked tokens ({count})",
-    "revokedHint": "Revoked tokens no longer work. Delete them to remove them from this list.",
-    "createKicker": "Create token",
+    "revokedTitle": "Revoked tokens ({count})",
+    "createTitle": "Create token",
     "createdTitle": "Token created — copy it now",
     "copy": "Copy token",
     "done": "Done",
@@ -713,25 +614,19 @@
       "deleted": "Token deleted."
     },
     "obsidian": {
-      "kicker": "Obsidian",
-      "title": "Connect your Obsidian vault",
-      "lead": "Obsidian is a free notes app that keeps your notes as plain files in a folder on your computer (a vault). With the plugin your lessons live there too, and sync both ways when you say so.",
+      "title": "Obsidian",
       "download": "Download the plugin",
       "install": {
         "title": "Install the plugin",
-        "text": "Unzip it into your vault’s <code>.obsidian/plugins</code> folder, then turn on Chalkenso in Obsidian’s Settings → Community plugins."
+        "text": "Unzip it into your vault’s <code>.obsidian/plugins</code> and turn on Chalkenso in Community plugins."
       },
-      "token": {
-        "title": "Create a token",
-        "text": "Under <link>Create token</link> below. It’s shown once, so copy it."
-      },
+      "token": "Create a token",
       "add": {
         "title": "Add it in Obsidian",
-        "text": "In Obsidian’s Settings → Chalkenso, set the server to this address, then Add your organisation and paste the token."
+        "text": "In Settings → Chalkenso, set the server to this address, then paste the token under Add your organisation."
       },
       "copy": "Copy",
       "copied": "Copied",
-      "then": "Then tick what to sync and run Sync.",
       "pluginGuide": "The plugin guide",
       "claudeGuide": "Claude Code in your vault",
       "connected": "Your vault is connected",

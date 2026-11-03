@@ -93,14 +93,13 @@ export default async function CourseFeedbackPage({ params, searchParams }: { par
   return (
     <CourseManagementFrame
       activeSection="courses"
-      pageContext={{ title: course.title, subtitle: course.summary ?? undefined, back: { href: '/admin/courses', label: t('back') } }}
+      pageContext={{ title: course.title, back: { href: '/admin/courses', label: t('back') } }}
       courseTabs={{ courseId, active: 'feedback' }}
     >
       <section className={styles.editorPageSection}>
         <AdminSectionCard
-          kicker={t('kicker')}
-          title=""
-          kickerAction={
+          title={t('title')}
+          action={
             <AdminButton
               href={`/admin/api/feedback-export?course=${courseId}${group ? `&group=${group}` : ''}`}
               download

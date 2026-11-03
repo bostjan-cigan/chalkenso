@@ -30,7 +30,6 @@ import OrganizationSwitcher from './OrganizationSwitcher';
 import NeedsYouCount from './NeedsYouCount';
 import { SidebarToggle, SidebarTooltips } from './SidebarState';
 import { getAdminProfileImageUrl } from '@/lib/profile-image';
-import AdminBadge from './ui/AdminBadge';
 import AdminButton from './ui/AdminButton';
 import styles from '../admin.module.css';
 
@@ -53,9 +52,8 @@ interface AdminFrameProps {
   children: ReactNode;
   /** When false, only the sidebar is shown; no page header, stats, or top actions. */
   showHero?: boolean;
-  eyebrow?: string;
+  /** The page header is its title and actions: no eyebrow above it, no sentence under it. */
   title?: string;
-  description?: string;
   actions?: ActionItem[];
   /** Optional summary stats (e.g. dashboard tiles) — right column of the page header on wide viewports. */
   summary?: ReactNode;
@@ -88,17 +86,15 @@ function initials(name: string) {
 }
 
 /**
- * The app chrome: a sidebar (brand, organisation, sections, account) and the page header. Its own
- * words are in `app` (the places' names in `app.nav`, roles in `app.roles`), in the reader's language;
- * the page header's are the page's.
+ * The app chrome: a sidebar (brand, organisation, sections, account) and the page header. Each place
+ * in it is its name alone: the organisation, the account, "Platform admin". Its own words are in
+ * `app` (the places' names in `app.nav`), in the reader's language; the page header's are the page's.
  */
 export default async function AdminFrame({
   navItems,
   children,
   showHero = true,
-  eyebrow,
   title,
-  description,
   actions = [],
   summary,
   accountPageActive = false,
@@ -142,8 +138,6 @@ export default async function AdminFrame({
     logoUrl: getOrganizationLogoUrl(organization.id, organization.logoKey),
     iconName: organization.iconName,
     iconColor: organization.iconColor,
-    // The edition's names for the roles (`serverExtensions.team.roles`), in the reader's language.
-    roleLabel: t(`roles.${EDITION}.${organization.role}`),
   }));
   const currentOrganization = viewer?.organization
     ? organizations.find((organization) => organization.id === viewer.organization?.id) ?? null
@@ -152,13 +146,6 @@ export default async function AdminFrame({
   // platform admin is logged in as them). The local edition runs one.
   const ownChoices = EDITION === 'cloud' && Boolean(viewer) && !viewer?.impersonator;
   const createHref = ownChoices && currentOrganization && (await isSignupOpen()) ? '/admin/organizations/new' : null;
-  const roleLabel = adminPanel
-    ? t('roles.platformAdmin')
-    : viewer?.orgRole
-      ? t(`roles.${EDITION}.${viewer.orgRole}`)
-      : viewer?.platformAdmin
-        ? t('roles.platformAdmin')
-        : null;
 
   return (
     <div className={`${styles.page} ${styles.appLayout}`}>
@@ -186,7 +173,6 @@ export default async function AdminFrame({
               </span>
               <span className={styles.platformMarkText}>
                 <strong>{t('frame.platformAdmin')}</strong>
-                <span>{t('frame.acrossOrganizations')}</span>
               </span>
             </div>
           </div>
@@ -273,7 +259,6 @@ export default async function AdminFrame({
               )}
               <span className={styles.sidebarAccountText}>
                 <span className={styles.sidebarAccountName}>{accountName}</span>
-                {roleLabel ? <span className={styles.sidebarAccountMeta}>{roleLabel}</span> : null}
               </span>
             </Link>
             <LanguageMenu variant="sidebar" />
@@ -290,25 +275,11 @@ export default async function AdminFrame({
 
       <main className={styles.main}>
         {viewer && AdminBanner ? <AdminBanner viewer={viewer} /> : null}
-        {/* Said once, on the platform admin's Home: on every page it only pushes the page down (a phone above all). */}
-        {adminPanel && platformSection === 'home' ? (
-          <div className={styles.platformStrip} role="note">
-            <TbShieldCheck aria-hidden size={16} />
-            <span>
-              {t.rich('frame.platformStrip', {
-                strong: (chunks) => <strong>{chunks}</strong>,
-                em: (chunks) => <em>{chunks}</em>,
-              })}
-            </span>
-          </div>
-        ) : null}
         <div className={wide ? `${styles.shell} ${styles.shellWide}` : styles.shell}>
           {showHero ? (
             <section className={styles.heroCard}>
               <div className={styles.heroContent}>
-                {eyebrow ? <AdminBadge variant="kicker">{eyebrow}</AdminBadge> : null}
                 {title ? <h1 className={styles.heroTitle}>{title}</h1> : null}
-                {description ? <p className={styles.heroDescription}>{description}</p> : null}
                 {actions.length ? (
                   <div className={styles.actionRow}>
                     {actions.map((action) => (
@@ -334,7 +305,7 @@ export default async function AdminFrame({
             would put it under the top bar on phones. */}
         {viewer?.organization && !adminPanel && !wide && !platformSection ? (
           <Suspense fallback={null}>
-            <GettingStarted home={navItems.some((item) => item.active && item.href === '/admin')} />
+            <GettingStarted />
           </Suspense>
         ) : null}
       </main>

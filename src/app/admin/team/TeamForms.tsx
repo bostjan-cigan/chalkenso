@@ -34,19 +34,21 @@ function Feedback({ state }: { state: TeamActionState }) {
     return <AdminNotice>{state.error}</AdminNotice>;
   }
   if (state.message) {
-    return <p className={styles.fieldHint} style={{ margin: 0 }}>{state.message}</p>;
+    return <p className={styles.quietText} style={{ margin: 0 }}>{state.message}</p>;
   }
   return null;
 }
 
-type RoleChoice = { value: 'OWNER' | 'ADMIN' | 'MEMBER'; label: string; inSentence?: string; hint?: string };
+type RoleChoice = { value: 'OWNER' | 'ADMIN' | 'MEMBER'; label: string };
 
 /**
  * With one invite role (the local edition: instructors), there is nothing to choose. A member (or
- * instructor) can be limited to chosen courses or groups; owners and admins always get everything.
+ * instructor) can be limited to chosen courses or groups; owners and admins always get everything,
+ * which Access then says instead of the editor.
  */
 export function InviteForm({ roles, accessOptions }: { roles: RoleChoice[]; accessOptions: AccessOptions }) {
   const t = useTranslations('account.team.inviteForm');
+  const accessWords = useTranslations('account.access');
   const { state, pending, onSubmit } = useFormAction(createInviteAction, INITIAL);
   const [copied, setCopied] = useState(false);
   const [role, setRole] = useState<string>(roles[0]?.value ?? 'MEMBER');
@@ -72,28 +74,24 @@ export function InviteForm({ roles, accessOptions }: { roles: RoleChoice[]; acce
                 name="role"
                 label={t('role')}
                 defaultValue={roles[0].value}
-                options={roles.map((choice) => ({ value: choice.value, label: choice.label, hint: choice.hint }))}
+                options={roles.map((choice) => ({ value: choice.value, label: choice.label }))}
                 onValueChange={setRole}
               />
             </div>
           ) : (
             <>
-              <AdminField
-                id="invite-label"
-                name="label"
-                label={t('label')}
-                placeholder={t('placeholder')}
-                hint={roles[0] ? t('joinsAs', { role: roles[0].inSentence ?? roles[0].label, hint: roles[0].hint ?? '' }) : undefined}
-              />
+              <AdminField id="invite-label" name="label" label={t('label')} placeholder={t('placeholder')} />
               <input type="hidden" name="role" value={roles[0]?.value ?? 'MEMBER'} />
             </>
           )}
-          {role === 'MEMBER' ? (
-            <div style={{ display: 'grid', gap: '0.4rem' }}>
-              <span className={styles.inputLabel}>{t('access')}</span>
+          <div style={{ display: 'grid', gap: '0.4rem' }}>
+            <span className={styles.inputLabel}>{t('access')}</span>
+            {role === 'MEMBER' ? (
               <AccessEditor idPrefix="invite-access" value={access} onChange={setAccess} options={accessOptions} />
-            </div>
-          ) : null}
+            ) : (
+              <span>{accessWords('full')}</span>
+            )}
+          </div>
           <InviteDelivery idPrefix="invite" delivery={delivery} onChange={setDelivery} />
         </>
       ) : null}
@@ -171,7 +169,6 @@ function AccessDialog({
           <h2 id={titleId} className={modalStyles.modalTitle}>
             {t('title', { name: memberName })}
           </h2>
-          <p className={modalStyles.modalDescription}>{t('description')}</p>
         </header>
         <div className={modalStyles.modalBody} style={{ display: 'grid', gap: '0.75rem' }}>
           {note ? <AdminNotice>{note}</AdminNotice> : null}

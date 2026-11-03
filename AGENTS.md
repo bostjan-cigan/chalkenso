@@ -10,6 +10,10 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## UI conventions
 
+- Screens say only what they must, like Linear or Apple Notes: a page is its title, its content and its
+  actions. No eyebrows, page descriptions, section kickers, field hints, ⓘ tips, taglines or secondary labels;
+  the only line under a field is its error (`AdminField`'s `error`). If a screen needs explaining, fix its
+  layout (a clearer label, the right input type, the order people work in), don't add words.
 - Dropdowns: always the product's own (`Dropdown` in `src/components/Dropdown.tsx`, or
   `AdminSearchableSelectField` with `onValueChange`), never a native `<select>`. ESLint enforces it.
 

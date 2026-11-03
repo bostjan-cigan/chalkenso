@@ -509,6 +509,12 @@ export type ProposedChange = {
  */
 export type ChangeState = 'clean' | 'conflict' | 'gone' | 'done' | 'nearby';
 
+/** Keep (the change goes in; for a conflict, the proposal replaces yours) or skip it. */
+export type ChangeDecision = 'keep' | 'skip';
+
+/** Changes that still need a decision: ones already in the text, or with nowhere to go, don't. */
+export const actionable = (state: ChangeState | undefined) => state === 'clean' || state === 'conflict' || state === 'nearby';
+
 /** Short, stable ids: the same change in the same draft keeps its id across renders. */
 function hash(text: string) {
   let value = 5381;
@@ -981,7 +987,7 @@ export function blockAnchor(block: string): string {
   return plainText(block);
 }
 
-/** What a check found, as a message key: `editor.revision.checks.<key>` (and `.problems.<key>` for a failed one). */
+/** What a check found, by name: `label` and `problem` in words, `key` and `values` as data. */
 export type RevisionCheckKey =
   | 'headingsChanged'
   | 'headingsKept'
@@ -998,7 +1004,7 @@ export type RevisionCheckKey =
 /**
  * A check on a revision: `label` for a checklist, and for a failed one `problem`, a sentence for the
  * review, both in English (the free Markdown diff tool reads `label` back); `key` and `values` say
- * the same for a translated message.
+ * the same as data, for words in another language.
  */
 export type RevisionCheck = {
   ok: boolean;

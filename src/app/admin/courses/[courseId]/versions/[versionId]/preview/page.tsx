@@ -92,7 +92,7 @@ export default async function VersionPreviewPage({ params, searchParams }: { par
       lessons={version.lessons}
       arcs={version.arcs}
       source={{ courseId, kind: 'preview', versionId }}
-      eyebrow={group ? t('eyebrowGroup', { name: group.name }) : t('eyebrow')}
+      mode={group ? t('modeGroup', { name: group.name }) : t('mode')}
       back={back}
       preparedBy={session?.user.organization?.name ?? null}
       commenting={

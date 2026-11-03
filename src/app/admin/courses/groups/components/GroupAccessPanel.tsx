@@ -141,8 +141,7 @@ export default function GroupAccessPanel({
         </div>
       ) : (
         <div className={adminStyles.emptyState}>
-          <h3 className={adminStyles.emptyStateTitle}>{t('groupLink.emptyTitle')}</h3>
-          <p className={adminStyles.emptyStateText}>{t('groupLink.emptyText')}</p>
+          <h3 className={adminStyles.emptyStateTitle}>{t('groupLink.empty')}</h3>
           <AdminButton size="compact"
             type="button"
             onClick={() => {

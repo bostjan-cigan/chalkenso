@@ -8,7 +8,7 @@ import styles from '../../admin.module.css';
 
 type DecisionButton = { label: string; status: TaskStatus | 'GROUP_ONLY'; primary?: boolean };
 
-/** A task row: status, title linking to the task, and one-click decisions that stay on this page. */
+/** A task row: title linking to the task, its status when the buttons don't say it, and one-click decisions that stay on this page. */
 function DecisionRow({
   task,
   note,
@@ -18,7 +18,7 @@ function DecisionRow({
   labels,
 }: {
   task: ForkTaskRef;
-  note: string;
+  note?: string;
   buttons: DecisionButton[];
   propose?: boolean;
   returnPath: string;
@@ -30,7 +30,7 @@ function DecisionRow({
         <Link href={`/admin/tasks/${task.id}`} className={styles.forkDecisionTitle}>
           {task.title}
         </Link>
-        <span className={styles.fieldHint}> · {note}</span>
+        {note ? <span className={styles.quietText}> · {note}</span> : null}
       </div>
       <div className={styles.versionForkActions}>
         {propose ? (
@@ -93,10 +93,6 @@ export async function ForkDecisions({
 
   return (
     <div className={styles.forkDecisions}>
-      <p className={styles.forkDecisionsHeading}>
-        {fork.decisionCount > 0 ? t('needsDecision') : t('inProgress')}
-      </p>
-
       {proposals.length > 0 ? (
         <section>
           <h4 className={styles.forkDecisionGroup}>{t('suggested')}</h4>
@@ -106,7 +102,6 @@ export async function ForkDecisions({
                 <DecisionRow
                   key={task.id}
                   task={task}
-                  note={t('waitingForReview')}
                   buttons={[
                     { label: t('accept'), status: TaskStatus.IN_PROGRESS, primary: true },
                     { label: t('decline'), status: TaskStatus.IGNORED },
@@ -138,7 +133,6 @@ export async function ForkDecisions({
                 <DecisionRow
                   key={task.id}
                   task={task}
-                  note={t('toDo')}
                   buttons={[
                     { label: t('start'), status: TaskStatus.IN_PROGRESS, primary: true },
                     { label: t('ignore'), status: TaskStatus.IGNORED },
@@ -169,7 +163,6 @@ export async function ForkDecisions({
               <DecisionRow
                 key={task.id}
                 task={task}
-                note={t('done')}
                 propose
                 buttons={[{ label: t('keepInGroup'), status: 'GROUP_ONLY' }]}
                 returnPath={returnPath}

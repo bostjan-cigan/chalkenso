@@ -37,13 +37,8 @@ export type LessonWorkspaceProps = {
   courseTitle: string;
   /** The course's page, when the viewer can open it (a group's instructor may not): else plain text. */
   courseHref?: string | null;
-  /**
-   * Whose lessons these are: the course's own (new groups start from them), or one group's copy
-   * (only that group reads it). Shown as a strip under the toolbar.
-   */
-  level?: { kind: 'course' } | { kind: 'copy'; groupName: string; groupHref: string | null };
   curriculumVersionId?: string;
-  /** "v2", or the group's name for a group's copy. */
+  /** "v2", or "Spring group's copy" for a group's copy. */
   versionLabel: string;
   backHref: string;
   previewHref?: string;
@@ -53,7 +48,6 @@ export type LessonWorkspaceProps = {
   revision?: number;
   initial: Saved;
   publishedAt?: string | null;
-  hasUnpublishedChanges?: boolean;
   arcs: { id: string; title: string }[];
   initialUploadedAssets: Record<string, UploadedLessonAsset>;
   /** The lesson's Improve mode (for whoever works on its feedback), and how much waits there. */
@@ -282,7 +276,6 @@ export default function LessonWorkspace(props: LessonWorkspaceProps) {
     }
   }, []);
 
-  const groupHref = props.level?.kind === 'copy' ? props.level.groupHref : null;
   const crumbs = (
     <nav className={styles.crumbs} aria-label={t('breadcrumb')}>
       {props.courseHref === null ? (
@@ -329,7 +322,7 @@ export default function LessonWorkspace(props: LessonWorkspaceProps) {
             <button type="button" className={mode === 'visual' ? styles.segmentActive : styles.segment} onClick={() => switchMode('visual')}>
               {t('visual')}
             </button>
-            <button type="button" className={mode === 'markdown' ? styles.segmentActive : styles.segment} onClick={() => switchMode('markdown')} title={t('markdownTitle')}>
+            <button type="button" className={mode === 'markdown' ? styles.segmentActive : styles.segment} onClick={() => switchMode('markdown')}>
               {t('markdown')}
             </button>
           </div>
@@ -369,27 +362,6 @@ export default function LessonWorkspace(props: LessonWorkspaceProps) {
         </div>
       ) : null}
 
-      {props.level ? (
-        <p className={props.level.kind === 'copy' ? `${styles.levelStrip} ${styles.levelStripCopy}` : styles.levelStrip} data-testid="lesson-level">
-          {props.level.kind === 'copy' ? (
-            <>
-              <strong>
-                {t.rich('copyTitle', {
-                  name: props.level.groupName,
-                  group: (chunks) => (groupHref ? <Link href={groupHref}>{chunks}</Link> : chunks),
-                })}
-              </strong>
-              <span>{t('copyText')}</span>
-            </>
-          ) : (
-            <>
-              <strong>{t('courseTitle')}</strong>
-              <span>{t('courseText')}</span>
-            </>
-          )}
-        </p>
-      ) : null}
-
       <div className={styles.titleRow}>
         <input
           id="lesson-title"
@@ -404,15 +376,10 @@ export default function LessonWorkspace(props: LessonWorkspaceProps) {
           required
           autoComplete="off"
         />
-        <p className={styles.statusLine}>
-          {status === 'PUBLISHED'
-            ? t('statusPublished')
-            : props.publishedAt
-              ? t(props.hasUnpublishedChanges ? 'statusDraftKeepsUnpublished' : 'statusDraftKeeps', {
-                  date: new Date(props.publishedAt).toLocaleDateString(INTL_LOCALES[locale]),
-                })
-              : t('statusDraftHidden')}
-        </p>
+        {/* A draft that was published before: learners still read the version from then. */}
+        {status === 'DRAFT' && props.publishedAt ? (
+          <p className={styles.statusLine}>{t('statusDraftKeeps', { date: new Date(props.publishedAt).toLocaleDateString(INTL_LOCALES[locale]) })}</p>
+        ) : null}
       </div>
 
       <div className={styles.grid}>
@@ -446,14 +413,12 @@ export default function LessonWorkspace(props: LessonWorkspaceProps) {
                 placeholder={t('markdownPlaceholder')}
                 aria-label={t('markdownLabel')}
               />
-              <p className={styles.markdownHint}>{t('markdownHint')}</p>
             </div>
           </div>
 
           {missingImages.length ? (
             <div className={styles.imagesCard}>
               <h3>{t('imagesTitle')}</h3>
-              <p>{t('imagesText')}</p>
               <LessonAssetUploadList courseId={courseId} onAssetUploaded={addUploadedAsset} references={missingImages} uploadedAssets={uploadedAssets} />
             </div>
           ) : null}
@@ -468,7 +433,6 @@ export default function LessonWorkspace(props: LessonWorkspaceProps) {
                 value={shortDescription}
                 maxLength={160}
                 onChange={(event) => setShortDescription(event.target.value)}
-                placeholder={t('shortDescriptionPlaceholder')}
                 id="lesson-short-description"
               />
             </label>
@@ -495,7 +459,6 @@ export default function LessonWorkspace(props: LessonWorkspaceProps) {
                 placeholder={t('slugPlaceholder')}
                 id="lesson-slug"
               />
-              <small>{t('slugHint')}</small>
             </label>
           </div>
         </aside>

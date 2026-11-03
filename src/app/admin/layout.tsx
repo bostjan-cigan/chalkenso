@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
-import { getTranslations } from 'next-intl/server';
 import { Suspense, type ReactNode } from 'react';
 import IntlProvider from '@/i18n/IntlProvider';
 import { getCurrentUserSession } from '@/lib/admin-auth';
@@ -17,11 +16,8 @@ async function SessionWatch() {
   ) : null;
 }
 
-/** The tab's title where a page has none of its own, in the app's language (the root layout's is English). */
-export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations('app.meta');
-  return { title: { absolute: t('title', { product: PRODUCT_NAME }), template: `%s | ${PRODUCT_NAME}` } };
-}
+/** The tab's title where a page has none of its own: the product's name, no tagline. */
+export const metadata: Metadata = { title: { absolute: PRODUCT_NAME, template: `%s | ${PRODUCT_NAME}` } };
 
 /**
  * Keeps `admin.module.css` loaded for every `/admin/*` route so portaled UI (e.g. account menu

@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { FiAlertTriangle, FiUsers } from 'react-icons/fi';
+import { FiAlertTriangle } from 'react-icons/fi';
 import AdminNotice from '../../../components/ui/AdminNotice';
 import AdminSectionCard from '../../../components/ui/AdminSectionCard';
 import CourseManagementFrame from '../../components/CourseManagementFrame';
@@ -44,7 +44,6 @@ export default async function NewGroupPage({
       activeSection="groups"
       pageContext={{
         title: t('title'),
-        subtitle: t('subtitle'),
         back: { href: '/admin/courses/groups', label: t('back') },
       }}
       notice={
@@ -60,11 +59,8 @@ export default async function NewGroupPage({
       }
     >
       <section className={styles.editorPageSection}>
-        <AdminSectionCard
-          kicker={t('title')}
-          title=""
-          icon={<FiUsers size={18} />}
-        >
+        {/* The page strip names it: the card has no title of its own. */}
+        <AdminSectionCard title="">
           <GroupForm
             action={createGroupAction}
             courses={courses}

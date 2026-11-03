@@ -204,8 +204,7 @@ export default function TaskPlanEditor({
                     opacity: unavailable && !selected ? 0.55 : 1,
                   }}
                 >
-                  <strong style={{ display: 'block', fontSize: '0.92rem' }}>{t(`scopes.${option.key}.title`)}</strong>
-                  <span style={{ fontSize: '0.82rem', opacity: 0.7 }}>{t(`scopes.${option.key}.text`)}</span>
+                  <strong style={{ display: 'block', fontSize: '0.92rem' }}>{t(`scopes.${option.key}`)}</strong>
                 </button>
               );
             })}

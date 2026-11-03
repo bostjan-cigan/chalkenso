@@ -9,14 +9,14 @@ import AdminField from './ui/AdminField';
  * A handle field: suggested from a name (`from`) until the person types their own, written the way a
  * handle must be (lowercase, digits, single hyphens), with what's wrong with its form. Whether it's free
  * is checked when the form is sent, or as they type with `check` (`/api/handles`, where the edition
- * has it). Its own words are in `common`, which every page's words include (the app's in English).
+ * has it): only a taken one is said. Its own words are in `common`, which every page's words include
+ * (the app's in English).
  */
 export default function HandleField({
   id,
   name,
   label,
   from,
-  hint,
   check = false,
   initial,
   optional = false,
@@ -27,13 +27,12 @@ export default function HandleField({
   label: string;
   /** What to suggest it from (the person's or the organisation's name). */
   from: string;
-  hint: string;
   /** Say whether it's free as they type. */
   check?: boolean;
   initial?: string;
   /** May be left empty (signing up: one is suggested). */
   optional?: boolean;
-  /** Handles already theirs (held ones): said to be theirs, not checked. */
+  /** Handles already theirs (held ones): never checked, never said to be taken. */
   mine?: Array<string | null>;
 }) {
   const t = useTranslations('common.handle');
@@ -62,13 +61,8 @@ export default function HandleField({
     };
   }, [check, value, problem, theirs]);
 
-  const availability = theirs
-    ? t('availability.yours', { handle: value })
-    : check && free?.handle === value && !problem
-      ? free.available
-        ? t('availability.free', { handle: value })
-        : t('availability.taken', { handle: value })
-      : null;
+  const taken =
+    !theirs && check && free?.handle === value && !problem && !free.available ? t('availability.taken', { handle: value }) : null;
   return (
     <AdminField
       id={id}
@@ -78,7 +72,7 @@ export default function HandleField({
       autoComplete="off"
       spellCheck={false}
       onChange={(event) => setOwn(typingHandle(event.target.value))}
-      hint={problem ?? availability ?? hint}
+      error={problem ?? taken}
       data-available={theirs ? 'true' : check && free?.handle === value ? String(free.available) : undefined}
       required={!optional}
     />

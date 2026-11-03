@@ -11,7 +11,7 @@ export const EXPORT_PAGE = '/admin/settings/export';
  */
 export default function ExportFirstLink({ label }: { label: string }) {
   return (
-    <p className={styles.fieldHint} style={{ margin: 0 }}>
+    <p className={styles.quietText} style={{ margin: 0 }}>
       <Link
         href={EXPORT_PAGE}
         style={{ display: 'inline-flex', alignItems: 'center', minHeight: 'var(--touch-target, auto)', color: 'rgb(var(--accent-color))' }}

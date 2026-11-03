@@ -1,7 +1,7 @@
 /*
  * Settings, the way Apple's are: a list of places on the left (a strip on phones), and on each page
- * inset grouped lists. A row has its name on the left and its value or control on the right; an
- * explanation sits behind ⓘ, not in paragraphs. Built on the theme tokens in src/app/globals.css.
+ * inset grouped lists. A row has its name on the left and its value or control on the right, and
+ * no paragraphs. Built on the theme tokens in src/app/globals.css.
  */
 
 /* ---------- The page: places on the left, the page on the right ---------- */
@@ -234,9 +234,8 @@
   background: #d97706;
 }
 
-/* Buttons in rows: Apple's plain text buttons (the action's colour), and a red one for destructive. */
-.action,
-.actionDanger {
+/* Buttons in rows: Apple's plain text buttons, in the action's colour. */
+.action {
   display: inline-flex;
   align-items: center;
   min-height: 36px;
@@ -252,99 +251,24 @@
   cursor: pointer;
 }
 
-.actionDanger {
-  color: #d64545;
-}
-
-.action:hover,
-.actionDanger:hover {
+.action:hover {
   background: var(--surface-2);
 }
 
-.action:focus-visible,
-.actionDanger:focus-visible {
+.action:focus-visible {
   outline: 2px solid rgb(var(--accent-color));
   outline-offset: 1px;
 }
 
-.action:disabled,
-.actionDanger:disabled {
+.action:disabled {
   opacity: 0.5;
   cursor: default;
 }
 
 @media (pointer: coarse) {
-  .action,
-  .actionDanger {
+  .action {
     min-height: 44px;
   }
-}
-
-/* ---------- ⓘ: the explanation, on demand ---------- */
-
-.info {
-  position: relative;
-  display: inline-flex;
-}
-
-.infoButton {
-  display: inline-grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  margin: -6px 0;
-  border: 0;
-  border-radius: 50%;
-  background: none;
-  color: rgba(var(--foreground-rgb), 0.5);
-  cursor: pointer;
-}
-
-.infoButton:hover,
-.infoButton[aria-expanded='true'] {
-  color: rgb(var(--accent-color));
-  background: var(--surface-2);
-}
-
-.infoButton:focus-visible {
-  outline: 2px solid rgb(var(--accent-color));
-  outline-offset: 1px;
-}
-
-@media (pointer: coarse) {
-  .infoButton {
-    width: 44px;
-    height: 44px;
-    margin: -14px -8px;
-  }
-}
-
-.infoPop {
-  position: absolute;
-  z-index: 30;
-  top: calc(100% + 8px);
-  left: -0.5rem;
-  width: min(20rem, calc(100vw - 2rem));
-  padding: 0.75rem 0.9rem;
-  border-radius: 12px;
-  border: 1px solid var(--card-border);
-  background: var(--card-bg);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.14);
-  color: rgb(var(--foreground-rgb));
-  font-size: 0.84rem;
-  font-weight: 400;
-  line-height: 1.5;
-  letter-spacing: normal;
-  text-transform: none;
-  white-space: normal;
-}
-
-.infoPop p {
-  margin: 0;
-}
-
-.infoPop p + p {
-  margin-top: 0.5rem;
 }
 
 /* ---------- Usage: how much of the plan's allowance is gone ---------- */

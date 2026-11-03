@@ -211,13 +211,11 @@ export default function VersionPreviewLinksPanel({
 
   return (
     <div className={modalStyles.inlineAccessBlock}>
-      <p className={styles.helperText}>{t('intro')}</p>
-
       <ActionNotice notice={notice} />
 
       <span className={styles.fieldLabel}>{t('activeHeading', { count: live.length })}</span>
       {live.length > 0 ? live.map(renderRow) : (
-        <p className={styles.helperText}>{t('noActive')}</p>
+        <p className={styles.quietText}>{t('noActive')}</p>
       )}
 
       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
@@ -242,14 +240,8 @@ export default function VersionPreviewLinksPanel({
 
       <ConfirmDialog
         open={Boolean(deleteTarget)}
-        title={t('deleteTitle')}
-        description={
-          deleteTarget
-            ? deleteTarget.label
-              ? t('deleteNamedDescription', { label: deleteTarget.label })
-              : t('deleteDescription')
-            : ''
-        }
+        title={deleteTarget?.label ? t('deleteNamedTitle', { label: deleteTarget.label }) : t('deleteTitle')}
+        description={t('deleteDescription')}
         confirmLabel={t('deleteConfirm')}
         tone="danger"
         pending={isDeleting}
@@ -290,8 +282,8 @@ function CreatePreviewLinkModal({
   onCreated,
 }: CreatePreviewLinkModalProps) {
   const t = useTranslations('courses.previewLinks.modal');
+  const usage = useTranslations('courses.previewLinks');
   const titleId = useId();
-  const descriptionId = useId();
   const [label, setLabel] = useState('');
   const [oneTime, setOneTime] = useState(false);
   const [expiry, setExpiry] = useState(defaultExpiryValue);
@@ -338,15 +330,11 @@ function CreatePreviewLinkModal({
       open={open}
       onClose={onClose}
       titleId={titleId}
-      descriptionId={descriptionId}
     >
       <header className={modalStyles.modalHeader}>
         <h2 id={titleId} className={modalStyles.modalTitle}>
           {t('title')}
         </h2>
-        <p id={descriptionId} className={modalStyles.modalDescription}>
-          {t('description')}
-        </p>
       </header>
 
       <div className={modalStyles.modalBody}>
@@ -373,7 +361,7 @@ function CreatePreviewLinkModal({
                 checked={!oneTime}
                 onChange={() => setOneTime(false)}
               />
-              <span>{t('reusable')}</span>
+              <span>{usage('reusable')}</span>
             </label>
             <label style={radioLabelStyle}>
               <input
@@ -382,17 +370,12 @@ function CreatePreviewLinkModal({
                 checked={oneTime}
                 onChange={() => setOneTime(true)}
               />
-              <span>{t('oneTime')}</span>
+              <span>{usage('oneTime')}</span>
             </label>
           </div>
         </fieldset>
 
         <span className={styles.fieldLabel}>{t('expires')}</span>
-        {oneTime ? (
-          <span className={styles.fieldHint}>
-            {t('expiresHint')}
-          </span>
-        ) : null}
         <AccessExpiryPicker idPrefix="preview-link" value={expiry} onChange={setExpiry} />
       </div>
 

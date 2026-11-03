@@ -288,9 +288,7 @@
 }
 
 .markdownContent a:visited,
-.markdownContent a:active,
-.partnerLink:visited,
-.partnerLink:active {
+.markdownContent a:active {
   color: var(--accent-color-hex);
 }
 

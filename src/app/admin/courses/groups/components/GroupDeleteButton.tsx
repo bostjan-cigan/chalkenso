@@ -63,7 +63,7 @@ export default function GroupDeleteButton({
         open={open}
         tone="danger"
         title={t('title')}
-        description={hasGroupCurriculum ? t('descriptionWithCopy', { name: groupName }) : t('description', { name: groupName })}
+        description={hasGroupCurriculum ? t('descriptionWithCopy') : t('description')}
         confirmLabel={t('button')}
         pending={isDeleting}
         onConfirm={handleDelete}
