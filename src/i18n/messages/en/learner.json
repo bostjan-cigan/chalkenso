@@ -115,5 +115,11 @@
     "notePersonalOnly": "Notes are only available on personal access links.",
     "noteNotFound": "Note not found.",
     "paused": "This course is taking a break: you can read it, but nothing can be sent for now."
+  },
+  "outcomes": {
+    "label": "Your feedback",
+    "changed": "{count, plural, one {# of your notes changed the lesson} other {# of your notes changed the lesson}}",
+    "replied": "{count, plural, one {# got a reply} other {# got a reply}}",
+    "lesson": "Lesson {position}"
   }
 }

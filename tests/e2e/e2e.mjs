@@ -114,16 +114,12 @@ try {
   await a.goto(lessonUrl + '/improvements?new=1');
   await a.fill('[data-testid=new-improvement-why]', 'Add a check-your-work step for learners.');
   await a.click('[data-testid=create-improvement]');
-  await a.waitForSelector('[data-testid=plan-with-ai]');
-  check('the lesson’s improvement starts with an empty plan, and nothing to change yet', (await a.locator('[data-testid=draft-changes]').count()) === 0);
-  await a.click('[data-testid=plan-with-ai]');
-  await a.waitForFunction(() => ((document.querySelector('[data-testid=plan-box] .ProseMirror')?.textContent || document.querySelector('[data-testid=plan-box] textarea')?.value || '')).trim().length > 0, null, { timeout: 30000 });
-  await a.click('[data-testid=save-plan]');
-  // The plan step has its own rows already: wait for the drafting step itself.
-  const drafting = await a.waitForSelector('[data-testid=draft-changes]', { timeout: 30000 }).then(() => true, () => false);
-  check('the plan is saved, and changes can be drafted', drafting && (await a.locator('[data-testid=draft-changes]').count()) === 1);
-  await a.click('[data-testid=draft-changes]');
-  await a.waitForSelector('[data-testid=inline-change]', { timeout: 30000 });
+  await a.waitForSelector('[data-testid=improve-lesson]');
+  check('the lesson’s improvement starts with nothing to change yet', (await a.locator('[data-testid=inline-change]').count()) === 0);
+  // One go: AI writes the plan, then the changes.
+  await a.click('[data-testid=improve-lesson]');
+  await a.waitForSelector('[data-testid=inline-change]', { timeout: 60000 });
+  check('the plan is saved on the improvement', sql(`select coalesce(max(plan), '') from public.tasks t join public.task_entity_links l on l.task_id = t.id and l.entity_type = 'lesson' and l.entity_id = '${lessonUrl.split('/').pop()}'`).length > 0);
   const change = a.locator('[data-testid=inline-change]').first();
   check('AI drafted changes, in place in the lesson', (await a.locator('[data-testid=inline-change]').count()) >= 1);
   check('each is marked in the lesson, numbered', ((await change.getAttribute('aria-label')) ?? '').startsWith('Change 1 of'));

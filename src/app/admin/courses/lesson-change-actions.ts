@@ -6,7 +6,7 @@ import { requireUser } from '@/lib/admin-auth';
 import { canWorkOnFeedback, loadTaskRef, requireVersionEdit } from '@/lib/crm-access';
 import { forgetLessonChange } from '@/lib/lesson-changes';
 import { takeBackNextImprovements } from '@/lib/lesson-improvement';
-import { takeBackCarry } from './carry-to-course';
+import { takeBackCarry, takeBackCourseWrite } from './carry-to-course';
 import { publishLessonSnapshot } from '@/lib/lesson-publishing';
 import { prisma } from '@/lib/prisma';
 import { updateTaskStatus } from '@/lib/tasks';
@@ -17,14 +17,17 @@ import { updateTaskStatus } from '@/lib/tasks';
  * main course's lesson comes back out of the draft there, feedback it sent on to the next
  * improvement comes back, and the drafts that went in wait for review again (for a few minutes
  * after the save). The lesson's text stays as saved: the Improve view saves the text from
- * before as well. Says whether something came back out of the main course's lesson.
+ * before as well. What the same Publish put into the main course's lesson goes back out, while
+ * nobody changed it since (`courseMovedOn`: it's to undo there). Says whether something came back
+ * out of the main course's lesson.
  */
-export async function undoLessonChangeAction(changeId: string, taskFrom: string | null): Promise<{ tookBack: boolean }> {
+export async function undoLessonChangeAction(changeId: string, taskFrom: string | null): Promise<{ tookBack: boolean; courseMovedOn: boolean }> {
+  const user = await requireUser();
   const change = await prisma.lessonChange.findUnique({
     where: { id: changeId },
     select: { taskId: true, lessonId: true, proposalIds: true, createdAt: true, lesson: { select: { curriculumVersionId: true } } },
   });
-  if (!change) return { tookBack: false };
+  if (!change) return { tookBack: false, courseMovedOn: false };
   const viewer = await requireVersionEdit(change.lesson.curriculumVersionId, [Permission.WRITE]);
   const from = (Object.values(TaskStatus) as string[]).includes(taskFrom ?? '') ? (taskFrom as TaskStatus) : null;
   const ref = change.taskId ? await loadTaskRef(change.taskId) : null;
@@ -35,8 +38,11 @@ export async function undoLessonChangeAction(changeId: string, taskFrom: string 
     revalidatePath(`/admin/tasks/${change.taskId}`);
   }
   await forgetLessonChange(prisma, changeId);
-  // What the save carried to the main course's lesson comes back out of the draft waiting there.
-  const tookBack = (await takeBackCarry({ changeId, copyLessonId: change.lessonId })) > 0;
+  // What the save carried to the main course's lesson comes back out of the draft waiting there,
+  // and what the same Publish put in goes back out.
+  const fromDraft = (await takeBackCarry({ changeId, copyLessonId: change.lessonId })) > 0;
+  const written = await takeBackCourseWrite({ changeId, viewer, userId: user.id });
+  const tookBack = fromDraft || written.tookBack;
   if (tookBack) revalidatePath('/admin', 'layout');
   // Feedback the save sent on to the next improvement comes back (finished or not, e.g. waiting for
   // the main course): with the change forgotten, this is the lesson's open improvement again.
@@ -47,7 +53,7 @@ export async function undoLessonChangeAction(changeId: string, taskFrom: string 
       data: { status: AiProposalStatus.OPEN, decidedAt: null },
     });
   }
-  return { tookBack };
+  return { tookBack, courseMovedOn: written.movedOn };
 }
 
 /**

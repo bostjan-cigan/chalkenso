@@ -56,6 +56,8 @@ export type InlineChanges = {
   isLooked?: (change: ProposedChange) => boolean;
   /** The last change is decided: what comes next is the caller's. */
   onAllLooked?: () => void;
+  /** A group's Publish that also changes the main course: a step that won't go in there by itself says so. */
+  courseTagOf?: (step: ProposedChange[]) => string | null;
 };
 
 /** How the lesson reads while reviewing: changes marked, as it is now, or as it will be (Pages' model). */
@@ -84,6 +86,7 @@ function TrackedStep({
   flash,
   view,
   note,
+  courseTag = null,
   editing,
   assets,
   onOpen,
@@ -103,6 +106,8 @@ function TrackedStep({
   view: ReviewView;
   /** What it answers, under it while it's read. */
   note?: ReactNode;
+  /** Where it won't go into the main course by itself (a group's Publish to both). */
+  courseTag?: string | null;
   editing: boolean;
   assets: Map<string, string>;
   onOpen: () => void;
@@ -180,6 +185,7 @@ function TrackedStep({
       }}
     >
       {nearby && decision !== 'keep' && view === 'markup' ? <span className={styles.checkTag} data-testid="check-place">{t('nearby.tag')}</span> : null}
+      {courseTag && decision !== 'skip' && view === 'markup' ? <span className={styles.checkTag} data-testid="course-tag">{courseTag}</span> : null}
       {editing && editable ? (
         <div data-testid="edit-in-place">
           <TextEditor ref={editor} initial={editable.after.join('\n\n')} assets={assets} label={t('yourVersion')} />
@@ -385,6 +391,7 @@ export default function LessonPart({
         assets={assets}
         view={view}
         note={note?.(step)}
+        courseTag={changes!.courseTagOf?.(step) ?? null}
         editing={editingAt === index}
         onOpen={() => goTo(index)}
         onEdited={(written) => {

@@ -708,13 +708,23 @@ export function applyOnto(
  * there, and failing that where the text is alike (`placeNearby`: the copies drift apart a little
  * as each is edited). What has nowhere to go (its paragraph was rewritten there, or is gone) is left
  * out and returned, for someone to do by hand. Changes the target already has count as placed.
- * `nearby`: how many went in where the text differs, for the reviewer to check.
+ * `nearby`: how many went in where the text differs, for the reviewer to check. `exact`: the
+ * target with only the changes that found the same text there (and those it already has), the part
+ * a publish can put in by itself.
  */
 export function transplantChanges(
   before: string,
   after: string,
   target: string
-): { text: string; total: number; placed: number; unplaced: ProposedChange[]; nearby: number; nearbyBlocks: string[] } {
+): {
+  text: string;
+  total: number;
+  placed: number;
+  unplaced: ProposedChange[];
+  nearby: number;
+  nearbyBlocks: string[];
+  exact: { text: string; placed: number; changed: boolean };
+} {
   const changes = proposeChanges(before, after);
   const states = placeChanges(before, target, changes);
   // A rewrite (a removal and new paragraphs in its place) goes in whole or not at all: half of one
@@ -732,6 +742,7 @@ export function transplantChanges(
   // Nothing changed after all: the target as it was, its own spacing too (the merge rejoins
   // paragraphs, which can change blank lines and line endings without changing a word).
   const same = proposeChanges(target, nearby.text).length === 0;
+  const exactChanged = proposeChanges(target, text).length > 0;
   return {
     text: same ? target : nearby.text,
     total: changes.length,
@@ -739,7 +750,35 @@ export function transplantChanges(
     unplaced: nearby.left,
     nearby: nearby.placed.length,
     nearbyBlocks: nearby.placedBlocks.map(normalise),
+    exact: {
+      text: exactChanged ? text : target,
+      placed: changes.filter((change) => fits(change) || states[change.id] === 'done').length,
+      changed: exactChanged,
+    },
   };
+}
+
+/**
+ * How each of a draft's changes (`base` → the draft) would go onto another copy of the lesson
+ * (`target`, the main course's): `lands` where the same text is there, `there` when it already has
+ * it, `check` where the text is alike but differs (it waits there for a look), `byHand` where it has
+ * nowhere to go. What a group's review shows before one Publish changes both.
+ */
+export type CourseFit = 'lands' | 'there' | 'check' | 'byHand';
+
+export function fitOnto(base: string, target: string, changes: ProposedChange[]): Record<string, CourseFit> {
+  const states = placeChanges(base, target, changes);
+  const fits: Record<string, CourseFit> = {};
+  for (const step of changeSteps(changes)) {
+    const whole = step.every((change) => states[change.id] === 'clean' || states[change.id] === 'done');
+    if (whole) {
+      for (const change of step) fits[change.id] = states[change.id] === 'done' ? 'there' : 'lands';
+      continue;
+    }
+    const nearby = placeNearby(base, target, step);
+    for (const change of step) fits[change.id] = nearby.left.includes(change) ? 'byHand' : 'check';
+  }
+  return fits;
 }
 
 /**

@@ -7,9 +7,10 @@
 /**
  * How far a draft is: someone's own Claude hasn't picked it up yet (a hand-off), the request is
  * being put together (or Claude reads it), Claude is thinking, Claude is writing, the answer is
- * written and being checked (a revision's diagrams, say).
+ * written and being checked (a revision's diagrams, say). `planning`: a lesson's changes whose plan
+ * is written first, in the same run ("Improve this lesson"), the plan so far as its text.
  */
-export type DraftStage = 'waiting' | 'reading' | 'thinking' | 'writing' | 'finishing';
+export type DraftStage = 'waiting' | 'reading' | 'thinking' | 'planning' | 'writing' | 'finishing';
 
 /** A revision as it is written: its summary so far, and the text's own sections (`revisionLive`). */
 export type RevisionLive = {

@@ -138,9 +138,6 @@
       "addPlaceholder": "Izberite lekcijo",
       "add": "Dodaj",
       "added": "Lekcija {position} je dodana.",
-      "leaveCourse": "Pusti glavni tečaj, kot je",
-      "leaveCourseLoses": "Njene predlagane spremembe na glavnem tečaju gredo.",
-      "leftCourse": "Glavni tečaj ostane, kot je.",
       "moved": "„{title}“ je opravljena.",
       "undo": "Razveljavi"
     },
@@ -160,12 +157,6 @@
   "plan": {
     "label": "Načrt popravka",
     "placeholder": "Kaj se bo v lekciji spremenilo, kje in zakaj.",
-    "scopeLabel": "Kam gre sprememba",
-    "scopes": {
-      "groupOnly": "Samo ta skupina",
-      "groupAndCore": "Skupina in glavni tečaj",
-      "noCourseLesson": "Glavni tečaj nima lekcije za spremembo."
-    },
     "save": "Shrani načrt",
     "saving": "Shranjevanje …",
     "draft": "Osnutek z AI",
@@ -178,7 +169,8 @@
       "stages": {
         "reading": "Pripravljanje povratnih informacij …",
         "thinking": "Claude razmišlja …",
-        "writing": "Claude piše načrt …"
+        "writing": "Claude piše načrt …",
+        "planning": "Claude piše načrt …"
       },
       "claudeStages": {
         "waiting": "Čakam na vaš Claude …",

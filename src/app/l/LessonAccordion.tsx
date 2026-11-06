@@ -1,13 +1,14 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useState, type MouseEvent } from 'react';
+import { useEffect, useRef, useState, type MouseEvent } from 'react';
 import { FiChevronDown } from 'react-icons/fi';
 import LoadingFillCircle from '@/components/LoadingFillCircle';
 import { lessonAnchorId } from '@/lib/lesson-wikilinks';
 import { cn } from '@/utils/cn';
 import LessonContentHtml from './components/LessonContentHtml';
 import LessonCommentLayer, { type LessonCommentView } from './components/LessonCommentLayer';
+import { OPEN_NOTE_EVENT, type OpenNoteDetail } from './components/FeedbackOutcomes';
 import type { ArcGroup } from './components/CourseAccessView';
 import { buildLessonRequest, type LessonSource } from './components/lesson-source';
 import { learnerUi } from '@/extensions/learner';
@@ -151,6 +152,22 @@ export default function LessonAccordion({
       void loadLessonIfNeeded(lessonId);
     }
   }
+
+  // A note opened from "what happened to your feedback": its lesson opens and comes into view
+  // (the lesson's comments open the note itself once they're there).
+  const openNow = useRef<(lessonId: string) => void>(() => undefined);
+  openNow.current = (lessonId: string) => {
+    if (!openLessonIds.includes(lessonId)) toggleLesson(lessonId);
+    requestAnimationFrame(() => document.getElementById(lessonAnchorId(lessonId))?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  };
+  useEffect(() => {
+    const onOpen = (event: Event) => {
+      const detail = (event as CustomEvent<OpenNoteDetail>).detail;
+      if (detail?.lessonId) openNow.current(detail.lessonId);
+    };
+    window.addEventListener(OPEN_NOTE_EVENT, onOpen);
+    return () => window.removeEventListener(OPEN_NOTE_EVENT, onOpen);
+  }, []);
 
   /** Links to other lessons (from `[[wikilinks]]`) open that lesson and scroll to it. */
   function handleLessonLinkClick(event: MouseEvent<HTMLDivElement>) {

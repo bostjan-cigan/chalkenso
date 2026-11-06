@@ -9,6 +9,8 @@ import { PRODUCT_NAME } from '@/lib/site';
 import contentStyles from '@/components/content/content.module.css';
 import courseStyles from '@/components/courses/courses.module.css';
 import LessonAccordion, { type LessonCommenting } from '../LessonAccordion';
+import FeedbackOutcomes from './FeedbackOutcomes';
+import type { FeedbackOutcome } from '@/lib/curriculum-comments';
 import CommentsVisibilityProvider from './comments-visibility';
 import { learnerUi } from '@/extensions/learner';
 import type { LessonSource } from './lesson-source';
@@ -76,10 +78,12 @@ interface CourseAccessViewProps {
   preparedBy?: string | null;
   /** The edition's learner signals for a personal learner link (see `learnerUi`). */
   learnerSignals?: { token: string; state: unknown } | null;
+  /** What happened to this person's feedback since they last looked (a personal link's). */
+  outcomes?: { token: string; items: FeedbackOutcome[]; lessons: Array<{ id: string; position: number }> } | null;
 }
 
 /** The client components' words: the lessons, and the comments, notes and Ask AI on them. */
-const CLIENT_NAMESPACES = ['common', 'learner.lessons', 'learner.annotations'];
+const CLIENT_NAMESPACES = ['common', 'learner.lessons', 'learner.annotations', 'learner.outcomes'];
 
 function formatScheduleDateOnly(value: Date, locale: Locale) {
   return new Intl.DateTimeFormat(INTL_LOCALES[locale], {
@@ -214,6 +218,7 @@ export default async function CourseAccessView({
   commenting = null,
   preparedBy = null,
   learnerSignals = null,
+  outcomes = null,
 }: CourseAccessViewProps) {
   const t = await getTranslations({ locale, namespace: 'learner.course' });
   const hasLessons = lessons.length > 0 && Boolean(source) && !restrictedNotice;
@@ -297,6 +302,7 @@ export default async function CourseAccessView({
             kinds={commenting?.role === 'viewer' && !commenting.api ? { comment: commenting.canComment !== false, note: true } : null}
           >
             {signals && CourseTop ? <CourseTop /> : null}
+            {outcomes ? <FeedbackOutcomes token={outcomes.token} items={outcomes.items} lessons={outcomes.lessons} /> : null}
             <LessonAccordion
               lessons={ungroupedLessons}
               arcGroups={arcGroups}

@@ -1,0 +1,148 @@
+/* "Sort with AI": one page, lesson by lesson, then what's left out, then Approve. */
+.view {
+  display: grid;
+  gap: 1rem;
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 1rem 1rem 6rem;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.88rem;
+  color: rgba(var(--foreground-rgb), 0.7);
+  text-decoration: none;
+}
+
+.title {
+  flex: 1;
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 650;
+}
+
+.start {
+  display: flex;
+}
+
+.card {
+  display: grid;
+  gap: 0.6rem;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card-bg);
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.plan,
+.reply {
+  width: 100%;
+  min-width: 0;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: rgb(var(--background-rgb));
+  color: inherit;
+  font: inherit;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.reply {
+  min-height: 3.2rem;
+}
+
+.reply::placeholder {
+  color: rgba(var(--foreground-rgb), 0.45);
+}
+
+.switchRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.88rem;
+}
+
+.notes {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.noteRow {
+  display: grid;
+  gap: 0.35rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--line);
+}
+
+.note {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.passage {
+  color: rgba(var(--foreground-rgb), 0.65);
+  font-style: italic;
+}
+
+.who {
+  font-size: 0.8rem;
+  font-style: normal;
+  color: rgba(var(--foreground-rgb), 0.6);
+}
+
+.noteActions {
+  display: flex;
+  gap: 0.9rem;
+}
+
+.quiet {
+  margin: 0;
+  font-size: 0.86rem;
+  color: rgba(var(--foreground-rgb), 0.6);
+}
+
+.error {
+  margin: 0;
+  color: rgb(var(--danger-color, 200 60 60));
+  font-size: 0.88rem;
+}
+
+.notice {
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+.foot {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  background: rgb(var(--background-rgb));
+  border-top: 1px solid var(--line);
+}

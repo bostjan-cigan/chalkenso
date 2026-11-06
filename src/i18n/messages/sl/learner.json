@@ -115,5 +115,11 @@
     "notePersonalOnly": "Opombe so na voljo samo na osebnih povezavah.",
     "noteNotFound": "Opombe ni bilo mogoče najti.",
     "paused": "Ta tečaj ima premor: lahko ga berete, pošiljati pa zaenkrat ni mogoče ničesar."
+  },
+  "outcomes": {
+    "label": "Vaše povratne informacije",
+    "changed": "{count, plural, one {# vaša opomba je spremenila lekcijo} two {# vaši opombi sta spremenili lekcijo} few {# vaše opombe so spremenile lekcijo} other {# vaših opomb je spremenilo lekcijo}}",
+    "replied": "{count, plural, one {# je dobila odgovor} two {# sta dobili odgovor} few {# so dobile odgovor} other {# jih je dobilo odgovor}}",
+    "lesson": "Lekcija {position}"
   }
 }

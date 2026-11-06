@@ -14,7 +14,8 @@ const ANSWER = (draft: unknown) => NextResponse.json({ draft }, { headers: { 'Ca
  * How far a draft is, for the page following it (`useDraftProgress`): a route rather than a server
  * action, which the client runs one at a time, so a slow save never holds up the progress (and the
  * other way round). A lesson's revision for whoever may edit the lesson, an improvement's plan for
- * whoever may work on it; `draft` is null once it was used or discarded.
+ * whoever may work on it, a version's sorted feedback for whoever may edit it and work on its
+ * feedback; `draft` is null once it was used or discarded.
  */
 export async function GET(_request: Request, { params }: { params: Promise<{ draftId: string }> }) {
   const { draftId } = await params;
@@ -29,6 +30,16 @@ export async function GET(_request: Request, { params }: { params: Promise<{ dra
     const view = await lessonDraftView(revision, viewer.id);
     // The summary is the AI's (in the lesson's language); our stand-in for a missing one is translated.
     return ANSWER(view && !view.summary && view.state === 'ready' ? { ...view, summary: (await getTranslations('editor.ai'))('revisedAsRequested') } : view);
+  }
+
+  // Sorting a version's new feedback ("Sort with AI"): whoever may edit the version and work on its feedback.
+  const round = await loadDraft(draftId, AiProposalKind.FEEDBACK_ROUND);
+  if (round) {
+    const version = await loadVersionRef(round.targetId);
+    if (!version || !canEditVersion(viewer, version, [Permission.WRITE]) || !canWorkOnFeedback(viewer, { courseId: version.courseId, groupIds: version.ownerGroupId ? [version.ownerGroupId] : [] }, 'tasks')) {
+      return NOT_FOUND();
+    }
+    return ANSWER(await draftView(round, viewer.id, 'plan'));
   }
 
   const plan = await loadDraft(draftId, AiProposalKind.TASK_PLAN);

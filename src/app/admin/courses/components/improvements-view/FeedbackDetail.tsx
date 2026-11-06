@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useId, useState, useTransition } from 'react';
-import { deleteCommentAction, resolveCommentAction, respondToCommentAction } from '../../comments/actions';
+import { deleteCommentAction, leaveOutFeedbackAction, resolveCommentAction, respondToCommentAction } from '../../comments/actions';
 import AdminMenu from '../../../components/ui/AdminMenu';
 import ConfirmDialog from '../ConfirmDialog';
 import { TickMark } from './Column';
@@ -13,10 +13,11 @@ import workspace from '../workspace/workspace.module.css';
 import styles from './improvements-view.module.css';
 
 /**
- * A piece of feedback, whole, in the column: the passage and what was said, then its tick (fix it
- * with AI: it joins the lesson's improvement, one plan and one set of changes for all of it) and a
- * reply (on feedback that isn't ticked, a reply answers it, so it's marked done). In the "⋯" menu:
- * Mark done without a reply, Delete.
+ * A piece of feedback, whole, in the column: the passage and what was said, then a reply. The
+ * lesson's feedback is in its next change by default; **Leave out** takes it out of that, with the
+ * reply saying why (required: whoever gave it hears back), and it's done. On feedback already in
+ * the change, **Reply** only answers it. In the "⋯" menu: Mark done without a reply, Delete. Where
+ * `onTick` is given (no AI: feedback is picked by hand), its tick picks it.
  */
 export default function FeedbackDetail({
   feedback,
@@ -67,6 +68,22 @@ export default function FeedbackDetail({
       setReply('');
       if (done) onAnswered(t('repliedDone'));
       else onNotice(t('replied'));
+      router.refresh();
+    });
+  /** Out of the change, with the reply saying why. */
+  const leaveOut = () =>
+    startTransition(async () => {
+      if (!reply.trim()) {
+        setError(t('replyFirst'));
+        return;
+      }
+      const result = await leaveOutFeedbackAction([feedback.id], reply);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setReply('');
+      onAnswered(result.left ? t('leftOut') : t('notLeftOut'));
       router.refresh();
     });
 
@@ -126,9 +143,14 @@ export default function FeedbackDetail({
               />
             ) : null}
             <span className={styles.spacer} />
-            {/* A reply answers feedback that isn't ticked, so it's marked done; ticked, it stays for the changes. */}
-            <button type="button" className={workspace.ghostButton} disabled={busy} onClick={send} data-testid="feedback-send-reply">
-              {used ? t('send') : t('sendDone')}
+            {/* In the change: a reply only answers it. Leave out takes it out, with the reply. */}
+            {used ? (
+              <button type="button" className={workspace.textButton} disabled={busy} onClick={send} data-testid="feedback-send-reply">
+                {t('send')}
+              </button>
+            ) : null}
+            <button type="button" className={workspace.ghostButton} disabled={busy} onClick={leaveOut} data-testid="feedback-leave-out">
+              {t('leaveOut')}
             </button>
           </div>
         </div>

@@ -327,8 +327,6 @@ export default async function TaskDetailPanel({
               canEdit={canWork}
               aiEnabled={aiEnabled}
               initialDraft={aiDraft}
-              isGroupTask={Boolean(groupScope)}
-              courseReachable={places.courseReachable}
               aiExtra={ui.TaskAi ? <ui.TaskAi taskId={task.id} follow /> : null}
             />
           </Section>
@@ -418,7 +416,6 @@ export default async function TaskDetailPanel({
                 lessons={places.lessons}
                 addable={places.addable}
                 canWork={canWork}
-                toCourse={places.toCourse}
               />
             </div>
           ) : null}

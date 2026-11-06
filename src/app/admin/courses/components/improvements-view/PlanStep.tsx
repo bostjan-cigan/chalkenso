@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState, useTransition, type ReactNode } from 'react';
 import { AiProposalKind } from '@prisma/client';
-import { TbArrowUp } from 'react-icons/tb';
 import { renderMarkdownToHtml } from '@/lib/markdown';
 import type { AppDraftView } from '@/lib/ai-draft-progress';
 import { parsePlanScope, planBody, withPlanScope, type PlanScope } from '@/lib/plan-scope';
@@ -29,11 +28,6 @@ const NO_ASSETS = new Map<string, string>();
 export function PlanText({ plan }: { plan: string }) {
   return <div className={styles.planText} data-testid="plan-text" dangerouslySetInnerHTML={{ __html: renderMarkdownToHtml(plan) }} />;
 }
-
-const SCOPES = [
-  { value: 'group only', key: 'groupOnly' },
-  { value: 'group and core', key: 'groupAndCore' },
-] as const satisfies ReadonlyArray<{ value: PlanScope; key: string }>;
 
 /** What an improvement's plan step gives the Improve view's column. */
 export type PlanStepState = {
@@ -69,8 +63,8 @@ export type PlanStepState = {
  * what the newer feedback needs) or Keep the plan as it is; a plan AI wrote goes into the box to
  * edit, and only Save plan keeps it. A plan handed to the person's own Claude ("Draft the plan in
  * your Claude ↗", `aiSlot`) is followed the same way, and Claude's plan goes into the box too. For
- * a group's copy, where the change goes is chosen here too (it's the plan's "Scope:" line, which the
- * box doesn't show). The plan reads as formatted text and is edited in the lesson's visual editor
+ * a group's copy, the plan keeps where the change goes as AI named it (its "Scope:" line, which the
+ * box doesn't show); it's chosen at Publish. The plan reads as formatted text and is edited in the lesson's visual editor
  * (or its Markdown). The column places the pieces: the step in its body, starting it in its foot.
  */
 export function usePlanStep(
@@ -79,13 +73,16 @@ export function usePlanStep(
     aiEnabled,
     aiSlot,
     onStarted,
+    onSaved,
   }: {
-    /** AI runs in the app: a plan can be refined by asking (Ask for changes). */
+    /** AI runs in the app (a plan can be drafted). */
     aiEnabled: boolean;
     /** The edition's part of the step (see `PlanStepState.slot`). */
     aiSlot?: ReactNode;
     /** The improvement moved (To do → In progress) when its plan was saved or drafted. */
     onStarted: (title: string) => void;
+    /** The plan was saved by the person (edited by hand): the changes may be written again from it. */
+    onSaved?: () => void;
   }
 ): PlanStepState {
   const t = useTranslations('editor.improvements.planStep');
@@ -98,9 +95,6 @@ export function usePlanStep(
   // A draft that went into the box (AI's here, or one someone's Claude sent): saving the plan uses it, Cancel discards it.
   const [draftInBox, setDraftInBox] = useState<{ id: string; claude: boolean } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  // Ask for changes: what to change in the plan as it is now.
-  const [ask, setAsk] = useState('');
-  const [askError, setAskError] = useState<string | null>(null);
   // Another improvement in the column: its own step, from the start.
   const id = improvement?.id ?? '';
   const [shownId, setShownId] = useState(id);
@@ -111,11 +105,8 @@ export function usePlanStep(
     setScope(improvement?.scope ?? null);
     setDraftInBox(null);
     setError(null);
-    setAsk('');
   }
   const box = useRef<TextEditorHandle>(null);
-  // A plan refined by asking keeps where it goes, as chosen: only what was asked changes.
-  const keepScope = useRef(false);
   const textRef = useRef(text);
   textRef.current = text;
 
@@ -123,8 +114,7 @@ export function usePlanStep(
   const takeDraft = (ready: AppDraftView) => {
     setText(planBody(ready.text));
     const named = parsePlanScope(ready.text);
-    if (named && improvement?.choosesScope && !keepScope.current) setScope(named);
-    keepScope.current = false;
+    if (named && improvement?.choosesScope) setScope(named);
     setDraftInBox({ id: ready.id, claude: ready.source === 'claude' });
     setDraft(null);
   };
@@ -197,33 +187,10 @@ export function usePlanStep(
       setDraftInBox(null);
       setText(null);
       if (result.moved) onStarted(result.moved.title);
+      onSaved?.();
       // A plan that arrived while the box was open is the next to decide on.
       if (draft?.state === 'ready') takeDraft(draft);
       router.refresh();
-    });
-
-  /**
-   * Ask for changes: AI changes the plan as it is now (the box's text, or the saved plan) as asked,
-   * keeping the rest; the answer goes into the box to review and save, as any drafted plan (a draft
-   * that was in the box gives way to it).
-   */
-  const askForChanges = () =>
-    startTransition(async () => {
-      const request = ask.trim();
-      const current = text !== null ? (box.current?.read() ?? text) : (improvement?.plan ?? '');
-      if (!improvement || !request || !current.trim()) return;
-      setAskError(null);
-      const result = await startTaskPlanDraftAction(improvement.id, { revise: { plan: current, request } });
-      if (!result.ok) {
-        setAskError(result.message);
-        return;
-      }
-      if (draftInBox) void settleTaskPlanDraftAction(draftInBox.id, false);
-      keepScope.current = true;
-      setDraftInBox(null);
-      setText(null);
-      setAsk('');
-      setDraft(result.draft);
     });
 
   const keepAsItIs = () =>
@@ -252,63 +219,6 @@ export function usePlanStep(
   const writing = Boolean(draft && draft.state !== 'ready');
   const busy = text !== null || writing;
 
-  // The main course is a choice only where it has the lesson (not one added in the group's copy).
-  const scopeChoice = improvement?.choosesScope && (improvement.courseReachable || scope === 'group and core') ? (
-    <div className={styles.scope}>
-      <span className={styles.label}>{t('whereLabel')}</span>
-      <div role="radiogroup" aria-label={t('whereLabel')} className={styles.scopeOptions} data-testid="plan-scope">
-        {SCOPES.map((option) => {
-          const selected = scope === option.value;
-          return (
-            <button
-              key={option.value}
-              type="button"
-              role="radio"
-              aria-checked={selected}
-              className={selected ? styles.scopeOn : styles.scopeOption}
-              onClick={() => setScope(option.value)}
-            >
-              {t(`scopes.${option.key}`)}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  ) : null;
-
-  // One line under the plan (or the box): what to change, sent with the plan as it is.
-  const askField =
-    aiEnabled && improvement?.canWork ? (
-      <form
-        className={styles.askRow}
-        onSubmit={(event) => {
-          event.preventDefault();
-          askForChanges();
-        }}
-      >
-        <input
-          className={styles.askInput}
-          value={ask}
-          maxLength={1000}
-          onChange={(event) => {
-            setAsk(event.target.value);
-            setAskError(null);
-          }}
-          placeholder={t('askPlaceholder')}
-          aria-label={t('ask')}
-          data-testid="ask-plan"
-        />
-        <button type="submit" className={styles.askSend} disabled={pending || !ask.trim()} aria-label={t('askSend')} title={t('askSend')} data-testid="ask-plan-send">
-          <TbArrowUp aria-hidden size={16} />
-        </button>
-      </form>
-    ) : null;
-  const askBlock = askField ? (
-    <>
-      {askField}
-      {askError ? <p className={styles.error}>{askError}</p> : null}
-    </>
-  ) : null;
 
   let view: ReactNode = null;
   if (improvement && !improvement.canWork) {
@@ -321,8 +231,6 @@ export function usePlanStep(
         <div data-testid="plan-box">
           <TextEditor key={`${draftInBox?.id ?? 'own'}:${text.length}`} ref={box} initial={text} assets={NO_ASSETS} label={t('label')} placeholder={t('placeholder')} />
         </div>
-        {text.trim() ? askBlock : null}
-        {scopeChoice}
         {error ? <p className={styles.error}>{error}</p> : null}
         <div className={styles.actionsEnd}>
           <button type="button" className={workspace.ghostButton} onClick={cancel}>
@@ -360,13 +268,9 @@ export function usePlanStep(
             {t('stale', { count: improvement.newSincePlan.length })}
           </p>
         ) : null}
-        {askBlock}
         <button type="button" className={`${workspace.textButton} ${styles.planEditButton}`} onClick={() => setText(improvement.plan)} data-testid="edit-plan">
           {t('editPlan')}
         </button>
-        {improvement.choosesScope ? (
-          <p className={styles.quiet}>{t(scope === 'group and core' ? 'goes.groupAndCore' : 'goes.groupOnly')}</p>
-        ) : null}
       </div>
     );
   }

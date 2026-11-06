@@ -23,6 +23,9 @@ export type NewLessonChange = {
   createdById: string | null;
   /** What it changed (the changed blocks), for "What changed" later. */
   changes?: Prisma.InputJsonValue;
+  /** The main course's part of a group copy's change: that change, and the course's text before. */
+  carriedFromId?: string;
+  textBefore?: string;
 };
 
 export async function recordLessonChange(db: DbClient, change: NewLessonChange) {

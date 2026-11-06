@@ -19,6 +19,7 @@ import AdminBadge from '../ui/AdminBadge';
 import AdminButton from '../ui/AdminButton';
 import AdminMenu, { type AdminMenuItem } from '../ui/AdminMenu';
 import type { FeedbackItemView } from './feedback-view';
+import { ItemPick } from './FeedbackSelection';
 import styles from './feedback.module.css';
 
 /** Each stage's badge (its words: `app.feedback.stage`). */
@@ -130,6 +131,7 @@ export default function FeedbackItem({
   return (
     <article id={`comment-${item.id}`} className={open ? styles.item : `${styles.item} ${styles.itemDone}`}>
       <header className={styles.itemHead}>
+        <ItemPick id={item.id} />
         <strong className={styles.itemWho}>{item.proposerName}</strong>
         {item.isInstructorNote ? <AdminBadge variant="warning">{t('note')}</AdminBadge> : null}
         <span className={styles.itemMeta}>·</span>

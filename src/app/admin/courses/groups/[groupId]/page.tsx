@@ -28,6 +28,8 @@ import { TASK_ENTITY_TYPE, TASK_KIND, groupTaskLaneId, listTasksForGroup } from 
 import AdminButton from '../../../components/ui/AdminButton';
 import AdminNotice from '../../../components/ui/AdminNotice';
 import AdminSectionCard from '../../../components/ui/AdminSectionCard';
+import SortFeedbackButton from '../../../components/feedback/SortFeedbackButton';
+import { isAiConfigured } from '@/lib/ai';
 import AdminTabs from '../../../components/ui/AdminTabs';
 import AdminTextareaField from '../../../components/ui/AdminTextareaField';
 import AdminField from '../../../components/ui/AdminField';
@@ -68,6 +70,9 @@ import { getGroupFlashMessage } from '../messages';
 import styles from '../../../admin.module.css';
 
 type PageParams = Promise<{ groupId: string }>;
+
+/** Fixing feedback with AI from here drafts several lessons in the background: allow it up to five minutes. */
+export const maxDuration = 300;
 
 type SearchParams = Promise<{
   error?: string;
@@ -141,6 +146,7 @@ export default async function GroupDetailPage({ params, searchParams }: { params
       ? `/admin/courses/${group.course.id}/versions/${readVersion.id}/preview?group=${group.id}`
       : null;
   const canEditCopy = copy ? canEditVersion(viewer, { id: copy.id, courseId: group.course.id, ownerGroupId: group.id }, [Permission.WRITE]) : false;
+  const aiEnabled = tab === 'feedback' ? await isAiConfigured() : false;
   const groupHref = `/admin/courses/groups/${group.id}`;
   const tabHref = (name: GroupTab) => (name === defaultTab ? groupHref : `${groupHref}?tab=${name}`);
 
@@ -303,9 +309,12 @@ export default async function GroupDetailPage({ params, searchParams }: { params
           <AdminSectionCard
             title=""
             action={
-              <AdminButton href={`/admin/api/feedback-export?group=${group.id}`} download size="compact" tone="secondary" data-testid="feedback-export">
-                {t('feedback.export')}
-              </AdminButton>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                {copy && canEditCopy && canWork && aiEnabled ? <SortFeedbackButton courseId={group.course.id} versions={[{ id: copy.id, label: '' }]} /> : null}
+                <AdminButton href={`/admin/api/feedback-export?group=${group.id}`} download size="compact" tone="secondary" data-testid="feedback-export">
+                  {t('feedback.export')}
+                </AdminButton>
+              </div>
             }
           >
             <FeedbackList

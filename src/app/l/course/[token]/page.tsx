@@ -7,6 +7,7 @@ import contentStyles from '@/components/content/content.module.css';
 import courseStyles from '@/components/courses/courses.module.css';
 import CourseAccessView, { AccessShell } from '../../components/CourseAccessView';
 import { PRODUCT_NAME } from '@/lib/site';
+import { feedbackOutcomesSince, type FeedbackOutcome } from '@/lib/curriculum-comments';
 import { serverExtensions } from '@/extensions/server';
 import { publicInstructorNames } from '@/lib/group-instructors';
 import IntlProvider from '@/i18n/IntlProvider';
@@ -197,6 +198,18 @@ async function loadAccessPayload(access: Exclude<AccessValidationResult, { state
       };
     }
 
+    // What happened to this person's feedback since they last looked: a learner's on their personal
+    // link, an instructor's notes on theirs (never on a preview).
+    let outcomes: FeedbackOutcome[] = [];
+    const lessonIds = course.lessons.map((lesson) => lesson.id);
+    if (!access.isPreview && access.instructor) {
+      const user = await prisma.user.findUnique({ where: { id: access.instructor.userId }, select: { notesSeenAt: true } });
+      if (user) outcomes = await feedbackOutcomesSince({ authorUserId: access.instructor.userId, isInstructorNote: true }, user.notesSeenAt, lessonIds);
+    } else if (!access.isPreview && access.memberId) {
+      const member = await prisma.courseGroupMember.findUnique({ where: { id: access.memberId }, select: { outcomesSeenAt: true } });
+      if (member) outcomes = await feedbackOutcomesSince({ memberId: access.memberId }, member.outcomesSeenAt, lessonIds);
+    }
+
     const lessons = course.lessons.map((lesson) => ({
       arcId: lesson.arcId,
       id: lesson.id,
@@ -228,6 +241,7 @@ async function loadAccessPayload(access: Exclude<AccessValidationResult, { state
       startsAt: access.startsAt,
       state: 'valid' as const,
       organizationId: access.organizationId,
+      outcomes,
     };
   }
 
@@ -405,6 +419,7 @@ export default async function AccessPage({
       restrictedNotice={isValid ? null : await getRestrictedNotice(accessPayload.state, token, locale)}
       readOnlyNotice={paused ? t('access.paused') : null}
       learnerSignals={signalsState ? { token, state: signalsState } : null}
+      outcomes={isValid && accessPayload.outcomes.length ? { token, items: accessPayload.outcomes, lessons: lessons.map((lesson) => ({ id: lesson.id, position: lesson.position })) } : null}
     />
   );
 }

@@ -12,7 +12,8 @@ import { recordLessonChange, savedLessonChange, type NewLessonChange, type Saved
 import { finishImprovement, workHere } from '@/lib/task-flow';
 import { startNextImprovement } from '@/lib/lesson-improvement';
 import { lessonChangesFromForm } from './lesson-change-input';
-import { carryToCourse, type CourseCarry } from './carry-to-course';
+import { carryToCourse, choosePlanScope, courseWritten, prepareCoursePart, writeCourseCarry, type CourseCarry, type CourseWrite } from './carry-to-course';
+import type { PlanScope } from '@/lib/plan-scope';
 import {
   buildAccessPlaceholderHtml,
   computeLessonSourceHash,
@@ -867,7 +868,13 @@ async function saveLessonWorkingCopy(input: {
    * `lesson-changes.ts`), with the feedback each improvement's changes don't answer (`later`).
    */
   changes?: Array<Omit<NewLessonChange, 'lessonId' | 'revision'> & { later?: string[] }>;
-}): Promise<{ revision: number; changes: SavedLessonChange[]; next: { taskId: string; count: number } | null } | null> {
+  /**
+   * A group's improvements, by the change's place in `changes`: the scope chosen at Publish, and the
+   * main course's part the same Publish writes (`prepareCoursePart`).
+   */
+  course?: Map<number, { scope: PlanScope | null; write: CourseWrite | null }>;
+  organizationId?: string | null;
+}): Promise<{ revision: number; changes: SavedLessonChange[]; next: { taskId: string; count: number } | null; written: Map<number, boolean> } | null> {
   const { lessonId, loadedRevision } = input;
   const assetReferences = buildLessonAssetReferences(input.data.markdownContent, input.uploadedAssetBindings);
   const accessRefs = assetReferences.map((reference) => ({
@@ -932,13 +939,21 @@ async function saveLessonWorkingCopy(input: {
         // The drafts that went in are used; an improvement is done once every lesson it changes is.
         const recorded: Array<{ id: string; finished: Awaited<ReturnType<typeof finishImprovement>> }> = [];
         let next: { taskId: string; count: number } | null = null;
-        for (const { later, ...change } of input.changes ?? []) {
+        // Whether the main course's part went in with this save (false: its lesson moved on).
+        const written = new Map<number, boolean>();
+        for (const [index, { later, ...change }] of Array.from((input.changes ?? []).entries())) {
           const id = (await recordLessonChange(transaction, { ...change, lessonId, revision })).id;
           if (change.proposalIds.length) {
             await transaction.aiProposal.updateMany({
               where: { id: { in: change.proposalIds }, status: AiProposalStatus.OPEN },
               data: { status: AiProposalStatus.USED, decidedAt: new Date() },
             });
+          }
+          // A group's improvement: where it goes, then the main course's part, before it's checked for done.
+          const part = change.taskId ? input.course?.get(index) : undefined;
+          if (part?.scope && change.taskId) await choosePlanScope(transaction, change.taskId, part.scope);
+          if (part?.write && input.organizationId) {
+            written.set(index, await writeCourseCarry(transaction, part.write, { groupChangeId: id, userId: input.publishedBy, organizationId: input.organizationId }));
           }
           recorded.push({ id, finished: change.taskId ? await finishImprovement(transaction, change.taskId) : null });
           // Feedback used after its changes were drafted: the lesson's next improvement.
@@ -956,16 +971,25 @@ async function saveLessonWorkingCopy(input: {
           const saved = await savedLessonChange(transaction, id, finished);
           if (saved) changes.push(saved);
         }
-        return { revision, changes, next };
+        return { revision, changes, next, written };
       });
     },
     { fields: ['slug'] }
   );
 }
 
-/** What several improvements' saves did for the main course, said once: changes waiting there add up. */
+/**
+ * What several improvements' saves did for the main course, said once: what went in, and what
+ * waits there, add up; what went in by itself is said first.
+ */
 function combineCarries(first: CourseCarry | null, next: CourseCarry | null): CourseCarry | null {
   if (!first || !next) return first ?? next;
+  const wentIn = (carry: CourseCarry): carry is Extract<CourseCarry, { kind: 'live' | 'saved' }> => carry.kind === 'live' || carry.kind === 'saved';
+  if (wentIn(first) && wentIn(next)) {
+    return { ...first, kind: first.kind === 'live' && next.kind === 'live' ? 'live' : 'saved', placed: first.placed + next.placed, waiting: first.waiting + next.waiting };
+  }
+  if (wentIn(first)) return first;
+  if (wentIn(next)) return next;
   if (first.kind === 'drafted' && next.kind === 'drafted') return { ...first, placed: first.placed + next.placed, unplaced: first.unplaced + next.unplaced };
   if (first.kind === 'drafted') return first;
   return next.kind === 'drafted' ? next : first;
@@ -1036,6 +1060,23 @@ export async function updateLessonInlineAction(
   }
 
   const changes = await lessonChangesFromForm(formData, lesson.id, viewer, user.id);
+  const organizationId = (await getCurrentUserSession())?.user.organization?.id ?? null;
+  // A group's improvements: where each goes (the review's switch), and the main course's part that
+  // goes in with this Publish, worked out before the save's transaction opens.
+  const course = new Map<number, { scope: PlanScope | null; write: CourseWrite | null }>();
+  for (const [index, change] of Array.from(changes.entries())) {
+    if (!change.taskId || !change.carry) continue;
+    const part = await prepareCoursePart({
+      taskId: change.taskId,
+      lessonId,
+      before: change.carry.before,
+      after: change.carry.after,
+      toCourse: change.toCourse,
+      viewer,
+      bindings: uploadedAssetBindings,
+    });
+    if (part) course.set(index, part);
+  }
   // Saved for an improvement by the lesson editor (a draft made for it, e.g. one carried over from a
   // group's copy): the text it had, to carry the changes to the main course if its plan says so (the
   // save is guarded by the loaded revision, so this is the text it replaces). The Improvements view
@@ -1058,7 +1099,9 @@ export async function updateLessonInlineAction(
     },
     uploadedAssetBindings,
     publishedBy: user.id,
-    changes: changes.map(({ carry: _carry, ...change }) => change),
+    changes: changes.map(({ carry: _carry, toCourse: _toCourse, ...change }) => change),
+    course,
+    organizationId,
   });
 
   // The lesson changed after it was opened (a sync from Obsidian, someone else's save): nothing was saved.
@@ -1069,14 +1112,22 @@ export async function updateLessonInlineAction(
     };
   }
 
-  // A group's copy, for an improvement that also changes the main course: the same changes wait
-  // there for review (or, for someone who can't edit the course, go to it as a suggestion).
-  const organizationId = (await getCurrentUserSession())?.user.organization?.id;
+  // A group's copy, for an improvement that also changes the main course: what went in with this
+  // Publish; otherwise the same changes wait there for review (or, for someone who can't edit the
+  // course, go to it as a suggestion).
+  let wentToCourse: CourseCarry | null = null;
+  const touchedCourse = new Set<string>();
+  for (const [index, part] of Array.from(course)) {
+    if (!part.write || !saved.written.get(index)) continue;
+    wentToCourse = combineCarries(wentToCourse, courseWritten(part.write));
+    touchedCourse.add(`/admin/courses/${part.write.courseId}/lessons/${part.write.courseLessonId}`);
+    touchedCourse.add(`/admin/courses/${part.write.courseId}/versions/${part.write.curriculumVersionId}`);
+  }
   const carries = [
-    ...changes.flatMap((change, index) => (change.taskId && change.carry ? [{ taskId: change.taskId, index, ...change.carry }] : [])),
+    ...changes.flatMap((change, index) => (change.taskId && change.carry && !saved.written.get(index) ? [{ taskId: change.taskId, index, ...change.carry }] : [])),
     ...(editorImprovementId && before !== null ? [{ taskId: editorImprovementId, index: changes.length ? 0 : -1, before, after: markdownContent }] : []),
   ];
-  let course: CourseCarry | null = null;
+  let courseResult: CourseCarry | null = wentToCourse;
   for (const carry of organizationId ? carries : []) {
     const savedChange = carry.index >= 0 ? saved.changes[carry.index] : undefined;
     const carried = await carryToCourse({
@@ -1090,7 +1141,7 @@ export async function updateLessonInlineAction(
       userId: user.id,
       organizationId: organizationId as string,
     });
-    course = combineCarries(course, carried);
+    courseResult = combineCarries(courseResult, carried);
     if (carried?.kind === 'suggested' && savedChange && !savedChange.task) {
       // The course's part is its suggestion's now: this may have been the improvement's last lesson.
       const moved = await finishImprovement(prisma, carry.taskId);
@@ -1107,6 +1158,7 @@ export async function updateLessonInlineAction(
   revalidatePath(`/admin/courses/${courseId}`);
   revalidatePath(`/admin/courses/${courseId}/versions/${lesson.curriculumVersionId}`);
   revalidatePath(`/admin/courses/${courseId}/lessons/${lessonId}`);
+  for (const path of Array.from(touchedCourse)) revalidatePath(path);
 
   return {
     lessonId,
@@ -1115,7 +1167,7 @@ export async function updateLessonInlineAction(
     revision: saved.revision,
     change: saved.changes[0] ?? null,
     changes: saved.changes,
-    course,
+    course: courseResult,
     next: saved.next,
   };
 }

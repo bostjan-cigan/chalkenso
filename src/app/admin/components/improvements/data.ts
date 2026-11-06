@@ -269,21 +269,15 @@ export function lessonWork(rows: ImprovementRow[], feedback: NewFeedbackLesson[]
   }
   return Array.from(lessons.values())
     .map(({ hrefs, ...lesson }) => {
-      // Feedback is decided before planning, so the plan covers it.
+      // Changes to review first; anything else to do on the lesson is one step, "Improve" (its new
+      // feedback, plan and changes in one go on its Improve page).
       const kind: LessonWork['next']['kind'] = lesson.toReview
         ? 'review'
-        : lesson.newFeedback
-          ? 'decide'
-          : lesson.plansToWrite
-            ? 'plan'
-            : lesson.plansToUpdate
-              ? 'update'
-              : lesson.plansReady
-                ? 'draft'
-                : lesson.improvements
-                  ? 'improve'
-                  : 'publish';
-      return { ...lesson, next: { kind, href: kind === 'publish' ? null : hrefs[kind] ?? lesson.href } };
+        : lesson.newFeedback || lesson.plansToWrite || lesson.plansToUpdate || lesson.plansReady || lesson.improvements
+          ? 'improve'
+          : 'publish';
+      const href = kind === 'review' ? (hrefs.review ?? lesson.href) : kind === 'improve' ? (hrefs.plan ?? hrefs.update ?? hrefs.draft ?? lesson.href ?? hrefs.improve) : null;
+      return { ...lesson, next: { kind, href: href ?? null } };
     })
     .sort((a, b) => Number(b.mine) - Number(a.mine) || NEXT_ORDER[a.next.kind] - NEXT_ORDER[b.next.kind] || a.label.localeCompare(b.label));
 }

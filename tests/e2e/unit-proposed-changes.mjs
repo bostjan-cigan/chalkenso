@@ -13,7 +13,7 @@ const out = await build({
   write: false,
   platform: 'node',
 });
-const { proposeChanges, applyChanges, placeChanges, applyOnto, revertApplied, transplantChanges, splitBlocks, changeSteps, stepKind, patchWords, changesNotIn } = await import(
+const { proposeChanges, applyChanges, placeChanges, applyOnto, revertApplied, transplantChanges, fitOnto, splitBlocks, changeSteps, stepKind, patchWords, changesNotIn } = await import(
   `data:text/javascript,${encodeURIComponent(out.outputFiles[0].text)}`
 );
 
@@ -167,6 +167,27 @@ const dropped = transplantChanges(removeBefore, removeAfter, removeDrift);
 check('a removal goes on a paragraph that’s nearly the same', dropped.placed === 1 && !dropped.text.includes('version line') && dropped.text.includes('Run it now.'), JSON.stringify(dropped));
 const unlike = ['## Volumes', 'Compose files once began with a version number; now they don’t.', 'Run it now.'].join('\n\n');
 check('but not on one that only shares a few words', transplantChanges(removeBefore, removeAfter, unlike).unplaced.length === 1);
+
+// One Publish on a group's copy also changes the main course: only what finds the same text goes in
+// by itself (`exact`); what's alike but differs, or has nowhere to go, waits there.
+check('onto the same text, everything goes in by itself', same.exact.changed && same.exact.placed === 2 && blocks(same.exact.text) === blocks(copyAfter));
+check('the course’s own wording elsewhere stays in what goes in', around.exact.placed === 2 && around.exact.text.includes('-d` to start both in the background'));
+check('where the course differs, only the rest goes in by itself', partly.exact.placed === 1 && partly.exact.text.includes('still there') && partly.exact.text.includes('outlives a container'));
+check('a change placed nearby doesn’t go in by itself', nearby.exact.placed === 1 && !nearby.exact.text.includes('so `down` keeps it') && nearby.exact.text.includes('still there'), nearby.exact.text);
+const restThere = proposeChanges(nearby.exact.text, nearby.text);
+check('on top of what went in, the rest is the nearby change alone', restThere.length === 1 && restThere[0].after.join(' ').includes('so `down` keeps it'), JSON.stringify(restThere));
+check('nothing found the same text: nothing goes in by itself', !transplantChanges(copyBefore, copyBefore.replace('A named volume keeps the data outside the container.', 'Gone.'), courseDiffers).exact.changed);
+check('the course already has it all: nothing to write', !already.exact.changed && already.exact.placed === 2);
+// What a group's review shows before Publish: how each change goes onto the main course.
+const draftChanges = proposeChanges(copyBefore, copyAfter);
+const fitSame = fitOnto(copyBefore, copyBefore, draftChanges);
+check('onto the same text, every change lands', draftChanges.every((change) => fitSame[change.id] === 'lands'), JSON.stringify(fitSame));
+const fitDrifted = fitOnto(copyBefore, drifted, draftChanges);
+check('reworded a little there: that change is to check', Object.values(fitDrifted).filter((fit) => fit === 'check').length === 1 && Object.values(fitDrifted).filter((fit) => fit === 'lands').length === 1, JSON.stringify(fitDrifted));
+const fitDiffers = fitOnto(copyBefore, courseDiffers, draftChanges);
+check('rewritten there: that change is by hand', Object.values(fitDiffers).includes('byHand') && Object.values(fitDiffers).includes('lands'), JSON.stringify(fitDiffers));
+const fitAlready = fitOnto(copyBefore, copyAfter, draftChanges);
+check('already there: it says so', draftChanges.every((change) => fitAlready[change.id] === 'there'), JSON.stringify(fitAlready));
 
 // Steps as a reader takes them: a rewrite (removed, then new in its place) is one step.
 const stepBase = ['## Adding recipes', 'It works, but notice the friction creeping in: a useState per field.', 'Next, a form library.', '## Validation', 'Note: older React versions bound handlers in the constructor.', 'Rules live next to their fields.'].join('\n\n');

@@ -35,6 +35,8 @@ import { orgNoticeText, readOrgNotice } from '@/lib/org-notice';
 import { loadGettingStarted } from './getting-started/data';
 import ShowGettingStarted from './getting-started/ShowGettingStarted';
 import { loadNeedsYou } from './needs-you';
+import NotesSeen from './components/NotesSeen';
+import { feedbackOutcomesSince } from '@/lib/curriculum-comments';
 import styles from './admin.module.css';
 import { adminNavItems } from '@/app/admin/nav';
 
@@ -138,6 +140,19 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
     .sort((a, b) => b.open - a.open || a.name.localeCompare(b.name));
   // A guest instructor can't open the group's page: their instructor link is how they reach it.
   const guestGroups = taughtGroups.groups.filter((group) => !canOnGroup(crmViewer, { id: group.id, courseId: group.courseId }, [Permission.READ]));
+  // What happened to the person's instructor notes since they last looked: changed a lesson, or answered.
+  const seenAt = (await prisma.user.findUnique({ where: { id: viewer.id }, select: { notesSeenAt: true } }))?.notesSeenAt ?? null;
+  const yourNotes = seenAt ? await feedbackOutcomesSince({ authorUserId: viewer.id, isInstructorNote: true }, seenAt) : [];
+  const noteLinks = yourNotes.length
+    ? new Map(
+        (
+          await prisma.curriculumComment.findMany({
+            where: { id: { in: yourNotes.map((note) => note.id) } },
+            select: { id: true, curriculumVersionId: true, groupId: true, lesson: { select: { courseId: true, position: true } } },
+          })
+        ).map((note) => [note.id, { href: `/admin/courses/${note.lesson.courseId}/versions/${note.curriculumVersionId}/preview${note.groupId ? `?group=${note.groupId}` : ''}`, position: note.lesson.position }])
+      )
+    : new Map<string, { href: string; position: number }>();
 
   return (
     <AdminFrame
@@ -158,6 +173,32 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
       {params.joined ? (
         <section className={styles.editorPageSection}>
           <AdminNotice>{t('joined', { organization: viewer.organization.name })}</AdminNotice>
+        </section>
+      ) : null}
+
+      {yourNotes.length ? (
+        <section className={styles.editorPageSection} data-testid="your-notes">
+          <NotesSeen />
+          <p className={styles.quietText} style={{ margin: 0 }}>
+            {[
+              yourNotes.some((note) => note.outcome === 'changed') ? t('yourNotes.changed', { count: yourNotes.filter((note) => note.outcome === 'changed').length }) : null,
+              yourNotes.some((note) => note.outcome === 'replied') ? t('yourNotes.replied', { count: yourNotes.filter((note) => note.outcome === 'replied').length }) : null,
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+          </p>
+          <ul className={styles.needsYouList}>
+            {yourNotes.map((note) => (
+              <li key={note.id}>
+                <Link href={noteLinks.get(note.id)?.href ?? '/admin'} className={styles.needsYouItem}>
+                  <span>
+                    {t('yourNotes.lesson', { position: noteLinks.get(note.id)?.position ?? 0 })} · “{note.quote}”
+                  </span>
+                  <TbChevronRight size={16} aria-hidden />
+                </Link>
+              </li>
+            ))}
+          </ul>
         </section>
       ) : null}
 

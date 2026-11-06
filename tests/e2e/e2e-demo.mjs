@@ -78,7 +78,7 @@ try {
     'the lesson’s improvement uses it (ticked beside the lesson)',
     Boolean(draftTaskId) && (await page.locator('[data-testid=feedback-card][data-used]', { hasText: 'cheat sheet of status codes' }).count()) === 1
   );
-  check('with its plan still to write, and nothing drafted yet', (await page.locator('[data-testid=plan-with-ai]').count()) === 1 && (await page.locator('[data-testid=draft-changes]').count()) === 0);
+  check('with nothing planned or drafted yet', (await page.locator('[data-testid=improve-lesson]').count()) === 1 && (await page.locator('[data-testid=inline-change]').count()) === 0);
 
   // With an improvement being worked on, the feedback stays open (its learner hears when the change is made)
   await page.goto(`${BASE}/admin/courses/comments/${groupVersionId}`);
@@ -98,11 +98,12 @@ try {
   check('the improvement’s page shows details, and opens it in the lesson', openInLesson && (await page.locator('[data-testid=task-plan]').count()) === 0);
   await page.screenshot({ path: 'tests/e2e/.shots/task-before.png' });
 
-  // AI drafts the plan in the background, in the lesson's Improve mode: what it is doing and the
-  // plan as it is written. Left while it's written, it waits in the plan box; Cancel puts it away.
+  // Improve this lesson: AI writes the plan, then the changes, in one go in the background, in the
+  // lesson's Improve mode (the plan as it's written, then the lesson's sections). Left while it
+  // works, it finishes and waits there; Stop ends it for good.
   const draftQuote = (value) => `'${String(value).replace(/'/g, "''")}'`;
   const latestDraft = () =>
-    sql(`select status from public.ai_proposals where target_id = ${draftQuote(draftTaskId)} and via = 'app' order by created_at desc limit 1`);
+    sql(`select status from public.ai_proposals where kind = 'LESSON_REVISION' and task_id = ${draftQuote(draftTaskId)} and via = 'app' order by created_at desc limit 1`);
   const waitForDraft = async (status, tries = 60) => {
     for (let i = 0; i < tries; i += 1) {
       if (latestDraft() === status) return true;
@@ -111,34 +112,25 @@ try {
     return false;
   };
   await page.goto(improveUrl);
-  await page.click('[data-testid=plan-with-ai]');
-  check('it says what AI is doing', await page.locator('[data-testid=plan-draft-stage]').waitFor({ timeout: 15000 }).then(() => true, () => false));
+  await page.click('[data-testid=improve-lesson]');
+  check('it says what AI is doing', await page.locator('[data-testid=changes-stage]').waitFor({ timeout: 15000 }).then(() => true, () => false));
+  check('and shows the plan as it is written', await page.locator('[data-testid=live-plan]').waitFor({ timeout: 30000 }).then(() => true, () => false));
   await page.goto(`${BASE}/admin`);
   check('it finishes while nobody watches', await waitForDraft('OPEN'));
+  check('the plan is kept on the improvement, with its Scope line for the vault', sql(`select plan from public.tasks where id = ${draftQuote(draftTaskId)}`).includes('Scope:'));
+  check('the work started', sql(`select status from public.tasks where id = ${draftQuote(draftTaskId)}`) === 'IN_PROGRESS');
   await page.goto(improveUrl);
-  await page.waitForFunction(() => ((document.querySelector('[data-testid=plan-box] .ProseMirror')?.textContent || document.querySelector('[data-testid=plan-box] textarea')?.value || '')).trim().length > 0, null, { timeout: 15000 });
-  check('back in the lesson, the draft waits in the plan box', true);
-  await page.locator('[data-testid=step-plan]').getByRole('button', { name: 'Cancel' }).click();
-  check('Cancel puts it away', await waitForDraft('DISCARDED', 20));
+  check('back in the lesson, the changes wait for review', await page.locator('[data-testid=apply-improvement]').waitFor({ timeout: 15000 }).then(() => true, () => false));
 
-  // Stop: no draft arrives later
-  await page.click('[data-testid=plan-with-ai]');
-  const working = page.locator('[data-testid=plan-draft-working]');
+  // Stop: nothing arrives later.
+  sql(`update public.ai_proposals set status = 'DISCARDED' where kind = 'LESSON_REVISION' and task_id = ${draftQuote(draftTaskId)} and status = 'OPEN'`);
+  await page.goto(improveUrl);
+  await page.click('[data-testid=improve-lesson]');
+  const working = page.locator('[data-testid=changes-working]');
   await working.waitFor({ timeout: 15000 });
   await working.getByRole('button', { name: 'Stop' }).click();
   await page.waitForTimeout(6000);
-  check('Stop ends it for good', latestDraft() === 'DISCARDED' && (await page.locator('[data-testid=plan-box]').count()) === 0);
-
-  // Done while watched, it goes into the box; saving keeps it and starts the improvement
-  await page.click('[data-testid=plan-with-ai]');
-  check('and shows the plan as it is written', await page.locator('[data-testid=plan-draft-live]').waitFor({ timeout: 20000 }).then(() => true, () => false));
-  await page.waitForFunction(() => ((document.querySelector('[data-testid=plan-box] .ProseMirror')?.textContent || document.querySelector('[data-testid=plan-box] textarea')?.value || '')).trim().length > 0, null, { timeout: 30000 });
-  check('AI drafted the plan, without its Scope line in the box', !(await page.locator('[data-testid=plan-box] .ProseMirror').innerText()).includes('Scope:'));
-  await page.click('[data-testid=save-plan]');
-  await page.waitForSelector('[data-testid=context-rows]');
-  check('plan saved on the task, with its Scope line for the vault', sql(`select plan from public.tasks where id = ${draftQuote(draftTaskId)}`).includes('Scope:'));
-  check('saving the plan starts the improvement', sql(`select status from public.tasks where id = ${draftQuote(draftTaskId)}`) === 'IN_PROGRESS');
-  check('the draft counts as used', await waitForDraft('USED', 20));
+  check('Stop ends it for good', latestDraft() === 'DISCARDED' && (await page.locator('[data-testid=apply-improvement]').count()) === 0);
 
   // Deleted from its own page, the improvement goes and its feedback waits to be decided again
   const taskId = new URL(taskUrl).pathname.split('/').pop();

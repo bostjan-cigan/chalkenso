@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 import AdminButton from '../../components/ui/AdminButton';
 import AdminSearchableSelectField from '../../components/ui/AdminSearchableSelectField';
-import { addImprovementLessonAction, leaveCourseAsItIsAction, moveTaskAction, removeImprovementLessonAction } from '../actions';
+import { addImprovementLessonAction, moveTaskAction, removeImprovementLessonAction } from '../actions';
 import type { ImprovementMove } from '@/lib/task-flow';
 
 export type PlaceLesson = { id: string; position: number; title: string; href: string; saved: boolean };
@@ -34,23 +34,19 @@ const quietButton = {
 /**
  * The lessons an improvement changes, on its page: each one (to open it with the plan), "Add a
  * lesson" from the same course or group copy, and taking one back out (not its last one, nor one
- * already saved). For a group's improvement that also changes the main course: "Leave the main
- * course as it is". Each change shows at once; a move it causes comes with Undo.
+ * already saved). Each change shows at once; a move it causes comes with Undo.
  */
 export default function ImprovementPlaces({
   taskId,
   lessons,
   addable,
   canWork,
-  toCourse,
 }: {
   taskId: string;
   lessons: PlaceLesson[];
   /** Lessons of the same course or copy it doesn't change yet. */
   addable: Array<{ id: string; position: number; title: string }>;
   canWork: boolean;
-  /** Its plan takes it to the main course too (and the course's part hasn't been handed over). */
-  toCourse: boolean;
 }) {
   const t = useTranslations('tasks.detail.places');
   const router = useRouter();
@@ -124,26 +120,6 @@ export default function ImprovementPlaces({
           >
             {t('add')}
           </AdminButton>
-        </div>
-      ) : null}
-
-      {canWork && toCourse ? (
-        <div style={{ display: 'grid', gap: '0.35rem', justifyItems: 'start' }}>
-          <AdminButton
-            type="button"
-            size="compact"
-            tone="secondary"
-            disabled={pending}
-            onClick={() =>
-              run(async () => {
-                const result = await leaveCourseAsItIsAction(taskId);
-                return { text: t('leftCourse'), moved: result.moved };
-              })
-            }
-          >
-            {t('leaveCourse')}
-          </AdminButton>
-          <span style={{ fontSize: '0.82rem', opacity: 0.65 }}>{t('leaveCourseLoses')}</span>
         </div>
       ) : null}
 

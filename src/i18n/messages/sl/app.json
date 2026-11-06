@@ -172,11 +172,26 @@
       "newest": "{shown, plural, one {Najnovejša #} two {Najnovejši #} few {Najnovejše #} other {Najnovejših #}} od {total}.",
       "nothingDone": "Še nič ni opravljeno.",
       "copyOf": "kopija skupine {group}",
-      "copyOfUnnamed": "kopija skupine"
+      "copyOfUnnamed": "kopija skupine",
+      "lessonHead": "Lekcija {position} · {title}"
     },
     "markDone": "Označi kot opravljeno",
     "use": "Upoštevaj",
-    "used": "V izboljšavi lekcije · {status}"
+    "used": "V izboljšavi lekcije · {status}",
+    "select": {
+      "select": "Izberi",
+      "all": "Vse",
+      "picked": "{count, plural, one {# izbrana} two {# izbrani} few {# izbrane} other {# izbranih}}",
+      "fix": "Popravi z AI",
+      "use": "Uporabi",
+      "leaveOut": "Izpusti …",
+      "reply": "{count, plural, one {Odgovor osebi, ki jo je dala} two {En odgovor obema osebama} few {En odgovor vsem # osebam} other {En odgovor vsem # osebam}}",
+      "leaveOutSend": "{count, plural, one {Izpusti} two {Izpusti #} few {Izpusti #} other {Izpusti #}}",
+      "cancel": "Prekliči",
+      "replyFirst": "Najprej napiši odgovor.",
+      "leftOut": "{count, plural, one {# izpuščena, z vašim odgovorom.} two {# izpuščeni, z vašim odgovorom.} few {# izpuščene, z vašim odgovorom.} other {# izpuščenih, z vašim odgovorom.}}",
+      "used": "{count, plural, one {# povratna informacija je v izboljšavi svoje lekcije.} two {# povratni informaciji sta v izboljšavah svojih lekcij.} few {# povratne informacije so v izboljšavah svojih lekcij.} other {# povratnih informacij je v izboljšavah svojih lekcij.}}"
+    }
   },
   "needsYou": {
     "groupFeedback": "{count, plural, one {# nova povratna informacija} two {# novi povratni informaciji} few {# nove povratne informacije} other {# novih povratnih informacij}} v skupini {group}",
@@ -218,6 +233,11 @@
       "offUntilKey": "AI je izklopljen, dokler lastnik ali skrbnik ne doda API-ključa Anthropic.",
       "offInstallation": "AI je izklopljen: za vklop nastavite ANTHROPIC_API_KEY.",
       "connector": "Medtem uporabite svoj Claude."
+    },
+    "yourNotes": {
+      "changed": "{count, plural, one {# vaša opomba je spremenila lekcijo} two {# vaši opombi sta spremenili lekcijo} few {# vaše opombe so spremenile lekcijo} other {# vaših opomb je spremenilo lekcijo}}",
+      "replied": "{count, plural, one {# je dobila odgovor} two {# sta dobili odgovor} few {# so dobile odgovor} other {# jih je dobilo odgovor}}",
+      "lesson": "Lekcija {position}"
     }
   },
   "impersonation": {

@@ -6,6 +6,8 @@ import AdminButton from '../../../components/ui/AdminButton';
 import AdminSectionCard from '../../../components/ui/AdminSectionCard';
 import UrlFilterSelect from '../../../components/ui/UrlFilterSelect';
 import FeedbackList from '../../../components/feedback/FeedbackList';
+import SortFeedbackButton from '../../../components/feedback/SortFeedbackButton';
+import { isAiConfigured } from '@/lib/ai';
 import { feedbackShow } from '../../../components/feedback/feedback-view';
 import ImprovementsList from '../../../components/improvements/ImprovementsList';
 import { loadImprovements, newFeedbackByLesson } from '../../../components/improvements/data';
@@ -14,6 +16,7 @@ import { getCourseHeader } from '../../data';
 import {
   accessScope,
   canReadFeedback,
+  canEditVersion,
   canWorkOnFeedback,
   groupScopeWhere,
   requireCourseAccess,
@@ -25,6 +28,9 @@ import { TASK_ENTITY_TYPE, TASK_KIND } from '@/lib/tasks';
 import styles from '../../../admin.module.css';
 
 export const dynamic = 'force-dynamic';
+
+/** Fixing feedback with AI from here drafts several lessons in the background: allow it up to five minutes. */
+export const maxDuration = 300;
 
 type PageParams = Promise<{ courseId: string }>;
 type SearchParams = Promise<{ show?: string; lesson?: string; group?: string }>;
@@ -49,7 +55,7 @@ export default async function CourseFeedbackPage({ params, searchParams }: { par
       orderBy: { name: 'asc' },
       select: { id: true, name: true },
     }),
-    prisma.curriculumVersion.findMany({ where: { courseId, ownerGroupId: null }, select: { id: true } }),
+    prisma.curriculumVersion.findMany({ where: { courseId, ownerGroupId: null }, orderBy: { version: 'desc' }, select: { id: true, label: true } }),
   ]);
   if (!course) {
     notFound();
@@ -90,6 +96,19 @@ export default async function CourseFeedbackPage({ params, searchParams }: { par
       ])
     : [[], 0, []];
 
+  // "Sort with AI": the course's own versions with open feedback, for whoever may edit them and work on it.
+  const aiEnabled = canWorkOnFeedback(viewer, feedbackRef, 'tasks') && (await isAiConfigured());
+  const withFeedback = aiEnabled
+    ? await prisma.curriculumComment.groupBy({
+        by: ['curriculumVersionId'],
+        where: { status: 'OPEN', curriculumVersionId: { in: coreVersions.map((version) => version.id) } },
+        _count: { _all: true },
+      })
+    : [];
+  const sortable = coreVersions.filter(
+    (version) => withFeedback.some((row) => row.curriculumVersionId === version.id) && canEditVersion(viewer, { id: version.id, courseId, ownerGroupId: null }, [Permission.WRITE])
+  );
+
   return (
     <CourseManagementFrame
       activeSection="courses"
@@ -100,15 +119,18 @@ export default async function CourseFeedbackPage({ params, searchParams }: { par
         <AdminSectionCard
           title={t('title')}
           action={
-            <AdminButton
-              href={`/admin/api/feedback-export?course=${courseId}${group ? `&group=${group}` : ''}`}
-              download
-              size="compact"
-              tone="secondary"
-              data-testid="feedback-export"
-            >
-              {t('exportCsv')}
-            </AdminButton>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              {group && group !== OWN ? null : <SortFeedbackButton courseId={courseId} versions={sortable.map((version) => ({ id: version.id, label: version.label }))} />}
+              <AdminButton
+                href={`/admin/api/feedback-export?course=${courseId}${group ? `&group=${group}` : ''}`}
+                download
+                size="compact"
+                tone="secondary"
+                data-testid="feedback-export"
+              >
+                {t('exportCsv')}
+              </AdminButton>
+            </div>
           }
         >
           <FeedbackList

@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { TaskStatus, TaskWorkplace } from '@prisma/client';
+import { AiProposalKind, AiProposalStatus, TaskStatus, TaskWorkplace } from '@prisma/client';
 import { improvementPlaces } from './improvement-targets';
 import { prisma, type DbClient } from './prisma';
 import { TASK_ENTITY_ROLE, TASK_ENTITY_TYPE } from './tasks';
@@ -59,13 +59,15 @@ export async function improvementFeedbackLinks(db: DbClient, taskId: string, les
 
 /**
  * The approved changes are saved: done, when every lesson the improvement changes (its own, and
- * the main course's when its plan says so) has a saved change for it. Run inside the save's
- * transaction. Null when nothing moved.
+ * the main course's when its plan says so) has a saved change for it, and nothing carried to the
+ * main course's lesson still waits there for a look. Run inside the save's transaction. Null when
+ * nothing moved.
  */
 export async function finishImprovement(db: DbClient, taskId: string): Promise<ImprovementMove | null> {
   const task = await db.task.findUnique({ where: { id: taskId }, select: { status: true, title: true } });
   if (!task || task.status === TaskStatus.DONE || task.status === TaskStatus.IGNORED) return null;
-  const lessons = await improvementLessons(db, taskId);
+  const targets = (await improvementPlaces(db, taskId))?.targets ?? [];
+  const lessons = targets.map((target) => target.lessonId);
   if (!lessons.length) return null;
   const changed = await db.lessonChange.findMany({
     where: { taskId, lessonId: { in: lessons } },
@@ -73,6 +75,15 @@ export async function finishImprovement(db: DbClient, taskId: string): Promise<I
     distinct: ['lessonId'],
   });
   if (changed.length < lessons.length) return null;
+  const courseLessons = targets.filter((target) => target.copy === 'course').map((target) => target.lessonId);
+  if (
+    courseLessons.length &&
+    (await db.aiProposal.count({
+      where: { kind: AiProposalKind.LESSON_REVISION, status: AiProposalStatus.OPEN, taskId, targetId: { in: courseLessons } },
+    }))
+  ) {
+    return null;
+  }
   await db.task.update({ where: { id: taskId }, data: { status: TaskStatus.DONE, completedAt: new Date() } });
   return { taskId, title: task.title, from: task.status, to: TaskStatus.DONE };
 }

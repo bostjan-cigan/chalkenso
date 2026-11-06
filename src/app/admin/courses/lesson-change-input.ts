@@ -15,6 +15,11 @@ export type LessonChangeInput = Omit<NewLessonChange, 'lessonId' | 'revision'> &
   carry: { before: string; after: string } | null;
   /** The improvement's feedback used after its changes were drafted: not answered by this save, it starts the next improvement. */
   later: string[];
+  /**
+   * A group copy's Publish: whether its changes go to the main course too (the review's switch).
+   * Null when it didn't say (the plan's scope decides).
+   */
+  toCourse: boolean | null;
 };
 
 /** Long enough for any lesson; anything longer isn't carried anywhere. */
@@ -49,7 +54,7 @@ export async function lessonChangesFromForm(formData: FormData, lessonId: string
   return changes;
 }
 
-type EntryValue = { proposalIds?: unknown; noteIds?: unknown; taskId?: unknown; applied?: unknown; skipped?: unknown; before?: unknown; after?: unknown };
+type EntryValue = { proposalIds?: unknown; noteIds?: unknown; taskId?: unknown; applied?: unknown; skipped?: unknown; before?: unknown; after?: unknown; toCourse?: unknown };
 
 async function lessonChangeEntry(
   value: EntryValue,
@@ -119,5 +124,6 @@ async function lessonChangeEntry(
     ...(changed?.length ? { changes: changed } : {}),
     carry: taskId && before !== null && after !== null ? { before, after } : null,
     later,
+    toCourse: taskId && typeof value.toCourse === 'boolean' ? value.toCourse : null,
   };
 }

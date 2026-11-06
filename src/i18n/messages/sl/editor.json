@@ -187,7 +187,8 @@
         "thinking": "Claude razmišlja …",
         "writing": "Claude piše spremembe …",
         "thinkingAbout": "{count, plural, one {Berem # povratno informacijo…} two {Berem # povratni informaciji…} few {Berem # povratne informacije…} other {Berem # povratnih informacij…}}",
-        "finishing": "Preverjam rezultat…"
+        "finishing": "Preverjam rezultat…",
+        "planning": "Claude piše načrt …"
       },
       "claude": {
         "waiting": "Čakam na vaš Claude …",
@@ -266,11 +267,6 @@
     "newTitle": "Še kaj za spremembo",
     "sayWhat": "Napišite, kaj naj se spremeni.",
     "planStep": {
-      "whereLabel": "Kam gre",
-      "scopes": {
-        "groupOnly": "Samo ta skupina",
-        "groupAndCore": "Ta skupina in glavni tečaj"
-      },
       "drafted": "Pripravila AI",
       "draftedByClaude": "Pripravil Claude",
       "placeholder": "V razdelku „Nosilci podatkov“ pokažite, zakaj podatki preživijo vsebnik.",
@@ -278,10 +274,6 @@
       "cancel": "Prekliči",
       "saving": "Shranjujem …",
       "save": "Shrani načrt",
-      "goes": {
-        "groupOnly": "Gre samo v kopijo te skupine.",
-        "groupAndCore": "Gre v kopijo te skupine in v glavni tečaj."
-      },
       "write": "Napiši načrt",
       "emptyPlan": "Najprej napišite načrt.",
       "editPlan": "Uredi načrt",
@@ -305,7 +297,10 @@
       "deleted": "Izbrisano.",
       "repliedDone": "Odgovor je poslan · označeno kot opravljeno.",
       "waitsForDraft": "Počaka na naslednji osnutek.",
-      "replyFirst": "Najprej napišite odgovor."
+      "replyFirst": "Najprej napišite odgovor.",
+      "leaveOut": "Izpusti",
+      "leftOut": "Izpuščeno, z vašim odgovorom.",
+      "notLeftOut": "Nanjo že odgovarja shranjena sprememba."
     },
     "compareTitle": "Sprememba {index} od {total}",
     "inSection": "v razdelku {section}",
@@ -351,7 +346,10 @@
       "copy": "Kopiraj novo besedilo",
       "copied": "Kopirano",
       "fit": "Umesti z AI",
-      "see": "Poglej jih"
+      "see": "Poglej jih",
+      "leave": "Pusti ostalo",
+      "left": "Ostane, kot je.",
+      "leftDone": "Ostane, kot je: izboljšava je opravljena."
     },
     "savedPublished": "Objavljeno",
     "savedDraft": "Shranjeno",
@@ -452,8 +450,36 @@
     },
     "toCourse": {
       "label": "Tudi na glavni tečaj",
-      "suggest": "Predlagaj glavnemu tečaju"
-    }
+      "suggest": "Predlagaj glavnemu tečaju",
+      "check": "Glavni tečaj: preveri",
+      "byHand": "Glavni tečaj: ročno",
+      "waits": "{count, plural, one {# čaka tam} two {# čakata tam} few {# čakajo tam} other {# čaka tam}}"
+    },
+    "courseLive": "tudi v glavnem tečaju",
+    "courseSaved": "shranjeno v lekciji glavnega tečaja, ne objavljeno",
+    "courseRestWaits": "{count, plural, one {# sprememba čaka tam} two {# spremembi čakata tam} few {# spremembe čakajo tam} other {# sprememb čaka tam}}",
+    "undoneCourseMovedOn": "Razveljavljeno tukaj. Lekcija glavnega tečaja se je medtem spremenila: razveljavi jo tam.",
+    "thread": {
+      "label": "Kako so nastale spremembe",
+      "attempt": "Poskus {number}",
+      "use": "Uporabi tega",
+      "placeholder": "Prosi za spremembe: krajše, ohrani primer …",
+      "ask": "Prosi za spremembe",
+      "send": "Pošlji",
+      "stop": "Ustavi",
+      "empty": "Najprej napiši, kaj naj se spremeni.",
+      "used": "Uporabljeno"
+    },
+    "edited": "Urejeno",
+    "nothingToImprove": "Ta lekcija nima nič novega za izboljšati.",
+    "queue": {
+      "at": "Lekcija {at} od {total}",
+      "next": "Naprej",
+      "nextLesson": "Naprej: lekcija {position} · {title}"
+    },
+    "improveLesson": "Izboljšaj to lekcijo",
+    "planSavedRedraft": "Načrt shranjen.",
+    "writeAgain": "Ponovno napiši spremembe"
   },
   "mode": {
     "label": "Način lekcije",

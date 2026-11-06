@@ -23,6 +23,7 @@ import styles from '../access.module.css';
 import markdownStyles from '@/styles/markdown-content.module.css';
 import '../access-lesson-copy.css';
 import './lesson-comments.css';
+import { OPEN_NOTE_EVENT, askedNote, type OpenNoteDetail } from './FeedbackOutcomes';
 
 /** A comment as rendered in the gutter (shared by viewer + admin modes). */
 export type LessonCommentView = {
@@ -272,6 +273,23 @@ export default function LessonCommentLayer({
     comments.forEach((comment) => map.set(comment.id, comment));
     return map;
   }, [comments]);
+
+  // A note opened from "what happened to your feedback" (FeedbackOutcomes): opened here once this
+  // lesson's comments include it.
+  const [askedOpen, setAskedOpen] = useState<string | null>(() => askedNote(lessonId));
+  useEffect(() => {
+    const onOpen = (event: Event) => {
+      const detail = (event as CustomEvent<OpenNoteDetail>).detail;
+      if (detail?.commentId && detail.lessonId === lessonId) setAskedOpen(detail.commentId);
+    };
+    window.addEventListener(OPEN_NOTE_EVENT, onOpen);
+    return () => window.removeEventListener(OPEN_NOTE_EVENT, onOpen);
+  }, [lessonId]);
+  useEffect(() => {
+    if (!askedOpen || !commentsById.has(askedOpen)) return;
+    setOpenTarget({ kind: 'comment', id: askedOpen });
+    setAskedOpen(null);
+  }, [askedOpen, commentsById]);
 
   const notesById = useMemo(() => {
     const map = new Map<string, LessonNoteView>();

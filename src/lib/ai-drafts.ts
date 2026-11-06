@@ -39,7 +39,16 @@ type DraftPayload = {
    * carried from a group's copy (carry-to-course.ts) say from which group, and which of their
    * paragraphs went where the text differs a little (`check`), to look at before keeping.
    */
-  why?: { instruction?: string; noteIds?: string[]; taskId?: string | null; planTitle?: string | null; fromCopy?: { group: string; lessonId: string }; check?: string[] };
+  why?: {
+    instruction?: string;
+    noteIds?: string[];
+    taskId?: string | null;
+    planTitle?: string | null;
+    fromCopy?: { group: string; lessonId: string };
+    check?: string[];
+    /** A turn of the thread: the changes of the attempt it went on from that the person skipped. */
+    skipped?: Array<{ section: string | null; before: string[]; after: string[] }>;
+  };
 };
 
 export type DraftRun = (
@@ -52,11 +61,14 @@ export async function startAppDraft(input: {
   organizationId: string;
   userId: string;
   kind: AiProposalKind;
-  targetType: 'lesson' | 'task' | 'report' | 'course';
+  targetType: 'lesson' | 'task' | 'report' | 'course' | 'version';
   targetId: string;
   taskId?: string | null;
   /** A lesson revision: the lesson's revision the draft is written against. */
   baseRevision?: number | null;
+  /** A turn of the improvement's thread: what the person asked, in their words, and the attempt it goes on from. */
+  request?: string | null;
+  continuesId?: string | null;
   /** The AI call, with the request's key and context already in hand (nothing in it reads the request). */
   run: DraftRun;
 }) {
@@ -76,6 +88,8 @@ export async function startAppDraft(input: {
       payload: { stage: 'reading' },
       via: 'app',
       createdById: input.userId,
+      request: input.request?.trim() || null,
+      continuesId: input.continuesId ?? null,
     },
     select: DRAFT_SELECT,
   });
@@ -100,12 +114,12 @@ async function runDraft(id: string, run: DraftRun) {
   const progress = (next: AiProgress) => {
     const now = Date.now();
     // A new stage is written at once; text as it grows, and signs of life while thinking, less often.
-    const every = next.stage === lastStage ? (next.stage === 'writing' ? PROGRESS_MS : 5_000) : 0;
+    const every = next.stage === lastStage ? (next.stage === 'writing' || next.stage === 'planning' ? PROGRESS_MS : 5_000) : 0;
     if (now - lastWrite < every) return;
     lastWrite = now;
     lastStage = next.stage;
     if (next.stage === 'thinking') write({ stage: 'thinking' });
-    else write({ stage: next.stage, ...(next.stage === 'writing' ? { text: next.text } : {}), ...(next.live ? { live: next.live } : {}) });
+    else write({ stage: next.stage, ...(next.stage === 'writing' || next.stage === 'planning' ? { text: next.text } : {}), ...('live' in next && next.live ? { live: next.live } : {}) });
   };
 
   try {
@@ -138,6 +152,8 @@ const DRAFT_SELECT = {
   createdById: true,
   createdBy: { select: { firstName: true, lastName: true, identifier: true } },
   via: true,
+  request: true,
+  continuesId: true,
 } as const satisfies Prisma.AiProposalSelect;
 
 type DraftRow = Prisma.AiProposalGetPayload<{ select: typeof DRAFT_SELECT }>;
@@ -247,10 +263,13 @@ export type LessonDraftView = AppDraftView & {
 
 /**
  * Changes carried from a group's copy that put nothing into the main course's lesson: an earlier
- * carry could leave one behind (only blank lines differed). Nothing to review, so not a draft.
+ * carry could leave one behind (only blank lines differed). Nothing to review, so not a draft. One
+ * that holds changes with nowhere to go there ("Didn't fit") waits, until they're done by hand or
+ * left ("Leave the rest").
  */
 export function isEmptyCarriedDraft(payload: Prisma.JsonValue | null) {
-  const value = (payload ?? {}) as DraftPayload & { why?: { fromCopy?: unknown } };
+  const value = (payload ?? {}) as DraftPayload & { why?: { fromCopy?: unknown; unplaced?: unknown } };
+  if (typeof value.why?.unplaced === 'number' && value.why.unplaced > 0) return false;
   return Boolean(value.why?.fromCopy) && typeof value.markdown === 'string' && !proposeChanges(String(value.base ?? ''), value.markdown).length;
 }
 

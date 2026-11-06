@@ -172,11 +172,26 @@
       "newest": "The newest {shown} of {total}.",
       "nothingDone": "Nothing done yet.",
       "copyOf": "{group}’s copy",
-      "copyOfUnnamed": "a group’s copy"
+      "copyOfUnnamed": "a group’s copy",
+      "lessonHead": "Lesson {position} · {title}"
     },
     "markDone": "Mark done",
     "use": "Use",
-    "used": "In the lesson’s improvement · {status}"
+    "used": "In the lesson’s improvement · {status}",
+    "select": {
+      "select": "Select",
+      "all": "All",
+      "picked": "{count} selected",
+      "fix": "Fix with AI",
+      "use": "Use",
+      "leaveOut": "Leave out…",
+      "reply": "{count, plural, one {Reply to the person who gave it} other {One reply to all # people}}",
+      "leaveOutSend": "{count, plural, one {Leave out} other {Leave out #}}",
+      "cancel": "Cancel",
+      "replyFirst": "Write a reply first.",
+      "leftOut": "{count, plural, one {# left out, with your reply.} other {# left out, with your reply.}}",
+      "used": "{count, plural, one {# piece of feedback is in its lesson’s improvement.} other {# pieces of feedback are in their lessons’ improvements.}}"
+    }
   },
   "needsYou": {
     "groupFeedback": "{count, plural, one {# new piece} other {# new pieces}} of feedback in {group}",
@@ -218,6 +233,11 @@
       "offUntilKey": "AI is off until an owner or admin adds an Anthropic API key.",
       "offInstallation": "AI is off: set ANTHROPIC_API_KEY to turn it on.",
       "connector": "Meanwhile, use your own Claude."
+    },
+    "yourNotes": {
+      "changed": "{count, plural, one {# of your notes changed a lesson} other {# of your notes changed a lesson}}",
+      "replied": "{count, plural, one {# got a reply} other {# got a reply}}",
+      "lesson": "Lesson {position}"
     }
   },
   "impersonation": {

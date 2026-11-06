@@ -1,12 +1,14 @@
 import 'server-only';
 
-import { AiProposalKind, CurriculumCommentStatus, Permission, TaskStatus } from '@prisma/client';
+import { AiProposalKind, AiProposalStatus, CurriculumCommentStatus, Permission, TaskStatus } from '@prisma/client';
 import { getTranslations } from 'next-intl/server';
 import type { AppDraftView } from '@/lib/ai-draft-progress';
 import { currentDraft, draftView, lessonDraftView, openLessonRevisions, type LessonDraftView } from '@/lib/ai-drafts';
 import { accessScope, canEditVersion, canWorkOnFeedback, commentScopeWhere, loadTaskRef, loadVersionRef, taskScopeWhere, type CrmViewer } from '@/lib/crm-access';
 import { improvementRecords, type ImprovementRecord } from '@/lib/improvement-record';
 import { improvementPlacesFor } from '@/lib/improvement-targets';
+import { improvementAttempts, lessonEdits, type ThreadAttempt } from '@/lib/improvement-thread';
+import { queueOf, type QueueLesson, type QueuePlace } from '@/lib/review-queue';
 import { ANONYMOUS_LEARNER } from '@/lib/learner-label';
 import { improvementLabel } from '@/lib/improvement-label';
 import { parsePlanScope, planBody, type PlanScope } from '@/lib/plan-scope';
@@ -48,6 +50,11 @@ export type ViewImprovement = {
   courseReachable: boolean;
   /** The person may edit that lesson (otherwise the main course gets a suggestion). */
   canEditCourse: boolean;
+  /**
+   * On the group's copy, for whoever may edit the main course: the text of the main course's lesson
+   * behind this one, to show before Publish which changes won't go in there by themselves.
+   */
+  courseText: string | null;
   /** The group whose improvement it is; null for the course's own. */
   group: string | null;
   /** A plan AI is writing for it, or wrote while nobody watched. */
@@ -75,12 +82,17 @@ export type ViewImprovement = {
   fromCopy: { group: string; changes: ProposedChange[] } | null;
   /** Proposed changes for it on this lesson: being written, or waiting for review. */
   draft: LessonDraftView | null;
+  /** Its thread on this lesson: the attempts at its changes since the last save, oldest first, with what was asked for each. */
+  attempts: ThreadAttempt[];
   /** What it changed so far (saved on some of its lessons, more to do). */
   record: ImprovementRecord | null;
   canWork: boolean;
 };
 
-/** A finished improvement on the lesson, read-only: why, its plan, and what it changed. */
+/**
+ * The lesson's history, read-only: a finished improvement (why, its plan, how its changes came
+ * about, and what it changed), or a published edit no improvement made (`edited`: what it changed).
+ */
 export type DoneImprovement = {
   id: string;
   label: string;
@@ -89,6 +101,10 @@ export type DoneImprovement = {
   feedback: ViewFeedback[];
   asked: string | null;
   record: ImprovementRecord | null;
+  attempts: ThreadAttempt[];
+  edited: boolean;
+  /** When it was finished (or the edit published), for the history's order. */
+  at: string;
 };
 
 /**
@@ -132,7 +148,7 @@ export async function loadImprovementsView(
     },
     orderBy: { createdAt: 'asc' },
     take: 60,
-    select: { id: true, title: true, description: true, aiNotes: true, status: true, plan: true, planUpdatedAt: true, aiReady: true, workplace: true, updatedAt: true },
+    select: { id: true, title: true, description: true, aiNotes: true, status: true, plan: true, planUpdatedAt: true, aiReady: true, workplace: true, updatedAt: true, completedAt: true },
   });
   const currentId = await lessonImprovement(prisma, lesson.id);
   const places = await improvementPlacesFor(
@@ -148,7 +164,7 @@ export async function loadImprovementsView(
   const openIds = open.map((task) => task.id);
   const doneIds = done.map((task) => task.id);
 
-  const [paths, sourceLinks, draftRows, saved, groups, records] = await Promise.all([
+  const [paths, sourceLinks, draftRows, saved, groups, records, attempts, doneAttempts, edits] = await Promise.all([
     revisionPathsFor(open, aiEnabled),
     prisma.taskEntityLink.findMany({
       where: { taskId: { in: [...openIds, ...doneIds] }, entityType: TASK_ENTITY_TYPE.curriculumComment, role: TASK_ENTITY_ROLE.source },
@@ -161,6 +177,9 @@ export async function loadImprovementsView(
       select: { id: true, name: true },
     }),
     improvementRecords(viewer, [...doneIds, ...openIds]),
+    improvementAttempts(lesson.id, openIds),
+    improvementAttempts(lesson.id, doneIds, { finished: true }),
+    lessonEdits(lesson.id),
   ]);
   const groupName = new Map(groups.map((group) => [group.id, group.name]));
   const whereOf = (taskId: string) => {
@@ -208,11 +227,12 @@ export async function loadImprovementsView(
     )
   );
   const improvements: ViewImprovement[] = [];
-  // The main course's lesson behind a group's improvement: whether the person may edit it.
-  const canEditLesson = async (lessonId: string | undefined) => {
-    const found = lessonId ? await prisma.lesson.findUnique({ where: { id: lessonId }, select: { curriculumVersionId: true } }) : null;
+  // The main course's lesson behind a group's improvement: whether the person may edit it, and its text then.
+  const courseLessonOf = async (lessonId: string | undefined) => {
+    const found = lessonId ? await prisma.lesson.findUnique({ where: { id: lessonId }, select: { curriculumVersionId: true, markdownContent: true } }) : null;
     const version = found ? await loadVersionRef(found.curriculumVersionId) : null;
-    return Boolean(version && canEditVersion(viewer, version, [Permission.WRITE]));
+    const canEdit = Boolean(version && canEditVersion(viewer, version, [Permission.WRITE]));
+    return { canEdit, text: canEdit && found ? found.markdownContent : null };
   };
   for (const task of open) {
     const place = places.get(task.id);
@@ -220,6 +240,7 @@ export async function loadImprovementsView(
     const { ownHere, label: whereLabel } = whereOf(task.id);
     const comments = commentsOf(task.id);
     const feedback = comments.map((comment) => toFeedback(comment, task.id));
+    const courseLesson = await courseLessonOf(place?.courseLessons[lesson.id] ?? Object.values(place?.courseLessons ?? {})[0]);
     improvements.push({
       id: task.id,
       current: task.id === currentId,
@@ -233,7 +254,8 @@ export async function loadImprovementsView(
       scope: parsePlanScope(task.plan),
       choosesScope: Boolean(place?.groupId) && ownHere,
       courseReachable: Object.keys(place?.courseLessons ?? {}).length > 0,
-      canEditCourse: await canEditLesson(Object.values(place?.courseLessons ?? {})[0]),
+      canEditCourse: courseLesson.canEdit,
+      courseText: Boolean(place?.groupId) && ownHere && place?.courseLessons[lesson.id] ? courseLesson.text : null,
       group: place?.groupId ? (groupName.get(place.groupId) ?? '') : null,
       planDraft: planDrafts.get(task.id) ?? null,
       feedback,
@@ -258,6 +280,7 @@ export async function loadImprovementsView(
         .filter((target) => target.lessonId !== lesson.id)
         .map((target) => ({ label: target.label, state: target.state, href: target.href, done: target.done, phase: target.phase, toReview: target.toReview, course: target.course })),
       draft: drafts.find((draft) => draft.taskId === task.id) ?? null,
+      attempts: attempts.get(task.id) ?? [],
       record: records.get(task.id) ?? null,
       canWork: Boolean(ref && canWorkOnFeedback(viewer, ref, 'tasks')),
     });
@@ -285,18 +308,55 @@ export async function loadImprovementsView(
   return {
     // The lesson's open improvement first, then earlier ones (and a group copy's, on the main course's lesson).
     improvements: [...improvements.filter((one) => one.current), ...improvements.filter((one) => !one.current)],
-    done: done.map((task): DoneImprovement => {
-      const comments = commentsOf(task.id);
-      return {
-        id: task.id,
-        label: improvementLabel(task.title, [lesson.title], comments[0]?.body, task.plan),
-        whereLabel: whereOf(task.id).label,
-        plan: planBody(task.plan),
-        feedback: comments.map((comment) => toFeedback(comment, task.id)),
-        asked: comments.length ? null : task.description?.trim() || null,
-        record: records.get(task.id) ?? null,
-      };
-    }),
+    done: [
+      ...done.map((task): DoneImprovement => {
+        const comments = commentsOf(task.id);
+        return {
+          id: task.id,
+          label: improvementLabel(task.title, [lesson.title], comments[0]?.body, task.plan),
+          whereLabel: whereOf(task.id).label,
+          plan: planBody(task.plan),
+          feedback: comments.map((comment) => toFeedback(comment, task.id)),
+          asked: comments.length ? null : task.description?.trim() || null,
+          record: records.get(task.id) ?? null,
+          attempts: doneAttempts.get(task.id) ?? [],
+          edited: false,
+          at: (task.completedAt ?? task.updatedAt).toISOString(),
+        };
+      }),
+      ...edits.map(
+        (edit): DoneImprovement => ({
+          id: edit.id,
+          label: t('edited'),
+          whereLabel: edit.by ?? '',
+          plan: '',
+          feedback: [],
+          asked: null,
+          record: {
+            saved: [
+              {
+                id: edit.id,
+                lessonId: lesson.id,
+                courseId: lesson.courseId,
+                lessonTitle: lesson.title,
+                lessonPosition: 0,
+                groupName: null,
+                savedAt: edit.at.toISOString(),
+                savedBy: edit.by,
+                changes: edit.changes,
+                seen: true,
+                seenSince: edit.at.toISOString(),
+                canPublish: false,
+              },
+            ],
+            waiting: [],
+          },
+          attempts: [],
+          edited: true,
+          at: edit.at.toISOString(),
+        })
+      ),
+    ].sort((a, b) => b.at.localeCompare(a.at)),
     newFeedback,
     // A course lesson's copies' images (the most recently saved copy's, where two use one name):
     // the page adds them to its own for what this lesson hasn't bound itself.
@@ -342,4 +402,59 @@ export async function countImprovementWork(viewer: CrmViewer, lesson: { id: stri
     ? await prisma.taskEntityLink.count({ where: { entityType: TASK_ENTITY_TYPE.curriculumComment, entityId: { in: openComments.map((comment) => comment.id) } } })
     : 0;
   return improvements + Math.max(0, openComments.length - covered) + looseDrafts;
+}
+
+/** Within a pass, a lesson published this long ago still counts in "Lesson 3 of 8". */
+const PASS_MS = 12 * 60 * 60 * 1000;
+/** A draft being written is heard from this often; longer, and it stopped. */
+const WRITING_MS = 2 * 60 * 1000;
+
+/**
+ * Where the lesson open now is in the person's pass through its course (or group copy): the
+ * lessons whose improvements' changes wait for review or are being written, with those they
+ * published lately, in lesson order, and the next one to go to. Only improvements they may see.
+ */
+export async function loadReviewQueue(viewer: CrmViewer, lesson: { id: string; courseId: string; curriculumVersionId: string }): Promise<QueuePlace & { nextHref: string | null }> {
+  const lessons = await prisma.lesson.findMany({
+    where: { curriculumVersionId: lesson.curriculumVersionId },
+    select: { id: true, position: true, title: true },
+  });
+  const ids = lessons.map((one) => one.id);
+  const [drafts, published] = await Promise.all([
+    prisma.aiProposal.findMany({
+      where: {
+        kind: AiProposalKind.LESSON_REVISION,
+        targetId: { in: ids },
+        taskId: { not: null },
+        OR: [{ status: AiProposalStatus.OPEN }, { via: 'app', status: AiProposalStatus.WORKING, updatedAt: { gte: new Date(Date.now() - WRITING_MS) } }],
+      },
+      select: { targetId: true, taskId: true, status: true },
+    }),
+    prisma.lessonChange.findMany({
+      where: { lessonId: { in: ids }, createdById: viewer.id, taskId: { not: null }, createdAt: { gte: new Date(Date.now() - PASS_MS) } },
+      select: { lessonId: true, taskId: true },
+    }),
+  ]);
+  const taskIds = Array.from(new Set(drafts.map((draft) => draft.taskId as string)));
+  const visible = new Set(
+    (
+      await prisma.task.findMany({
+        where: { AND: [taskScopeWhere(accessScope(viewer, 'tasks')), { id: { in: taskIds }, status: { in: [TaskStatus.TODO, TaskStatus.IN_PROGRESS] } }] },
+        select: { id: true },
+      })
+    ).map((task) => task.id)
+  );
+  const items = new Map<string, QueueLesson>();
+  for (const one of lessons) {
+    const own = drafts.filter((draft) => draft.targetId === one.id && visible.has(draft.taskId as string));
+    const ready = own.find((draft) => draft.status === AiProposalStatus.OPEN);
+    const writing = own.find((draft) => draft.status === AiProposalStatus.WORKING);
+    const done = published.find((change) => change.lessonId === one.id);
+    const pick = ready ?? writing;
+    if (pick) items.set(one.id, { lessonId: one.id, position: one.position, title: one.title, taskId: pick.taskId, state: ready ? 'review' : 'writing' });
+    else if (done) items.set(one.id, { lessonId: one.id, position: one.position, title: one.title, taskId: done.taskId, state: 'done' });
+  }
+  const place = queueOf(Array.from(items.values()), lesson.id);
+  const nextHref = place.next ? `/admin/courses/${lesson.courseId}/lessons/${place.next.lessonId}/improvements${place.next.taskId ? `?i=${place.next.taskId}` : ''}` : null;
+  return { ...place, nextHref };
 }

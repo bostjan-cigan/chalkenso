@@ -138,9 +138,6 @@
       "addPlaceholder": "Choose a lesson",
       "add": "Add",
       "added": "Lesson {position} added.",
-      "leaveCourse": "Leave the main course as it is",
-      "leaveCourseLoses": "Its proposed changes on the main course go.",
-      "leftCourse": "The main course stays as it is.",
       "moved": "“{title}” is done.",
       "undo": "Undo"
     },
@@ -160,12 +157,6 @@
   "plan": {
     "label": "Revision plan",
     "placeholder": "What will change in the lesson, where, and why.",
-    "scopeLabel": "Where the change goes",
-    "scopes": {
-      "groupOnly": "This group only",
-      "groupAndCore": "Group and main course",
-      "noCourseLesson": "The main course has no lesson to change."
-    },
     "save": "Save plan",
     "saving": "Saving…",
     "draft": "Draft with AI",
@@ -178,7 +169,8 @@
       "stages": {
         "reading": "Getting the feedback ready…",
         "thinking": "Claude is thinking…",
-        "writing": "Claude is writing the plan…"
+        "writing": "Claude is writing the plan…",
+        "planning": "Claude is writing the plan…"
       },
       "claudeStages": {
         "waiting": "Waiting for your Claude…",

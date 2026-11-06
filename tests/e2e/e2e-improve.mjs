@@ -4,9 +4,10 @@
 // done, one plan (following the improvement's notes for AI, changed when asked), one draft and one
 // save cover all of it, feedback ticked after the draft starts
 // the next improvement, Undo puts it all back, and a plan written before more feedback joined asks
-// to be updated. Then a diagram AI drew, saved on the
-// group's copy for "this group and the main course", is the same image on the main course's lesson
-// once that's saved too. What it adds is removed at the end, and what it changed put back.
+// to be updated. One Publish on the group's copy puts the changes into the main course's lesson too
+// (and Undo takes them back out there); a diagram AI drew is the same image on the main course's
+// lesson, and what waits there for a look is reviewed there. What it adds is removed at the end,
+// and what it changed put back.
 // node tests/e2e/e2e-improve.mjs
 import { chromium } from 'playwright-core';
 import { mkdirSync, rmSync } from 'node:fs';
@@ -73,48 +74,34 @@ try {
   await Promise.all([page.waitForURL(/\/admin(\?|$)/), page.click('button[type=submit]')]);
   check('demo owner signed in', page.url().endsWith('/admin'));
 
-  // Two pieces of feedback to decide, and a third to answer.
+  // Two pieces of feedback to fix, and a third to answer.
   const first = await note('A CSRF token, sent with every form', 'E2E first: does this apply to the API too?');
   const second = await note('Flask-Security-Too stores a', 'E2E second: compare session cookies and tokens.');
   const thanks = await note('Why you never build auth yourself', 'E2E thanks: this made it click.');
   created.push(first, second, thanks);
 
-  // A piece of feedback opens whole in the column: its tick (fix it with AI) adds it to the lesson's improvement.
-  const tickedIn = (selector) => page.waitForSelector(`${selector}[aria-pressed=true]`, { timeout: 15000 });
+  // A piece of feedback opens whole in the column: it's in the lesson's next change by default, and
+  // Leave out takes it out, with a reply (required).
   await page.goto(`${improveUrl}?note=${first}`);
-  await page.waitForSelector('[data-testid=feedback-tick]');
-  check('feedback to decide offers its tick and a reply', (await page.locator('[data-testid=feedback-reply-box]').count()) === 1);
+  await page.waitForSelector('[data-testid=feedback-leave-out]');
+  check('feedback opens with Leave out and a reply, no tick', (await page.locator('[data-testid=feedback-reply-box]').count()) === 1 && (await page.locator('[data-testid=feedback-tick]').count()) === 0);
   check('its passage is marked in the lesson', await page.waitForFunction(() => (CSS.highlights?.get('improve-selected')?.size ?? 0) > 0, null, { timeout: 15000 }).then(() => true, () => false));
-  await page.click('[data-testid=feedback-tick]');
-  await tickedIn('[data-testid=feedback-tick]');
+  // Use on the group's Feedback list puts it in the lesson's improvement (the list stays).
+  await page.goto(`${BASE}/admin/courses/comments/${versionId}`);
+  await page.locator('[id^=comment-]', { hasText: 'E2E first' }).first().locator('[data-testid=feedback-use]').click();
   await waitFor(() => Boolean(usedBy(first)), 30);
   const improvement = currentTask();
-  check('the tick puts it in the lesson’s improvement', usedBy(first) === improvement && Boolean(improvement));
-  await page.goto(`${improveUrl}?note=${second}`);
-  await page.click('[data-testid=feedback-tick]');
-  await waitFor(() => usedBy(second) === improvement, 30);
-  check('the next piece joins the same improvement', usedBy(second) === improvement);
+  check('Use puts it in the lesson’s improvement', usedBy(first) === improvement && Boolean(improvement));
   check('used feedback stays open until the change reaches learners', status(first) === 'OPEN' && status(second) === 'OPEN');
 
-  // Unticked: back to decide, and ticked again, from the cards beside the lesson.
-  await page.goto(improveUrl);
-  await page.waitForSelector('[data-testid=feedback-card]');
-  const usedCount = await page.locator('[data-testid=feedback-card][data-used]').count();
-  check('the column ticks the feedback the improvement uses', usedCount >= 2, `${usedCount}`);
-  const secondCard = page.locator('[data-testid=feedback-card]', { hasText: 'E2E second' }).first();
-  await secondCard.locator('[data-testid=card-tick]').click();
-  await waitFor(() => usedBy(second) === '', 30);
-  check('unticking takes it back out', usedBy(second) === '' && status(second) === 'OPEN');
-  await page.goto(improveUrl);
-  await page.locator('[data-testid=feedback-card]', { hasText: 'E2E second' }).first().locator('[data-testid=card-tick]').click();
-  await waitFor(() => usedBy(second) === improvement, 30);
-
-  // A reply on its own answers feedback: it's done, and no improvement uses it.
+  // Leave out: the reply is required, and then it's done, with no improvement using it.
   await page.goto(`${improveUrl}?note=${thanks}`);
+  await page.click('[data-testid=feedback-leave-out]');
+  check('leaving out without a reply asks for one', status(thanks) === 'OPEN');
   await page.fill('[data-testid=feedback-reply-box]', 'Glad it helped!');
-  await page.click('[data-testid=feedback-send-reply]');
-  check('a reply alone marks it done', await waitFor(() => status(thanks) === 'RESOLVED', 30));
-  check('and no improvement uses it', usedBy(thanks) === '');
+  await page.click('[data-testid=feedback-leave-out]');
+  check('left out with a reply, it’s done', await waitFor(() => status(thanks) === 'RESOLVED', 30));
+  check('with the reply its learner sees, and no improvement uses it', sql(`select admin_response from courses.curriculum_comments where id = ${quote(thanks)}`) === 'Glad it helped!' && usedBy(thanks) === '');
 
   // Notes for AI, kept with the improvement.
   await page.goto(`${improveUrl}?i=${improvement}`);
@@ -123,25 +110,16 @@ try {
   await page.click('[data-testid=notes-for-ai-save]');
   check('notes for AI are kept with the improvement', await waitFor(() => sql(`select ai_notes from public.tasks where id = ${quote(improvement)}`) === 'E2E notes: career changers, keep it practical.', 30));
 
-  // One plan for all of it, following the notes (Save closed the sheet).
-  const boxText = () => page.locator('[data-testid=plan-box] .ProseMirror').innerText();
-  await page.click('[data-testid=plan-with-ai]');
-  await page.waitForFunction(() => ((document.querySelector('[data-testid=plan-box] .ProseMirror')?.textContent || '')).trim().length > 0, null, { timeout: 30000 });
-  const planText = await boxText();
-  check('one plan covers both pieces', planText.includes('E2E first') && planText.includes('E2E second'));
-  check('the plan follows the notes for AI', planText.includes('Following the notes: E2E notes'));
-  // Ask for changes: the plan comes back changed, in the box, to review and save.
-  await page.fill('[data-testid=ask-plan]', 'E2E ask: end with a short check.');
-  await page.click('[data-testid=ask-plan-send]');
-  await page.waitForFunction(() => ((document.querySelector('[data-testid=plan-box] .ProseMirror')?.textContent || '')).includes('As asked: E2E ask'), null, { timeout: 30000 });
-  check('asking for changes revises the plan, keeping the rest', (await boxText()).includes('E2E first') && (await boxText()).includes('As asked: E2E ask'));
-  await page.click('[data-testid=save-plan]');
-  await page.waitForSelector('[data-testid=draft-changes]');
-
-  // One draft: feedback used while it's written waits for the next one.
-  await page.click('[data-testid=draft-changes]');
+  // Improve this lesson: the new feedback comes in, and AI writes the plan, then the changes, in one go.
+  await page.goto(`${improveUrl}?i=${improvement}`);
+  await page.click('[data-testid=improve-lesson]');
   check('the working state shows on the click, before the server answers', await page.locator('[data-testid=changes-working]').waitFor({ timeout: 500 }).then(() => true, () => false));
-  check('progress is the lesson’s own sections', await page.locator('[data-testid=live-section]').first().waitFor({ timeout: 20000 }).then(() => true, () => false));
+  check('the plan shows as it’s written', await page.locator('[data-testid=live-plan]').waitFor({ timeout: 30000 }).then(() => true, () => false));
+  check('the lesson’s new feedback came in by default', await waitFor(() => usedBy(second) === improvement, 30));
+  check('progress is then the lesson’s own sections', await page.locator('[data-testid=live-section]').first().waitFor({ timeout: 40000 }).then(() => true, () => false));
+  const planText = sql(`select plan from public.tasks where id = ${quote(improvement)}`);
+  check('one plan covers both pieces', planText.includes('E2E first') && planText.includes('E2E second'), planText.slice(0, 200));
+  check('the plan follows the notes for AI', planText.includes('Following the notes: E2E notes'));
   await page.screenshot({ path: 'tests/e2e/.shots/improve-working.png', fullPage: false });
   await page.emulateMedia({ reducedMotion: 'reduce' });
   check('with less motion asked for, the working block holds still', await page.evaluate(() => Array.from(document.querySelectorAll('[data-testid=changes-working], [data-testid=changes-working] *')).every((element) => getComputedStyle(element).animationName === 'none')));
@@ -208,13 +186,29 @@ try {
   await page.locator('[data-testid=improvements-notice]').waitFor({ timeout: 30000 });
   const notice = await page.locator('[data-testid=improvements-notice]').innerText();
   check('saving says what it did', notice.includes('Published') && notice.includes('next improvement'), notice);
+  check('and that the main course has it too', notice.includes('in the main course too'), notice);
   check('the feedback it covered is done', status(first) === 'RESOLVED' && status(second) === 'RESOLVED');
   const next = usedBy(late);
   check('the late piece starts the next improvement', status(late) === 'OPEN' && Boolean(next) && next !== improvement);
   check('one change recorded for the improvement', sql(`select count(*) from courses.lesson_changes where lesson_id = ${quote(lessonId)} and task_id = ${quote(improvement)}`) === '1');
   const carriedOpen = () =>
     sql(`select count(*) from public.ai_proposals where target_id = ${quote(baseLessonId)} and status = 'OPEN' and created_at >= ${quote(started)}`);
-  check('the change waits on the main course’s lesson', carriedOpen() === '1');
+  // The same Publish: the main course's lesson has the change, recorded for the same improvement.
+  const groupChange = sql(`select id from courses.lesson_changes where lesson_id = ${quote(lessonId)} and task_id = ${quote(improvement)} limit 1`);
+  const courseText = () => sql(`select replace(markdown_content, chr(13), '') from courses.lessons where id = ${quote(baseLessonId)}`);
+  // The notes the change added on the group's copy (one per passage the feedback points at).
+  const added = sql(`select replace(markdown_content, chr(13), '') from courses.lessons where id = ${quote(lessonId)}`)
+    .split(/\n{2,}/)
+    .filter((block) => block.startsWith('> [!note]') && !JSON.parse(lessonBefore).markdown_content.includes(block));
+  const courseBefore = JSON.parse(courseLessonBefore).markdown_content.replace(/\r/g, '');
+  check('one Publish puts the change into the main course’s lesson', added.length > 0 && courseText() !== courseBefore.trim() && added.some((block) => courseText().includes(block)), added.join(' | ').slice(0, 200));
+  check(
+    'recorded there as the same improvement’s change, from the group’s',
+    sql(`select count(*) from courses.lesson_changes where lesson_id = ${quote(baseLessonId)} and task_id = ${quote(improvement)} and carried_from_id = ${quote(groupChange)}`) === '1'
+  );
+  check('and its learners get it', added.some((block) => sql(`select replace(coalesce(published_markdown_content, ''), chr(13), '') from courses.lessons where id = ${quote(baseLessonId)}`).includes(block)));
+  const waitingAfterPublish = carriedOpen();
+  check('what waits there for a look is at most one draft', waitingAfterPublish === '0' || waitingAfterPublish === '1', waitingAfterPublish);
 
   // Undo: the text, the feedback, the draft and the late piece go back.
   await page.locator('[data-testid=improvements-notice]').getByRole('button', { name: 'Undo' }).click();
@@ -228,6 +222,8 @@ try {
   await page.goto(`${improveUrl}?i=${improvement}`);
   check('and the changes wait for review again', await page.locator('[data-testid=apply-improvement]').waitFor({ timeout: 15000 }).then(() => true, () => false));
   check('Undo takes back what the save carried to the main course’s lesson', carriedOpen() === '0');
+  check('Undo puts the main course’s text back', courseText() === courseBefore.trim() || !added.some((block) => courseText().includes(block)));
+  check('and forgets its change there', sql(`select count(*) from courses.lesson_changes where lesson_id = ${quote(baseLessonId)} and task_id = ${quote(improvement)}`) === '0');
 
   // Discarded, the plan comes first again: it was written before the late piece joined.
   for (let attempt = 0; attempt < 5 && !(await page.getByRole('menuitem', { name: 'Discard changes' }).isVisible()); attempt += 1) {
@@ -237,33 +233,55 @@ try {
   await page.getByRole('menuitem', { name: 'Discard changes' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Discard' }).click();
   check('a plan written before more feedback asks to be updated', await page.locator('[data-testid=plan-stale]').waitFor({ timeout: 15000 }).then(() => true, () => false));
-  await page.click('[data-testid=update-plan]');
-  await page.waitForFunction(() => ((document.querySelector('[data-testid=plan-box] .ProseMirror')?.textContent || '')).includes('E2E late'), null, { timeout: 30000 });
-  await page.click('[data-testid=save-plan]');
-  await page.waitForSelector('[data-testid=draft-changes]');
+  // Improve this lesson again: the plan is updated (keeping what still applies) and the changes written.
+  await page.click('[data-testid=improve-lesson]');
+  await page.waitForSelector('[data-testid=apply-improvement]', { timeout: 60000 });
   check('the updated plan keeps the plan and adds the late piece', /E2E first[\s\S]*E2E late/.test(sql(`select plan from public.tasks where id = ${quote(improvement)}`)));
+  // Discarded again: the next Improve takes in the feedback that comes next.
+  for (let attempt = 0; attempt < 5 && !(await page.getByRole('menuitem', { name: 'Discard changes' }).isVisible()); attempt += 1) {
+    await page.locator('[data-testid=improvement-detail]').getByRole('button', { name: 'More actions' }).first().click();
+    await page.getByRole('menuitem', { name: 'Discard changes' }).waitFor({ timeout: 3000 }).catch(() => {});
+  }
+  await page.getByRole('menuitem', { name: 'Discard changes' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Discard' }).click();
+  await page.waitForSelector('[data-testid=improve-lesson]', { timeout: 15000 });
 
   // A diagram AI draws, saved on the group's copy for this group and the main course: the main
   // course's lesson shows the same image in its review, and binds it when it's saved.
   const diagramNote = await note('A CSRF token, sent with every form', 'E2E diagram: a diagram of how the token travels would help.');
   created.push(diagramNote);
-  await page.goto(`${improveUrl}?note=${diagramNote}`);
-  await page.click('[data-testid=feedback-tick]');
-  await waitFor(() => usedBy(diagramNote) === improvement, 30);
+  // The main course's lesson says a little more right where the notes go: what's added there waits
+  // on its lesson for a look instead of going in by itself.
+  const addAfter = (text, phrase, extra) => {
+    const at = text.indexOf(phrase);
+    if (at < 0) return text;
+    const end = text.slice(at).search(/\r?\n\r?\n/);
+    return end < 0 ? `${text}\n\n${extra}` : `${text.slice(0, at + end)}\n\n${extra}${text.slice(at + end)}`;
+  };
+  const courseMarkdown = sql(`select markdown_content from courses.lessons where id = ${quote(baseLessonId)}`);
+  const drifted = addAfter(
+    addAfter(courseMarkdown, 'A CSRF token, sent with every form', 'E2E course: the main course says more about tokens here.'),
+    'Flask-Security-Too stores a',
+    'E2E course: the main course says more about sessions here.'
+  );
+  check('the main course’s lesson differs where the notes go', drifted !== courseMarkdown);
+  sql(`update courses.lessons set markdown_content = ${quote(drifted)} where id = ${quote(baseLessonId)}`);
   await page.goto(`${improveUrl}?i=${improvement}`);
-  await page.click('[data-testid=update-plan]');
-  await page.waitForFunction(() => ((document.querySelector('[data-testid=plan-box] .ProseMirror')?.textContent || '')).includes('E2E diagram'), null, { timeout: 30000 });
-  await page.click('[data-testid=save-plan]');
+  await page.click('[data-testid=improve-lesson]');
+  check('the new note comes in with Improve this lesson', await waitFor(() => usedBy(diagramNote) === improvement, 30));
+  await page.waitForSelector('[data-testid=apply-improvement]', { timeout: 60000 });
+  check('the updated plan covers it', sql(`select plan from public.tasks where id = ${quote(improvement)}`).includes('E2E diagram'));
   check('the improvement goes to the group and the main course', /Scope: group and core/.test(sql(`select plan from public.tasks where id = ${quote(improvement)}`)));
-  await page.click('[data-testid=draft-changes]');
-  await page.waitForSelector('[data-testid=apply-improvement]', { timeout: 30000 });
-  // Where it goes, changed at Publish.
+  // Where it goes, chosen at Publish: the switch alone changes nothing yet.
   const scopeNow = () => sql(`select plan from public.tasks where id = ${quote(improvement)}`);
   await page.click('[data-testid=also-course]');
-  check('switched off, it stays with the group', await waitFor(() => /Scope: group only/.test(scopeNow()), 20));
-  check('and the foot says so', (await page.locator('[data-testid=also-course]').getAttribute('aria-checked')) === 'false');
+  check('switched off, the foot says so', (await page.locator('[data-testid=also-course]').getAttribute('aria-checked')) === 'false');
+  await page.waitForTimeout(500);
+  check('and the plan stays as it is until Publish', /Scope: group and core/.test(scopeNow()));
   await page.click('[data-testid=also-course]');
-  check('switched on, it goes to the main course again', await waitFor(() => /Scope: group and core/.test(scopeNow()), 20));
+  check('switched on again', (await page.locator('[data-testid=also-course]').getAttribute('aria-checked')) === 'true');
+  // Before Publish, the review tags what won't go into the main course by itself.
+  const courseTags = await page.locator('[data-testid=course-tag]').count();
   const drawn = page.locator('[data-testid=lesson-part] img[src*="/admin/api/drafts/"]');
   check('the review shows the diagram AI drew', await drawn.first().waitFor({ timeout: 15000 }).then(() => true, () => false));
   await page.click('[data-testid=apply-improvement]');
@@ -273,23 +291,25 @@ try {
   const carriedDraft = sql(
     `select id from public.ai_proposals where target_id = ${quote(baseLessonId)} and status = 'OPEN' and task_id = ${quote(improvement)} order by updated_at desc limit 1`
   );
-  check('the main course’s lesson gets the change, diagram and all', Boolean(carriedDraft) && sql(`select payload->>'markdown' from public.ai_proposals where id = ${quote(carriedDraft)}`).includes('diagrams/'));
+  check('the main course’s lesson gets the change, diagram and all', courseText().includes('diagrams/') || sql(`select coalesce(payload->>'markdown', '') from public.ai_proposals where id = ${quote(carriedDraft)}`).includes('diagrams/'));
+  check('what differs a little there waits as a draft', Boolean(carriedDraft));
+  check('as the review’s tags said before Publish', courseTags > 0, `${courseTags}`);
+  check('and the improvement isn’t done while it waits', sql(`select status from public.tasks where id = ${quote(improvement)}`) !== 'DONE');
   const courseImproveUrl = `${BASE}/admin/courses/${courseId}/lessons/${baseLessonId}/improvements?draft=${carriedDraft}`;
-  // A change marked as placed where the text differs a little: tagged, and skipped until kept.
+  // A change placed where the text differs a little: tagged, and skipped until kept.
   const carriedMarkdown = sql(`select payload->>'markdown' from public.ai_proposals where id = ${quote(carriedDraft)}`);
-  const carriedBlock = carriedMarkdown.split(/\n{2,}/).find((block) => block.includes('diagrams/'))?.replace(/\s+/g, ' ').trim() ?? '';
   const check0 = sql(`select payload->'why'->'check' from public.ai_proposals where id = ${quote(carriedDraft)}`);
-  sql(`update public.ai_proposals set payload = jsonb_set(payload::jsonb, '{why,check}', ${quote(JSON.stringify([carriedBlock]))}::jsonb) where id = ${quote(carriedDraft)}`);
   await page.goto(`${BASE}/admin/courses/${courseId}/lessons/${baseLessonId}/improvements?i=${improvement}`);
   check('on the main course, the path shows where it came from', await page.locator('[data-testid=improvement-path]').waitFor({ timeout: 15000 }).then(async () => (await page.locator('[data-testid=improvement-path]').innerText()).includes('copy'), () => false));
   check('a change placed nearby is tagged', await page.locator('[data-testid=check-place]').first().waitFor({ timeout: 15000 }).then(() => true, () => false));
   check('and starts skipped', (await page.locator('[data-testid=inline-change]', { has: page.locator('[data-testid=check-place]') }).first().getAttribute('data-decision')) === 'skip');
   check('feedback from the group’s copy comes along', (await page.locator('[data-testid=inline-change][data-current] [data-testid=change-answers]').count()) === 1);
   await page.screenshot({ path: 'tests/e2e/.shots/improve-course.png', fullPage: false });
-  sql(`update public.ai_proposals set payload = jsonb_set(payload::jsonb, '{why,check}', ${quote(check0 || '[]')}::jsonb) where id = ${quote(carriedDraft)}`);
 
   // One of the changes didn't make it into the draft: it can't be placed, and goes to AI from there.
-  const unplacedBlock = carriedMarkdown.split(/\n{2,}/).find((block) => block.startsWith('> [!note]') && block.includes('Learners mixed up'));
+  // The note on the session-cookie paragraph (the demo's own feedback there, or the test's).
+  const unplacedBlock = carriedMarkdown.split(/\n{2,}/).find((block) => block.startsWith('> [!note]') && (block.includes('Learners mixed up') || block.includes('E2E second')));
+  check('a note to take out of the draft', Boolean(unplacedBlock));
   const withoutIt = carriedMarkdown.replace(`${unplacedBlock}\n\n`, '');
   sql(`update public.ai_proposals set payload = jsonb_set(payload::jsonb, '{markdown}', ${quote(JSON.stringify(withoutIt))}::jsonb) where id = ${quote(carriedDraft)}`);
   const courseSteps = `${BASE}/admin/courses/${courseId}/lessons/${baseLessonId}/improvements?i=${improvement}`;

@@ -369,7 +369,8 @@
     "noFeedbackPicked": "Izbrana ni nobena povratna informacija.",
     "commentNotFound": "Povratne informacije ni bilo mogoče najti.",
     "task": "Izboljšava",
-    "diagramNotSaved": "Novega diagrama ni bilo mogoče shraniti, zato ni bilo nič shranjeno. Poskusite znova ali diagram preskočite."
+    "diagramNotSaved": "Novega diagrama ni bilo mogoče shraniti, zato ni bilo nič shranjeno. Poskusite znova ali diagram preskočite.",
+    "replyRequired": "Napiši odgovor: kdor je dal povratno informacijo, izve, zakaj."
   },
   "upload": {
     "unauthorized": "Za to nimate dovoljenja.",
@@ -380,5 +381,34 @@
     "emptyFile": "Prazne datoteke ni mogoče naložiti.",
     "failed": "Nalaganje ni uspelo.",
     "unsafeSvg": "Ta SVG nima ničesar več za prikaz, ko mu odstranimo skripte in zunanje povezave."
+  },
+  "round": {
+    "title": "Razvrsti povratne informacije",
+    "sort": "Razvrsti z AI",
+    "notAllowed": "Teh povratnih informacij ne morete razvrstiti.",
+    "nothingNew": "Ni novih povratnih informacij za razvrščanje.",
+    "gone": "Tega razvrščanja ni več.",
+    "stale": "Nekdo drug je spremenil to razvrščanje. Znova naložite stran.",
+    "lesson": "Lekcija {position} · {title}",
+    "alsoCourse": "Tudi na glavni tečaj",
+    "leaveOut": "Izpusti",
+    "changeIt": "Spremeni",
+    "leftOut": "Izpuščeno",
+    "sameAs": "Enako kot »{text}«",
+    "use": "Uporabi",
+    "reply": "Odgovor",
+    "approve": "Potrdi",
+    "approveOpen": "{count, plural, one {Potrdi · # brez odgovora} two {Potrdi · # brez odgovora} few {Potrdi · # brez odgovora} other {Potrdi · # brez odgovora}}",
+    "more": "{count, plural, one {# več v naslednjem razvrščanju} two {# več v naslednjem razvrščanju} few {# več v naslednjem razvrščanju} other {# več v naslednjem razvrščanju}}",
+    "sortAgain": "Razvrsti znova",
+    "discard": "Zavrzi",
+    "stop": "Ustavi",
+    "working": "Claude razvršča povratne informacije …",
+    "elapsed": "{time}",
+    "failed": "Razvrščanje se je ustavilo.",
+    "tryAgain": "Poskusi znova",
+    "approved": "{replied, plural, =0 {Potrjeno.} one {Potrjeno · # odgovor poslan.} two {Potrjeno · # odgovora poslana.} few {Potrjeno · # odgovori poslani.} other {Potrjeno · # odgovorov poslanih.}}",
+    "nothingToChange": "Nobena lekcija se ne spremeni.",
+    "saveFailed": "Ni shranjeno. Znova naložite stran."
   }
 }

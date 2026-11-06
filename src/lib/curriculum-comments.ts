@@ -633,3 +633,45 @@ export async function deleteInstructorNote(userId: string, commentId: string): P
   });
   return result.count > 0 ? { ok: true } : { ok: false, status: 404, error: 'Note not found.' };
 }
+
+/** What happened to someone's feedback since they last looked: the lesson changed for it, or it got a reply. */
+export type FeedbackOutcome = { id: string; lessonId: string; quote: string; outcome: 'changed' | 'replied' };
+
+/**
+ * Someone's feedback (`where`: a learner's, or an instructor's notes) that, since `since`, changed
+ * its lesson (done, and the lesson published again after they wrote it) or got a reply. The newest
+ * first, at most 10; only on these lessons when given (what they can read).
+ */
+export async function feedbackOutcomesSince(where: Prisma.CurriculumCommentWhereInput, since: Date, lessonIds?: string[]): Promise<FeedbackOutcome[]> {
+  const rows = await prisma.curriculumComment.findMany({
+    where: {
+      AND: [
+        where,
+        lessonIds ? { lessonId: { in: lessonIds } } : {},
+        { OR: [{ status: CurriculumCommentStatus.RESOLVED, resolvedAt: { gt: since } }, { adminRespondedAt: { gt: since } }] },
+      ],
+    },
+    orderBy: { updatedAt: 'desc' },
+    take: 10,
+    select: {
+      id: true,
+      lessonId: true,
+      body: true,
+      status: true,
+      adminResponse: true,
+      adminRespondedAt: true,
+      createdAt: true,
+      selectedText: true,
+      context: true,
+      lessonRevision: true,
+      lesson: { select: { publishedRevision: true } },
+    },
+  });
+  return rows.flatMap((row): FeedbackOutcome[] => {
+    const view = toViewerComment(row);
+    const quote = row.body.replace(/\s+/g, ' ').slice(0, 120);
+    if (view.lessonChanged) return [{ id: row.id, lessonId: row.lessonId, quote, outcome: 'changed' }];
+    if (row.adminResponse && row.adminRespondedAt && row.adminRespondedAt > since) return [{ id: row.id, lessonId: row.lessonId, quote, outcome: 'replied' }];
+    return [];
+  });
+}

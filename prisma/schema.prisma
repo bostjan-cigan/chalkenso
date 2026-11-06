@@ -158,6 +158,8 @@ model User {
   oauthCodes           OAuthCode[]
   proposalsCreated     AiProposal[]            @relation("AiProposalCreatedBy")
   proposalsAssigned    AiProposal[]            @relation("AiProposalAssignee")
+  /// They saw what happened to their instructor notes up to then (the line on Home).
+  notesSeenAt          DateTime                @default(now()) @map("notes_seen_at")
   createdAt            DateTime                @default(now()) @map("created_at")
   updatedAt            DateTime                @updatedAt @map("updated_at")
 
@@ -780,19 +782,21 @@ model CourseGroupInstructor {
 }
 
 model CourseGroupMember {
-  id            String              @id @default(cuid())
-  groupId       String              @map("group_id")
-  group         CourseGroup         @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  fullName      String              @map("full_name")
-  position      Int
+  id             String              @id @default(cuid())
+  groupId        String              @map("group_id")
+  group          CourseGroup         @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  fullName       String              @map("full_name")
+  position       Int
   /**
    * The learner asked not to count their reading (anonymous reading statistics stay off for them).
    */
-  readingOptOut Boolean             @default(false) @map("reading_opt_out")
-  accessLinks   AccessLink[]
-  comments      CurriculumComment[]
-  createdAt     DateTime            @default(now()) @map("created_at")
-  updatedAt     DateTime            @updatedAt @map("updated_at")
+  readingOptOut  Boolean             @default(false) @map("reading_opt_out")
+  accessLinks    AccessLink[]
+  comments       CurriculumComment[]
+  /// The learner saw what happened to their feedback up to then (the line on their next visit).
+  outcomesSeenAt DateTime            @default(now()) @map("outcomes_seen_at")
+  createdAt      DateTime            @default(now()) @map("created_at")
+  updatedAt      DateTime            @updatedAt @map("updated_at")
 
   @@unique([groupId, position])
   @@index([groupId])
@@ -1591,6 +1595,11 @@ model LessonChange {
   /// What it changed: the changed blocks (proposed-changes shape: kind, section, before, after,
   /// words), so "What changed" can show it later. Null for changes saved before this was recorded.
   changes            Json?
+  /// The main course's part of a group's change, put in by the same publish: the group copy's
+  /// change it came from (no foreign key, like `taskId`), so Undo of that save takes this back too.
+  carriedFromId      String?   @map("carried_from_id")
+  /// The main course's text before this carried change went in, for that Undo.
+  textBefore         String?   @map("text_before")
   createdById        String?   @map("created_by_id")
   createdAt          DateTime  @default(now()) @map("created_at")
 
@@ -1598,6 +1607,7 @@ model LessonChange {
   @@index([lessonId, revision])
   @@index([taskId])
   @@index([lessonId, settledAt])
+  @@index([carriedFromId])
   @@map("lesson_changes")
   @@schema("courses")
 }
@@ -2075,6 +2085,9 @@ enum AiProposalKind {
   CHECK_QUESTION
   REPORT_SUMMARY
   FEEDBACK_THEMES
+  /// All new feedback of a course version or a group's copy, sorted by AI: what changes in each
+  /// lesson, and what's left out (with a suggested reply the person confirms). Target: the version.
+  FEEDBACK_ROUND
 
   @@schema("public")
 }
@@ -2101,7 +2114,7 @@ model AiProposal {
   organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   kind           AiProposalKind
   status         AiProposalStatus @default(OPEN)
-  /// lesson | task | report | course
+  /// lesson | task | report | course | version
   targetType     String           @map("target_type")
   targetId       String           @map("target_id")
   /// Lesson revisions: the lesson's revision the draft was written against (stale once it moved on).
@@ -2121,12 +2134,20 @@ model AiProposal {
   assigneeId     String?          @map("assignee_id")
   assignee       User?            @relation("AiProposalAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
   decidedAt      DateTime?        @map("decided_at")
+  /// What the person asked for in their own words (a turn of the improvement's thread: "shorter",
+  /// "keep the example"). Kept apart from the payload, which the AI's progress writes over.
+  request        String?          @db.Text
+  /// The attempt this one goes on from: the improvement's thread, attempt by attempt.
+  continuesId    String?          @map("continues_id")
+  continues      AiProposal?      @relation("AiProposalContinues", fields: [continuesId], references: [id], onDelete: SetNull)
+  continuedBy    AiProposal[]     @relation("AiProposalContinues")
   createdAt      DateTime         @default(now()) @map("created_at")
   updatedAt      DateTime         @updatedAt @map("updated_at")
 
   @@index([organizationId, status])
   @@index([targetType, targetId])
   @@index([taskId])
+  @@index([continuesId])
   @@map("ai_proposals")
   @@schema("public")
 }

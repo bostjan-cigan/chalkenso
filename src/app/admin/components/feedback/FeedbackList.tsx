@@ -11,9 +11,11 @@ import {
   type CrmViewer,
 } from '@/lib/crm-access';
 import { countFeedback, listFeedback } from '@/lib/feedback-list';
+import { isAiConfigured } from '@/lib/ai';
 import type { FeedbackRoster } from '@/app/admin/courses/groups/components/LinkFeedbackModal';
 import SegmentedControl from '../ui/SegmentedControl';
 import FeedbackItem from './FeedbackItem';
+import { FeedbackSelection, LessonPick } from './FeedbackSelection';
 import type { FeedbackItemView, FeedbackShow } from './feedback-view';
 import styles from './feedback.module.css';
 
@@ -76,10 +78,11 @@ export default async function FeedbackList({
     // One lesson: its feedback, and its group copies' (insights count them together).
     AND: [commentScopeWhere(accessScope(viewer, 'comments')), where, lessonId ? { OR: [{ lessonId }, { lesson: { baseLessonId: lessonId } }] } : {}],
   };
-  const [counts, rows, t] = await Promise.all([
+  const [counts, rows, t, aiEnabled] = await Promise.all([
     countFeedback(scoped),
     show === 'change' ? Promise.resolve([]) : listFeedback(scoped, show, { take: show === 'done' ? DONE_SHOWN : OPEN_SHOWN }),
     getTranslations('app.feedback.list'),
+    isAiConfigured(),
   ]);
 
   const items: FeedbackItemView[] = rows.map((row) => {
@@ -98,6 +101,19 @@ export default async function FeedbackList({
         showGroup && row.copyOfGroupId ? (row.groupName ? t('copyOf', { group: row.groupName }) : t('copyOfUnnamed')) : null,
     };
   });
+
+  const itemOf = (item: FeedbackItemView) => {
+    const ref = { courseId: item.courseId, groupIds: item.groupIds };
+    return (
+      <FeedbackItem
+        key={item.id}
+        item={item}
+        canWork={canWorkOnFeedback(viewer, ref)}
+        canDelete={canWorkOnFeedback(viewer, ref, 'comments', [Permission.DELETE])}
+        roster={roster && item.needsLink && item.groupId === roster.groupId ? roster : null}
+      />
+    );
+  };
 
   // New, Improvements and Done are the list's parts, not filters: a segmented control.
   const segment = (value: FeedbackShow, label: string, count: number | null) => ({
@@ -139,24 +155,44 @@ export default async function FeedbackList({
           {(show === 'done' ? counts.done : counts.open) > items.length ? (
             <p className={styles.note}>{t('newest', { shown: items.length, total: show === 'done' ? counts.done : counts.open })}</p>
           ) : null}
-          <div className={styles.list} data-testid={show === 'done' ? 'resolved-comments' : 'open-comments'}>
-            {items.map((item) => {
-              const ref = { courseId: item.courseId, groupIds: item.groupIds };
-              return (
-                <FeedbackItem
-                  key={item.id}
-                  item={item}
-                  canWork={canWorkOnFeedback(viewer, ref)}
-                  canDelete={canWorkOnFeedback(viewer, ref, 'comments', [Permission.DELETE])}
-                  roster={roster && item.needsLink && item.groupId === roster.groupId ? roster : null}
-                />
-              );
-            })}
-          </div>
+          {show === 'done' ? (
+            <div className={styles.list} data-testid="resolved-comments">
+              {items.map(itemOf)}
+            </div>
+          ) : (
+            // Open feedback, lesson by lesson (in course order, a copy's after the course's), to pick many at once.
+            <FeedbackSelection selectable={items.filter((item) => item.stage === 'new' && canWorkOnFeedback(viewer, { courseId: item.courseId, groupIds: item.groupIds })).map((item) => item.id)} aiEnabled={aiEnabled}>
+              <div className={styles.list} data-testid="open-comments">
+                {byLesson(items).map((lesson) => (
+                  <section key={lesson.key} className={styles.lessonGroup} data-testid="feedback-lesson">
+                    <LessonPick ids={lesson.items.map((item) => item.id)}>
+                      {t('lessonHead', { position: lesson.items[0].lessonPosition, title: lesson.items[0].lessonTitle })}
+                      {lesson.items[0].copyLabel ? ` (${lesson.items[0].copyLabel})` : ''}
+                    </LessonPick>
+                    {lesson.items.map(itemOf)}
+                  </section>
+                ))}
+              </div>
+            </FeedbackSelection>
+          )}
         </>
       ) : (
         <p className={styles.empty}>{show === 'done' ? t('nothingDone') : emptyText}</p>
       )}
     </div>
+  );
+}
+
+/** Open feedback grouped by lesson: the course's lessons in order, then each copy's; newest first within a lesson. */
+function byLesson(items: FeedbackItemView[]) {
+  const groups = new Map<string, { key: string; items: FeedbackItemView[] }>();
+  for (const item of items) {
+    const key = item.lessonId;
+    const group = groups.get(key) ?? { key, items: [] };
+    group.items.push(item);
+    groups.set(key, group);
+  }
+  return Array.from(groups.values()).sort(
+    (a, b) => Number(Boolean(a.items[0].copyOfGroupId)) - Number(Boolean(b.items[0].copyOfGroupId)) || a.items[0].lessonPosition - b.items[0].lessonPosition
   );
 }

@@ -142,11 +142,13 @@ export async function revisionPathsFor(tasks: TaskFacts[], aiEnabled: boolean): 
       );
       let draftState: PathTarget['draft'] = null;
       if (draft && !(draft.status === AiProposalStatus.OPEN && isEmptyCarriedDraft(draft.payload))) {
-        const payload = (draft.payload ?? {}) as { markdown?: string; base?: string };
+        const payload = (draft.payload ?? {}) as { markdown?: string; base?: string; why?: { unplaced?: unknown } };
+        // Carried from a group's copy: what couldn't be placed waits there for a look too.
+        const unplaced = typeof payload.why?.unplaced === 'number' ? payload.why.unplaced : 0;
         draftState =
           draft.status !== AiProposalStatus.OPEN
             ? { state: 'working', count: null }
-            : { state: 'ready', count: proposeChanges(payload.base ?? lesson.markdownContent, payload.markdown ?? '').length };
+            : { state: 'ready', count: proposeChanges(payload.base ?? lesson.markdownContent, payload.markdown ?? '').length + unplaced };
       }
       const change = changes.find((row) => row.taskId === task.id && row.lessonId === lessonId);
       return [

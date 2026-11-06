@@ -368,6 +368,15 @@ const OWNED_REFERENCES: Record<string, ReferenceCheck> = {
     owned: (client, ids, organizationId) => client.task.findMany({ where: { id: { in: ids }, organizationId }, select: { id: true } }),
     exists: (client, ids) => client.task.count({ where: { id: { in: ids } } }),
   },
+  continuesId: {
+    owned: (client, ids, organizationId) => client.aiProposal.findMany({ where: { id: { in: ids }, organizationId }, select: { id: true } }),
+    exists: (client, ids) => client.aiProposal.count({ where: { id: { in: ids } } }),
+  },
+  carriedFromId: {
+    owned: (client, ids, organizationId) =>
+      client.lessonChange.findMany({ where: { id: { in: ids }, lesson: { course: { organizationId } } }, select: { id: true } }),
+    exists: (client, ids) => client.lessonChange.count({ where: { id: { in: ids } } }),
+  },
   partnerId: {
     owned: (client, ids, organizationId) => client.partner.findMany({ where: { id: { in: ids }, organizationId }, select: { id: true } }),
     exists: (client, ids) => client.partner.count({ where: { id: { in: ids } } }),

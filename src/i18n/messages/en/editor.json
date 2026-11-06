@@ -187,7 +187,8 @@
         "thinking": "Claude is thinking…",
         "writing": "Claude is writing changes…",
         "thinkingAbout": "{count, plural, one {Reading # piece of feedback…} other {Reading # pieces of feedback…}}",
-        "finishing": "Checking the result…"
+        "finishing": "Checking the result…",
+        "planning": "Claude is writing the plan…"
       },
       "claude": {
         "waiting": "Waiting for your Claude…",
@@ -266,11 +267,6 @@
     "newTitle": "Something else to change",
     "sayWhat": "Say what should change.",
     "planStep": {
-      "whereLabel": "Where it goes",
-      "scopes": {
-        "groupOnly": "This group only",
-        "groupAndCore": "This group and the main course"
-      },
       "drafted": "Drafted by AI",
       "draftedByClaude": "Drafted by Claude",
       "placeholder": "In “Volumes”, show why the data outlives the container.",
@@ -278,10 +274,6 @@
       "cancel": "Cancel",
       "saving": "Saving…",
       "save": "Save plan",
-      "goes": {
-        "groupOnly": "Goes to this group’s copy only.",
-        "groupAndCore": "Goes to this group’s copy and the main course."
-      },
       "write": "Write the plan",
       "emptyPlan": "Write the plan first.",
       "editPlan": "Edit plan",
@@ -305,7 +297,10 @@
       "deleted": "Deleted.",
       "repliedDone": "Reply sent · marked done.",
       "waitsForDraft": "Waits for the next draft.",
-      "replyFirst": "Write a reply first."
+      "replyFirst": "Write a reply first.",
+      "leaveOut": "Leave out",
+      "leftOut": "Left out, with your reply.",
+      "notLeftOut": "A saved change already answers it."
     },
     "compareTitle": "Change {index} of {total}",
     "inSection": "in {section}",
@@ -351,7 +346,10 @@
       "copy": "Copy the new text",
       "copied": "Copied",
       "fit": "Fit it with AI",
-      "see": "See them"
+      "see": "See them",
+      "leave": "Leave the rest",
+      "left": "Left as it is.",
+      "leftDone": "Left as it is: the improvement is done."
     },
     "savedPublished": "Published",
     "savedDraft": "Saved",
@@ -452,8 +450,36 @@
     },
     "toCourse": {
       "label": "Also to the main course",
-      "suggest": "Suggest to the main course"
-    }
+      "suggest": "Suggest to the main course",
+      "check": "Main course: check",
+      "byHand": "Main course: by hand",
+      "waits": "{count, plural, one {# waits there} other {# wait there}}"
+    },
+    "courseLive": "in the main course too",
+    "courseSaved": "saved on the main course’s lesson, not published",
+    "courseRestWaits": "{count, plural, one {# change waits there} other {# changes wait there}}",
+    "undoneCourseMovedOn": "Undone here. The main course’s lesson changed since: undo it there.",
+    "thread": {
+      "label": "How the changes came about",
+      "attempt": "Attempt {number}",
+      "use": "Use this one",
+      "placeholder": "Ask for changes: shorter, keep the example…",
+      "ask": "Ask for changes",
+      "send": "Send",
+      "stop": "Stop",
+      "empty": "Write what to change first.",
+      "used": "Used"
+    },
+    "edited": "Edited",
+    "nothingToImprove": "This lesson has nothing new to improve.",
+    "queue": {
+      "at": "Lesson {at} of {total}",
+      "next": "Next",
+      "nextLesson": "Next: Lesson {position} · {title}"
+    },
+    "improveLesson": "Improve this lesson",
+    "planSavedRedraft": "Plan saved.",
+    "writeAgain": "Write the changes again"
   },
   "mode": {
     "label": "Lesson mode",

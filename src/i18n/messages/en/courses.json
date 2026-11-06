@@ -369,7 +369,8 @@
     "noFeedbackPicked": "No feedback picked.",
     "commentNotFound": "Comment not found.",
     "task": "Improvement",
-    "diagramNotSaved": "A new diagram couldn't be saved, so nothing was saved. Try again, or skip the diagram."
+    "diagramNotSaved": "A new diagram couldn't be saved, so nothing was saved. Try again, or skip the diagram.",
+    "replyRequired": "Write a reply: whoever gave the feedback hears why."
   },
   "upload": {
     "unauthorized": "Unauthorized.",
@@ -380,5 +381,34 @@
     "emptyFile": "Cannot upload an empty file.",
     "failed": "Upload failed.",
     "unsafeSvg": "This SVG has nothing left to show once its scripts and outside links are taken out."
+  },
+  "round": {
+    "title": "Sort the feedback",
+    "sort": "Sort with AI",
+    "notAllowed": "You can’t sort this feedback.",
+    "nothingNew": "No new feedback to sort.",
+    "gone": "This sorting is gone.",
+    "stale": "Someone else changed this sorting. Reload the page.",
+    "lesson": "Lesson {position} · {title}",
+    "alsoCourse": "Also to the main course",
+    "leaveOut": "Leave out",
+    "changeIt": "Change it",
+    "leftOut": "Left out",
+    "sameAs": "Same as “{text}”",
+    "use": "Use",
+    "reply": "Reply",
+    "approve": "Approve",
+    "approveOpen": "{count, plural, one {Approve · # left to answer} other {Approve · # left to answer}}",
+    "more": "{count, plural, one {# more in the next sorting} other {# more in the next sorting}}",
+    "sortAgain": "Sort again",
+    "discard": "Discard",
+    "stop": "Stop",
+    "working": "Claude is sorting the feedback…",
+    "elapsed": "{time}",
+    "failed": "The sorting stopped.",
+    "tryAgain": "Try again",
+    "approved": "{replied, plural, =0 {Approved.} one {Approved · # reply sent.} other {Approved · # replies sent.}}",
+    "nothingToChange": "No lesson changes.",
+    "saveFailed": "Not saved. Reload the page."
   }
 }

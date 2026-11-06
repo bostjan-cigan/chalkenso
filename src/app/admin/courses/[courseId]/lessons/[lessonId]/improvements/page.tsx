@@ -13,7 +13,7 @@ import AdminFrame from '../../../../../components/AdminFrame';
 import { adminNavItems } from '../../../../../nav';
 import { getLessonDetail, mapUploadedAssets } from '../../../../data';
 import ImprovementsView, { type Selection } from '../../../../components/improvements-view/ImprovementsView';
-import { loadImprovementsView } from '../../../../components/improvements-view/data';
+import { loadImprovementsView, loadReviewQueue } from '../../../../components/improvements-view/data';
 
 /** Drafting a plan or changes can wait on Claude: allow it up to five minutes. */
 export const maxDuration = 300;
@@ -52,7 +52,10 @@ export default async function LessonImprovementsPage({ params, searchParams }: {
   // Only where the organisation works in the Obsidian vault too: where each improvement is worked on.
   const vault = await usesVaultAgent(session?.user.organization?.id);
   const canWork = canWorkOnFeedback(viewer, { courseId, groupIds: versionRef.ownerGroupId ? [versionRef.ownerGroupId] : [] }, 'tasks');
-  const data = await loadImprovementsView(viewer, { id: lesson.id, courseId, ownerGroupId: versionRef.ownerGroupId, title: lesson.title }, aiEnabled);
+  const [data, queue] = await Promise.all([
+    loadImprovementsView(viewer, { id: lesson.id, courseId, ownerGroupId: versionRef.ownerGroupId, title: lesson.title }, aiEnabled),
+    loadReviewQueue(viewer, { id: lesson.id, courseId, curriculumVersionId: lesson.curriculumVersionId }),
+  ]);
   // The drafts it opens with: what arrives later (someone's Claude) is brought in.
   const seenDrafts = await lessonDraftIds(lesson.id, data.improvements.map((improvement) => improvement.id));
 
@@ -112,6 +115,7 @@ export default async function LessonImprovementsPage({ params, searchParams }: {
         initial={initial}
         initialWhy={initial?.kind === 'new' ? (search.why ?? '').slice(0, 2000) : ''}
         back={search.from === 'map' ? { href: `/admin/courses/${courseId}/map?lesson=${lesson.id}`, label: t('backToMap') } : undefined}
+        queue={queue.total > 1 || queue.next ? { at: queue.at, total: queue.total, next: queue.next ? { title: queue.next.title, position: queue.next.position, href: queue.nextHref as string } : null } : null}
       />
     </AdminFrame>
   );

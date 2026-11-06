@@ -228,3 +228,58 @@
     margin-left: 0;
   }
 }
+
+/* Picking many pieces of feedback at once: the bar above the list, and each lesson's heading. */
+.selectBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0 0 0.75rem;
+  min-height: 2rem;
+}
+
+.selectAll {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.86rem;
+}
+
+.selectCount {
+  font-size: 0.86rem;
+  color: rgba(var(--foreground-rgb), 0.7);
+}
+
+.selectSpacer {
+  flex: 1;
+}
+
+.selectDone {
+  border: 0;
+  background: none;
+  color: rgb(var(--accent-color));
+  font: inherit;
+  font-size: 0.86rem;
+  cursor: pointer;
+}
+
+.selectReply {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+}
+
+.lessonGroup {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.lessonHead {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.75rem 0 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
