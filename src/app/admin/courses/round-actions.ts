@@ -6,8 +6,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import type { Locale } from '@/i18n/config';
 import { getCurrentUserSession } from '@/lib/admin-auth';
 import { AI_LANGUAGES, backgroundAiKey, sortVersionFeedback } from '@/lib/ai';
-import { currentDraft, draftView, loadDraft, settleDraft, startAppDraft } from '@/lib/ai-drafts';
-import type { AppDraftView } from '@/lib/ai-draft-progress';
+import { currentDraft, loadDraft, settleDraft, startAppDraft } from '@/lib/ai-drafts';
 import { accessScope, canWorkOnFeedback, commentScopeWhere, loadCommentRef, requireVersionEdit, type CrmViewer } from '@/lib/crm-access';
 import { resolveComment, respondToComment } from '@/lib/curriculum-comments';
 import { listFeedback } from '@/lib/feedback-list';
@@ -15,21 +14,24 @@ import { isFeedbackUsed, lessonImprovement, stopUsingFeedback, takeUpFeedback } 
 import { lessonSections, passageHeading } from '@/lib/lesson-sections';
 import { planBody, withPlanScope } from '@/lib/plan-scope';
 import { prisma } from '@/lib/prisma';
-import { cleanEdit, cleanRound, leftToAnswer, type RoundLessonInput, type RoundNote, type RoundPlan } from '@/lib/version-round-rules';
+import { cleanDecisions, cleanEdit, cleanRound, type RoundDecisions, type RoundLessonInput, type RoundNote, type RoundPlan } from '@/lib/version-round-rules';
 import { courseContext } from './ai-context';
 import { improveLesson } from './improvement-run';
 
 /**
- * "Sort with AI": all new feedback of a course version or a group's copy, sorted by AI in one go
- * (a FEEDBACK_ROUND draft on the version), edited on one page, then approved: each lesson's notes
- * join its improvement with the plan, the changes are drafted lesson by lesson, and left-out notes
- * the person answered get that reply and are done. Replies are always the person's: AI only
- * suggests. Every action checks the person may edit the version and work on its feedback.
+ * "Improve": all new feedback of a course version or a group's copy, sorted by AI in one go (a
+ * FEEDBACK_ROUND draft on the version) and worked through on one page. Sorted, each lesson's notes
+ * join its improvement with the plan and its changes are drafted (`draftRoundAction`, which the page
+ * calls by itself). The person keeps or skips each change there and publishes the lessons (the
+ * lesson's own save, `updateLessonInlineAction`); `settleRoundAction` then sends the replies they
+ * confirmed and takes the published lessons off the round, which ends when no lesson is left.
+ * Replies are always the person's: AI only suggests. Nothing reaches learners by itself. Every
+ * action checks the person may edit the version and work on its feedback.
  */
 
 /** At most this many notes in one round, whole lessons at a time; the rest wait for the next. */
 const ROUND_NOTES = 120;
-/** Lessons whose changes are drafted at once on Approve; the rest are planned, to start from their page. */
+/** Lessons whose changes are drafted in one go; the page asks for the next ones ("Draft more"). */
 const ROUND_DRAFTS = 10;
 
 /** What a round keeps, besides what AI writes while it's at it. */
@@ -40,7 +42,10 @@ export type RoundPayload = {
   lessons?: Array<{ id: string; reachesCourse: boolean }>;
   /** New notes it doesn't sort (over the cap, or on lessons whose changes wait for review). */
   more?: number;
-  applied?: { at: string; drafting: number; planned: number; replied: number; skipped: number };
+  /** The lessons whose changes were drafted for this round, each with its improvement. */
+  drafted?: Record<string, string>;
+  /** Keep or skip for each change decided on the page (`<draft>:<change>`); the rest are undecided. */
+  decisions?: RoundDecisions;
 };
 
 async function roundAccess(versionId: string) {
@@ -108,7 +113,7 @@ async function roundInputs(viewer: CrmViewer, version: { id: string; ownerGroupI
   return { notes, lessons: lessonInputs, more };
 }
 
-/** "Sort with AI": the version's open round (being sorted or waiting to be approved), or a new one. */
+/** "Improve": the version's open round (being sorted, or being worked through), or a new one. */
 export async function startRoundAction(versionId: string): Promise<{ ok: true; id: string } | { ok: false; message: string }> {
   const t = await getTranslations('courses.round');
   const access = await roundAccess(versionId);
@@ -163,12 +168,6 @@ async function roundRow(id: string) {
   return access ? { row, ...access } : null;
 }
 
-/** How far the sorting is (the page polls it while AI is at it). */
-export async function roundDraftAction(id: string): Promise<AppDraftView | null> {
-  const found = await roundRow(id);
-  return found ? draftView(found.row, found.viewer.id, 'plan') : null;
-}
-
 /** "Stop" while AI sorts. */
 export async function stopRoundAction(id: string): Promise<void> {
   if (await roundRow(id)) await settleDraft(id, 'stopped');
@@ -187,8 +186,8 @@ function editedRound(payload: RoundPayload, edited: unknown): RoundPlan | null {
 }
 
 /**
- * Keeps the page's edits (it saves as the person works), only over the round as it was loaded
- * (`updatedAt`): someone else's save in between is never overwritten, the page says to reload.
+ * Keeps the page's edits and decisions (it saves as the person works), only over the round as it was
+ * loaded (`updatedAt`): someone else's save in between is never overwritten, the page says to reload.
  */
 export async function saveRoundAction(id: string, edited: unknown, updatedAt: string): Promise<{ ok: true; updatedAt: string } | { ok: false; stale: boolean }> {
   const found = await roundRow(id);
@@ -199,91 +198,136 @@ export async function saveRoundAction(id: string, edited: unknown, updatedAt: st
   const now = new Date();
   const { count } = await prisma.aiProposal.updateMany({
     where: { id, status: AiProposalStatus.OPEN, updatedAt: new Date(updatedAt) },
-    data: { payload: { ...payload, round } as Prisma.InputJsonValue, updatedAt: now },
+    data: { payload: { ...payload, round, decisions: decisionsOf(edited, payload) } as Prisma.InputJsonValue, updatedAt: now },
   });
   return count ? { ok: true, updatedAt: now.toISOString() } : { ok: false, stale: true };
 }
 
+const decisionsOf = (edited: unknown, payload: RoundPayload) => cleanDecisions((edited as { decisions?: unknown } | null)?.decisions ?? payload.decisions);
+
+/** A note nobody decided since the sort, that the person may work on. */
+async function stillNew(viewer: CrmViewer, noteId: string) {
+  const ref = await loadCommentRef(noteId);
+  if (!ref || !canWorkOnFeedback(viewer, ref, 'comments')) return false;
+  const note = await prisma.curriculumComment.findUnique({ where: { id: noteId }, select: { status: true, adminResponse: true } });
+  return note?.status === 'OPEN' && !note.adminResponse;
+}
+
 /**
- * "Approve": each lesson's notes join its improvement with the plan (a plan left empty is written by
- * AI first), and its changes are drafted (up to ten lessons at once; the rest are planned, ready to
- * start from their page). Left-out notes with a reply the person confirmed or wrote get it and are
- * done; the rest stay open on the Feedback list. Notes decided since the sort are skipped. Returns
- * the first lesson to review; the others follow with Next.
+ * Drafts the round's lessons: each lesson's notes join its improvement with the plan (a plan left
+ * empty is written by AI first), and its changes are drafted, up to ten lessons a call, in course
+ * order. The page calls it once the feedback is sorted, and again for the lessons past ten. With
+ * `only`, that lesson is drafted again (its plan was edited, a note moved to it). Nothing is sent
+ * or published: the changes wait on the round's page.
  */
-export async function approveRoundAction(
+export async function draftRoundAction(
   id: string,
   edited: unknown,
-  updatedAt: string
-): Promise<{ ok: true; href: string | null; drafting: number; planned: number; replied: number; open: number; skipped: number } | { ok: false; message: string }> {
+  updatedAt: string,
+  only?: string
+): Promise<{ ok: true; updatedAt: string; started: number; left: number } | { ok: false; message: string; stale?: boolean }> {
   const t = await getTranslations('courses.round');
   const found = await roundRow(id);
   if (!found || found.row.status !== AiProposalStatus.OPEN) return { ok: false, message: t('gone') };
   const payload = (found.row.payload ?? {}) as RoundPayload;
   const round = editedRound(payload, edited);
   if (!round) return { ok: false, message: t('gone') };
-  // Claimed once: a second Approve (another tab, someone else) finds it used.
+  // Claimed: a second call (another tab, someone else) finds the round moved on, and reloads.
+  const claimedAt = new Date();
   const claimed = await prisma.aiProposal.updateMany({
     where: { id, status: AiProposalStatus.OPEN, updatedAt: new Date(updatedAt) },
-    data: { status: AiProposalStatus.USED, decidedAt: new Date(), payload: { ...payload, round } as Prisma.InputJsonValue },
+    data: { payload: { ...payload, round, decisions: decisionsOf(edited, payload) } as Prisma.InputJsonValue, updatedAt: claimedAt },
   });
-  if (!claimed.count) return { ok: false, message: t('stale') };
+  if (!claimed.count) return { ok: false, message: t('stale'), stale: true };
   const { viewer, version } = found;
-  const stillNew = async (noteId: string) => {
-    const ref = await loadCommentRef(noteId);
-    if (!ref || !canWorkOnFeedback(viewer, ref, 'comments')) return false;
-    const note = await prisma.curriculumComment.findUnique({ where: { id: noteId }, select: { status: true, adminResponse: true } });
-    return note?.status === 'OPEN' && !note.adminResponse;
-  };
-  let skipped = 0;
-  let drafting = 0;
-  let planned = 0;
-  let replied = 0;
-  let firstHref: string | null = null;
-  const lessons = await prisma.lesson.findMany({ where: { id: { in: round.lessons.map((card) => card.lessonId) } }, select: { id: true, courseId: true, position: true } });
-  const position = new Map(lessons.map((lesson) => [lesson.id, lesson]));
-  for (const card of [...round.lessons].sort((a, b) => (position.get(a.lessonId)?.position ?? 0) - (position.get(b.lessonId)?.position ?? 0))) {
+  const drafted = { ...(payload.drafted ?? {}) };
+  const lessons = await prisma.lesson.findMany({ where: { id: { in: round.lessons.map((card) => card.lessonId) } }, select: { id: true, position: true } });
+  const position = new Map(lessons.map((lesson) => [lesson.id, lesson.position]));
+  let started = 0;
+  for (const card of [...round.lessons].sort((a, b) => (position.get(a.lessonId) ?? 0) - (position.get(b.lessonId) ?? 0))) {
+    if (only ? card.lessonId !== only : Boolean(drafted[card.lessonId])) continue;
+    if (started >= ROUND_DRAFTS) break;
     let took = 0;
     for (const noteId of card.noteIds) {
-      if (!(await stillNew(noteId)) || (await isFeedbackUsed(prisma, noteId))) {
-        skipped += 1;
-        continue;
-      }
+      if (!(await stillNew(viewer, noteId)) || (await isFeedbackUsed(prisma, noteId))) continue;
       if ((await takeUpFeedback({ commentId: noteId, createdById: viewer.id })).ok) took += 1;
     }
     const taskId = await lessonImprovement(prisma, card.lessonId);
-    if (!taskId || (!took && !card.plan)) continue;
+    if (!taskId || (!took && !card.plan && !only)) continue;
     const plan = card.plan ? withPlanScope(card.plan, card.scope) : null;
-    const lesson = position.get(card.lessonId);
-    if (drafting < ROUND_DRAFTS) {
-      const run = await improveLesson(viewer, { curriculumVersionId: version.id, lessonId: card.lessonId, plan, takeUpNew: false });
-      if (run?.ok) drafting += 1;
-      else planned += 1;
-    } else {
-      if (plan) await prisma.task.update({ where: { id: taskId }, data: { plan, planUpdatedAt: new Date() } });
-      planned += 1;
-    }
-    firstHref ??= lesson ? `/admin/courses/${lesson.courseId}/lessons/${lesson.id}/improvements?i=${taskId}` : null;
+    const run = await improveLesson(viewer, { curriculumVersionId: version.id, lessonId: card.lessonId, plan, takeUpNew: false });
+    if (!run?.ok) continue;
+    drafted[card.lessonId] = taskId;
+    started += 1;
   }
-  for (const item of round.leaveOut) {
-    if (!item.reply.trim()) continue;
-    if (!(await stillNew(item.noteId))) {
-      skipped += 1;
-      continue;
-    }
-    if ((await isFeedbackUsed(prisma, item.noteId)) && !(await stopUsingFeedback(item.noteId))) {
-      skipped += 1;
-      continue;
-    }
-    await respondToComment(item.noteId, item.reply);
-    await resolveComment(item.noteId);
-    replied += 1;
-  }
-  const open = leftToAnswer(round);
-  await prisma.aiProposal.update({
-    where: { id },
-    data: { payload: { ...payload, round, applied: { at: new Date().toISOString(), drafting, planned, replied, skipped } } as Prisma.InputJsonValue },
+  const now = new Date();
+  await prisma.aiProposal.updateMany({
+    where: { id, status: AiProposalStatus.OPEN, updatedAt: claimedAt },
+    data: { payload: { ...payload, round, decisions: decisionsOf(edited, payload), drafted } as Prisma.InputJsonValue, updatedAt: now },
   });
   revalidatePath('/admin', 'layout');
-  return { ok: true, href: firstHref, drafting, planned, replied, open, skipped };
+  return { ok: true, updatedAt: now.toISOString(), started, left: round.lessons.filter((card) => !drafted[card.lessonId]).length };
+}
+
+/**
+ * After Publish: left-out notes with a reply the person confirmed or wrote get it and are done (the
+ * rest stay open on the Feedback list), and the lessons whose changes were published or let go (no
+ * draft of theirs waits any more) leave the round. With no lesson left the round is over.
+ */
+export async function settleRoundAction(
+  id: string,
+  edited: unknown,
+  updatedAt: string
+): Promise<{ ok: true; updatedAt: string; replied: number; done: boolean } | { ok: false; message: string }> {
+  const t = await getTranslations('courses.round');
+  const found = await roundRow(id);
+  if (!found || found.row.status !== AiProposalStatus.OPEN) return { ok: false, message: t('gone') };
+  const payload = (found.row.payload ?? {}) as RoundPayload;
+  const round = editedRound(payload, edited);
+  if (!round) return { ok: false, message: t('gone') };
+  const claimedAt = new Date();
+  const claimed = await prisma.aiProposal.updateMany({
+    where: { id, status: AiProposalStatus.OPEN, updatedAt: new Date(updatedAt) },
+    data: { updatedAt: claimedAt },
+  });
+  if (!claimed.count) return { ok: false, message: t('stale') };
+  const { viewer } = found;
+  let replied = 0;
+  const answered = new Set<string>();
+  for (const item of round.leaveOut) {
+    if (!item.reply.trim() || !(await stillNew(viewer, item.noteId))) continue;
+    if ((await isFeedbackUsed(prisma, item.noteId)) && !(await stopUsingFeedback(item.noteId))) continue;
+    await respondToComment(item.noteId, item.reply);
+    await resolveComment(item.noteId);
+    answered.add(item.noteId);
+    replied += 1;
+  }
+  // A drafted lesson with no draft of its improvement waiting: published, or let go.
+  const drafted = payload.drafted ?? {};
+  const waiting = await prisma.aiProposal.findMany({
+    where: {
+      kind: AiProposalKind.LESSON_REVISION,
+      targetId: { in: Object.keys(drafted) },
+      taskId: { in: Object.values(drafted) },
+      status: { in: [AiProposalStatus.OPEN, AiProposalStatus.WORKING] },
+    },
+    select: { targetId: true },
+  });
+  const open = new Set(waiting.map((draft) => draft.targetId));
+  const left: RoundPlan = {
+    lessons: round.lessons.filter((card) => !drafted[card.lessonId] || open.has(card.lessonId)),
+    leaveOut: round.leaveOut.filter((item) => !answered.has(item.noteId)),
+  };
+  const done = !left.lessons.length;
+  const now = new Date();
+  await prisma.aiProposal.update({
+    where: { id },
+    data: {
+      payload: { ...payload, round: left, decisions: decisionsOf(edited, payload) } as Prisma.InputJsonValue,
+      updatedAt: now,
+      ...(done ? { status: AiProposalStatus.USED, decidedAt: now } : {}),
+    },
+  });
+  revalidatePath('/admin', 'layout');
+  return { ok: true, updatedAt: now.toISOString(), replied, done };
 }

@@ -2,9 +2,9 @@ import 'server-only';
 
 import { cache } from 'react';
 import { getTranslations } from 'next-intl/server';
-import { Permission, TaskStatus } from '@prisma/client';
+import { AiProposalKind, AiProposalStatus, Permission, TaskStatus } from '@prisma/client';
 import { ui } from '@/extensions/ui';
-import { accessScope, canEditVersion, commentScopeWhere, getCrmViewer, hasAnyAccess, loadVersionRef, taskScopeWhere, type CrmViewer } from '@/lib/crm-access';
+import { accessScope, canEditVersion, canWorkOnFeedback, commentScopeWhere, getCrmViewer, hasAnyAccess, loadVersionRef, taskScopeWhere, type CrmViewer } from '@/lib/crm-access';
 import { countOpenFeedback } from '@/lib/feedback-list';
 import { prisma } from '@/lib/prisma';
 import { TASK_ENTITY_ROLE, TASK_ENTITY_TYPE } from '@/lib/tasks';
@@ -54,6 +54,30 @@ async function unpublishedChanges(viewer: CrmViewer) {
 }
 
 /**
+ * Improve rounds waiting to be worked through (feedback sorted, lessons' changes drafted), which the
+ * viewer may work on: each with its lessons still to decide, and whose it is (a group's copy, a course).
+ */
+async function openRounds(viewer: CrmViewer) {
+  const rows = await prisma.aiProposal.findMany({
+    where: { kind: AiProposalKind.FEEDBACK_ROUND, status: AiProposalStatus.OPEN },
+    orderBy: { updatedAt: 'desc' },
+    take: 20,
+    select: { id: true, targetId: true, payload: true },
+  });
+  const rounds: Array<{ id: string; href: string; lessons: number; where: string }> = [];
+  for (const row of rows) {
+    const lessons = ((row.payload ?? {}) as { round?: { lessons?: unknown[] } }).round?.lessons?.length ?? 0;
+    const ref = lessons ? await loadVersionRef(row.targetId) : null;
+    if (!ref || !canEditVersion(viewer, ref, [Permission.WRITE])) continue;
+    if (!canWorkOnFeedback(viewer, { courseId: ref.courseId, groupIds: ref.ownerGroupId ? [ref.ownerGroupId] : [] }, 'tasks')) continue;
+    const version = await prisma.curriculumVersion.findUnique({ where: { id: row.targetId }, select: { ownerGroup: { select: { name: true } }, course: { select: { title: true } } } });
+    if (!version) continue;
+    rounds.push({ id: row.id, href: `/admin/courses/${ref.courseId}/versions/${row.targetId}/improve`, lessons, where: version.ownerGroup?.name ?? version.course.title });
+  }
+  return rounds;
+}
+
+/**
  * What waits on the viewer, in their courses and groups: feedback nobody has answered yet (by group,
  * or on a course's own lessons), changes groups suggested for a course, and (the edition's) drafts to
  * review. Counted in the database, once per request (no arguments, so React's cache shares it): the
@@ -63,7 +87,7 @@ async function unpublishedChanges(viewer: CrmViewer) {
 export const loadNeedsYou = cache(async (): Promise<NeedsYouItem[]> => {
   const viewer = await getCrmViewer();
   if (!viewer || !hasAnyAccess(viewer)) return [];
-  const [fresh, suggested, mine, drafts, unpublished, t] = await Promise.all([
+  const [fresh, suggested, mine, drafts, unpublished, rounds, t] = await Promise.all([
     countOpenFeedback(commentScopeWhere(accessScope(viewer, 'comments')), { unanswered: true }),
     // A group's change suggested for the course waits for a yes or no: a core task, still to do, made
     // from a group's task.
@@ -94,6 +118,7 @@ export const loadNeedsYou = cache(async (): Promise<NeedsYouItem[]> => {
     }),
     ui.waitingDrafts ? ui.waitingDrafts() : Promise.resolve(0),
     unpublishedChanges(viewer),
+    openRounds(viewer),
     getTranslations('app.needsYou'),
   ]);
 
@@ -194,6 +219,10 @@ export const loadNeedsYou = cache(async (): Promise<NeedsYouItem[]> => {
       href: `/admin/courses/${course.id}/groups`,
       count,
     });
+  }
+  // Improve rounds under way: their lessons' changes wait to be kept or skipped, and published.
+  for (const round of rounds) {
+    items.push({ key: `round:${round.id}`, text: t('round', { count: round.lessons, where: round.where }), href: round.href, count: round.lessons });
   }
   // Changes saved as drafts: learners see them once the lessons are published (the Improvements list's publish bar).
   for (const [id, group] of Array.from(unpublished.byGroup.entries())) {

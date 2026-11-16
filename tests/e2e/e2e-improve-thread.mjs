@@ -70,6 +70,7 @@ try {
   const improvement = sql(`select task_id from public.task_entity_links where entity_type = 'curriculum_comment' and entity_id = ${quote(comment)} limit 1`);
   check('the feedback is in the lesson’s improvement', Boolean(improvement));
   await page.waitForSelector('[data-testid=apply-improvement]', { timeout: 60000 });
+  await (async (p) => { const all = p.locator('[data-testid=keep-all]'); if (await all.count()) await all.click(); })(page);
   const first = open(improvement);
   check('a first attempt waits for review', Boolean(first) && !first.includes(','), first);
   check('the why stays in view while reviewing: notes for AI', (await page.locator('[data-testid=notes-for-ai]').count()) > 0);
@@ -137,7 +138,10 @@ try {
   // Published (to this group only), the improvement is in the lesson's history with its thread.
   await page.goto(`${improveUrl}?i=${improvement}`);
   await page.waitForSelector('[data-testid=apply-improvement]');
+  await (async (p) => { const all = p.locator('[data-testid=keep-all]'); if (await all.count()) await all.click(); })(page);
   if ((await page.locator('[data-testid=also-course]').getAttribute('aria-checked').catch(() => null)) === 'true') await page.click('[data-testid=also-course]');
+  // Nothing is kept until it's said: keep them all, then publish.
+  await (async (p) => { const all = p.locator('[data-testid=keep-all]'); if (await all.count()) await all.click(); })(page);
   await page.click('[data-testid=apply-improvement]');
   await page.locator('[data-testid=improvements-notice]').waitFor({ timeout: 30000 });
   check('published, the improvement is done', await waitFor(() => sql(`select status from public.tasks where id = ${quote(improvement)}`) === 'DONE', 30));

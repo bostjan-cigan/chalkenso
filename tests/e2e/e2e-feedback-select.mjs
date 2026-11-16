@@ -5,7 +5,7 @@
 // required. Nothing is published; what it adds is removed at the end.
 // node tests/e2e/e2e-feedback-select.mjs
 import { chromium } from 'playwright-core';
-import { BASE, env, sql } from './helpers.mjs';
+import { BASE, env, sql, skipSuite } from './helpers.mjs';
 
 const results = [];
 function check(name, ok, detail = '') {
@@ -67,6 +67,12 @@ try {
   await page.waitForSelector('[data-testid=feedback-lesson]');
   check('the New list is grouped by lesson', (await page.locator('[data-testid=feedback-lesson]').count()) >= 2);
 
+  // Where AI works, lessons change through Improve and nothing is picked here (e2e-feedback-round.mjs).
+  if (!(await page.locator('[data-testid=feedback-select]').count())) {
+    if (created.filter(Boolean).length) sql(`delete from courses.curriculum_comments where id in (${created.filter(Boolean).map(quote).join(', ')})`);
+    await browser.close();
+    skipSuite('picking feedback is for servers without AI: with it, Improve works through all of it');
+  }
   // Leave out two at once: a reply is required, then both are done with it.
   await page.click('[data-testid=feedback-select]');
   const item = (text) => page.locator('[id^=comment-]', { hasText: text }).first().locator('[data-testid=feedback-select-item]');

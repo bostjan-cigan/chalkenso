@@ -12,7 +12,7 @@
 import { chromium } from 'playwright-core';
 import { mkdirSync, rmSync } from 'node:fs';
 import path from 'node:path';
-import { BASE, env, sql } from './helpers.mjs';
+import { BASE, env, sql, useFeedback } from './helpers.mjs';
 
 mkdirSync('tests/e2e/.shots', { recursive: true });
 const results = [];
@@ -88,7 +88,7 @@ try {
   check('its passage is marked in the lesson', await page.waitForFunction(() => (CSS.highlights?.get('improve-selected')?.size ?? 0) > 0, null, { timeout: 15000 }).then(() => true, () => false));
   // Use on the group's Feedback list puts it in the lesson's improvement (the list stays).
   await page.goto(`${BASE}/admin/courses/comments/${versionId}`);
-  await page.locator('[id^=comment-]', { hasText: 'E2E first' }).first().locator('[data-testid=feedback-use]').click();
+  await useFeedback(page, page.locator('[id^=comment-]', { hasText: 'E2E first' }).first());
   await waitFor(() => Boolean(usedBy(first)), 30);
   const improvement = currentTask();
   check('Use puts it in the lesson’s improvement', usedBy(first) === improvement && Boolean(improvement));
@@ -127,10 +127,11 @@ try {
   const late = await note('Because the browser sends cookies automatically', 'E2E late: show a forged request.');
   created.push(late);
   await page.waitForSelector('[data-testid=apply-improvement]', { timeout: 30000 });
+  await (async (p) => { const all = p.locator('[data-testid=keep-all]'); if (await all.count()) await all.click(); })(page);
   // Used from the group's Feedback list, which stays where it is.
   await page.goto(`${BASE}/admin/courses/comments/${versionId}`);
   const card = page.locator('[id^=comment-]', { hasText: 'E2E late' }).first();
-  await card.locator('[data-testid=feedback-use]').click();
+  await useFeedback(page, card);
   await card.locator('a', { hasText: 'In the lesson’s improvement' }).waitFor({ timeout: 15000 });
   check('Use on the Feedback list keeps the list', !page.url().includes('/improvements') && usedBy(late) === improvement);
   await page.goto(`${improveUrl}?i=${improvement}`);
@@ -182,6 +183,8 @@ try {
   await page.setViewportSize({ width: 1280, height: 900 });
 
   // One save: what the draft covered is done; the late piece starts the next improvement.
+  // Nothing is kept until it's said: keep them all, then publish.
+  await (async (p) => { const all = p.locator('[data-testid=keep-all]'); if (await all.count()) await all.click(); })(page);
   await page.click('[data-testid=apply-improvement]');
   await page.locator('[data-testid=improvements-notice]').waitFor({ timeout: 30000 });
   const notice = await page.locator('[data-testid=improvements-notice]').innerText();
@@ -236,6 +239,7 @@ try {
   // Improve this lesson again: the plan is updated (keeping what still applies) and the changes written.
   await page.click('[data-testid=improve-lesson]');
   await page.waitForSelector('[data-testid=apply-improvement]', { timeout: 60000 });
+  await (async (p) => { const all = p.locator('[data-testid=keep-all]'); if (await all.count()) await all.click(); })(page);
   check('the updated plan keeps the plan and adds the late piece', /E2E first[\s\S]*E2E late/.test(sql(`select plan from public.tasks where id = ${quote(improvement)}`)));
   // Discarded again: the next Improve takes in the feedback that comes next.
   for (let attempt = 0; attempt < 5 && !(await page.getByRole('menuitem', { name: 'Discard changes' }).isVisible()); attempt += 1) {
@@ -270,6 +274,7 @@ try {
   await page.click('[data-testid=improve-lesson]');
   check('the new note comes in with Improve this lesson', await waitFor(() => usedBy(diagramNote) === improvement, 30));
   await page.waitForSelector('[data-testid=apply-improvement]', { timeout: 60000 });
+  await (async (p) => { const all = p.locator('[data-testid=keep-all]'); if (await all.count()) await all.click(); })(page);
   check('the updated plan covers it', sql(`select plan from public.tasks where id = ${quote(improvement)}`).includes('E2E diagram'));
   check('the improvement goes to the group and the main course', /Scope: group and core/.test(sql(`select plan from public.tasks where id = ${quote(improvement)}`)));
   // Where it goes, chosen at Publish: the switch alone changes nothing yet.
@@ -284,6 +289,8 @@ try {
   const courseTags = await page.locator('[data-testid=course-tag]').count();
   const drawn = page.locator('[data-testid=lesson-part] img[src*="/admin/api/drafts/"]');
   check('the review shows the diagram AI drew', await drawn.first().waitFor({ timeout: 15000 }).then(() => true, () => false));
+  // Nothing is kept until it's said: keep them all, then publish.
+  await (async (p) => { const all = p.locator('[data-testid=keep-all]'); if (await all.count()) await all.click(); })(page);
   await page.click('[data-testid=apply-improvement]');
   await page.locator('[data-testid=improvements-notice]').waitFor({ timeout: 30000 });
   const copyAsset = sql(`select coalesce(asset_id, '') from courses.lesson_asset_references where lesson_id = ${quote(lessonId)} and source_path like 'diagrams/%' limit 1`);
@@ -334,6 +341,7 @@ try {
   check('with the changes carried before it', sql(`select payload->>'markdown' from public.ai_proposals where id = ${quote(fitted)}`).includes('diagrams/'));
   await page.goto(courseSteps);
   await page.waitForSelector('[data-testid=apply-improvement]', { timeout: 30000 });
+  await (async (p) => { const all = p.locator('[data-testid=keep-all]'); if (await all.count()) await all.click(); })(page);
   const carriedImage = page.locator('[data-testid=lesson-part] img[src*="diagrams"], [data-testid=lesson-part] img[alt*="request travels"]').first();
   await carriedImage.waitFor({ timeout: 15000 }).catch(() => {});
   const shows = await carriedImage.evaluate((img) => img.complete && img.naturalWidth > 0).catch(() => false);
@@ -346,6 +354,8 @@ try {
     await page.click('[data-testid=review-keep]');
     await page.waitForTimeout(100);
   }
+  // Nothing is kept until it's said: keep them all, then publish.
+  await (async (p) => { const all = p.locator('[data-testid=keep-all]'); if (await all.count()) await all.click(); })(page);
   await page.click('[data-testid=apply-improvement]');
   await page.locator('[data-testid=improvements-notice]').waitFor({ timeout: 30000 });
   const courseNotice = await page.locator('[data-testid=improvements-notice]').innerText();

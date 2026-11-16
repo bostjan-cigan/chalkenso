@@ -146,3 +146,101 @@
   background: rgb(var(--background-rgb));
   border-top: 1px solid var(--line);
 }
+
+/* A lesson's head: its name, and the way to its own page. */
+.cardHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.viewRow {
+  display: flex;
+}
+
+.changes {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* One change: its passage, and Keep | Skip beside it. Undecided until one is pressed. */
+.change {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  padding: 0.7rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.change[data-decision='skip'] .passageText {
+  opacity: 0.5;
+}
+
+.changeBody {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 0.3rem;
+  justify-items: start;
+}
+
+.passageText {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.passageText p {
+  margin: 0 0 0.3rem;
+}
+
+.passageText ins {
+  text-decoration: none;
+  border-radius: 4px;
+  padding: 0 0.15rem;
+  background: rgba(46, 160, 67, 0.16);
+}
+
+.passageText del {
+  border-radius: 4px;
+  padding: 0 0.15rem;
+  background: rgba(218, 54, 51, 0.12);
+  color: rgba(var(--foreground-rgb), 0.6);
+}
+
+.decide {
+  display: flex;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.choice {
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.84rem;
+  cursor: pointer;
+}
+
+.choice[aria-pressed='true'] {
+  border-color: transparent;
+  background: rgb(var(--foreground-rgb));
+  color: rgb(var(--background-rgb));
+}
+
+.whole {
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--line);
+}
+
+@media (max-width: 560px) {
+  .change {
+    flex-direction: column;
+  }
+}

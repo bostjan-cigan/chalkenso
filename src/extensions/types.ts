@@ -65,13 +65,14 @@ export type ServerExtensions = {
   aiKeyFallback(organizationId: string | null): Promise<AiKeyFallback>;
   /**
    * The AI the edition includes for the organisation (e.g. in a plan), for Settings → AI's bar: the
-   * cap (US cents, null: no cap) for this month, or for a trial (`forTrial`), spend so far and what's
+   * cap (US cents, null: no cap) for this month, for a trial (`forTrial`) or once and never again
+   * (`once`), spend so far and what's
    * left of `topUpMicros` (micros of a dollar), about how many drafts the cap covers, and `canTopUp`.
    * Null where none is included (as in the local edition, which runs on the installation's key).
    */
   aiAllowance(
     organizationId: string
-  ): Promise<{ capCents: number | null; forTrial: boolean; spentMicros: number; topUpMicros: number; drafts: number | null; canTopUp: boolean } | null>;
+  ): Promise<{ capCents: number | null; forTrial: boolean; once?: boolean; spentMicros: number; topUpMicros: number; drafts: number | null; canTopUp: boolean } | null>;
   /** Whether people can connect their own Claude to the app. */
   claudeConnector: boolean;
   /**

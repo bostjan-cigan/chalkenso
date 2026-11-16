@@ -201,7 +201,8 @@
     "groupImprovements": "{count, plural, one {# izboljšava je vaša} two {# izboljšavi sta vaši} few {# izboljšave so vaše} other {# izboljšav je vaših}} v skupini {group}",
     "courseImprovements": "{count, plural, one {# izboljšava je vaša} two {# izboljšavi sta vaši} few {# izboljšave so vaše} other {# izboljšav je vaših}} na lekcijah tečaja {course}",
     "groupUnpublished": "{count, plural, one {# lekcija ima spremembe} two {# lekciji imata spremembe} few {# lekcije imajo spremembe} other {# lekcij ima spremembe}}, ki jih udeleženci v skupini {group} še ne vidijo",
-    "courseUnpublished": "{count, plural, one {# lekcija ima spremembe} two {# lekciji imata spremembe} few {# lekcije imajo spremembe} other {# lekcij ima spremembe}}, ki jih udeleženci tečaja {course} še ne vidijo"
+    "courseUnpublished": "{count, plural, one {# lekcija ima spremembe} two {# lekciji imata spremembe} few {# lekcije imajo spremembe} other {# lekcij ima spremembe}}, ki jih udeleženci tečaja {course} še ne vidijo",
+    "round": "{count, plural, one {# lekcija} two {# lekciji} few {# lekcije} other {# lekcij}} za izboljšanje: {where}"
   },
   "home": {
     "title": "Domov",

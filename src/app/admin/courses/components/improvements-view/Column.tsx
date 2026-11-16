@@ -77,6 +77,7 @@ export function ChangeRow({
   section,
   state,
   keep,
+  undecided = false,
   current,
   keepLabel,
   openLabel,
@@ -91,6 +92,8 @@ export function ChangeRow({
   state?: string | null;
   /** Kept or skipped; null: nothing to decide. */
   keep: boolean | null;
+  /** Not decided yet: neither kept nor skipped. */
+  undecided?: boolean;
   /** The change being read in the lesson. */
   current: boolean;
   keepLabel: string;
@@ -99,7 +102,7 @@ export function ChangeRow({
   onOpen: () => void;
 }) {
   return (
-    <li className={styles.changeRow} data-current={current || undefined} data-skipped={keep === false || undefined} data-testid="change-row">
+    <li className={styles.changeRow} data-current={current || undefined} data-skipped={(keep === false && !undecided) || undefined} data-testid="change-row">
       {keep !== null ? <Tick on={keep} label={keepLabel} onToggle={onToggle} testId="change-keep" /> : <span className={styles.tickSpace} aria-hidden />}
       <button type="button" className={styles.changeOpen} onClick={onOpen} aria-label={openLabel}>
         <span className={styles.changeText}>

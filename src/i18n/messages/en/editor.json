@@ -409,7 +409,8 @@
         "removed": "Removed: “{text}”",
         "rewritten": "Rewritten: “{text}”",
         "image": "New image"
-      }
+      },
+      "keepAll": "Keep all"
     },
     "notes": {
       "row": "Notes for AI",

@@ -7,7 +7,6 @@ import { useEffect, useMemo, useRef, useState, useTransition, type ReactNode } f
 import { TbCheck, TbChevronLeft, TbChevronRight, TbCircleCheck, TbPlus, TbSparkles } from 'react-icons/tb';
 import { AiProposalKind } from '@prisma/client';
 import { INTL_LOCALES, type Locale } from '@/i18n/config';
-import { getPendingImageReferences } from '@/lib/course-markdown';
 import { QUIET_MS } from '@/lib/ai-draft-progress';
 import type { LessonDraftView } from '@/lib/ai-drafts';
 import { excerpt } from '@/lib/improvement-label';
@@ -53,6 +52,7 @@ import {
   type ProposedChange,
 } from '../workspace/revision';
 import CompareSheet, { editableOf } from '../workspace/CompareSheet';
+import { lessonSaveForm } from '../workspace/lesson-save';
 import { HANDOFF_STARTED_EVENT, handoffDraft, type HandoffStartedDetail } from '../workspace/events';
 import { useDraftProgress } from '../workspace/useDraftProgress';
 import { useHandoffStarted } from '../workspace/useHandoffStarted';
@@ -317,6 +317,8 @@ export default function ImprovementsView({
   }, [uploadedUrls, diagramKey]);
   const decisionOf = (review: Review, change: ProposedChange): ChangeDecision =>
     decisions[`${review.draft.id}:${change.id}`] ?? (review.states[change.id] === 'clean' ? 'keep' : 'skip');
+  // Nothing is kept until the person says so: a change counts once they decided on it (or kept them all).
+  const keeps = (review: Review, change: ProposedChange) => looked.has(`${review.draft.id}:${change.id}`) && decisionOf(review, change) === 'keep';
 
   // A draft going on from one that waits (what couldn't be placed, fitted with AI): what comes back
   // if it's stopped or fails. And how to start each again.
@@ -770,41 +772,7 @@ export default function ImprovementsView({
   // --- Saving: the review's last step ----------------------------------------------------------
   /** Saves the lesson's text (with what one improvement's changes answer); null when it couldn't, with why said. */
   const saveLesson = async (text: string, entry: Entry | null, fromRevision = revision) => {
-    const formData = new FormData();
-    formData.set('courseId', lesson.courseId);
-    formData.set('lessonId', lesson.id);
-    formData.set('title', lesson.title);
-    formData.set('slug', lesson.slug);
-    formData.set('status', lesson.status);
-    formData.set('shortDescription', lesson.shortDescription);
-    formData.set('arcId', lesson.arcId);
-    formData.set('revision', String(fromRevision));
-    formData.set('markdownContent', text);
-    for (const reference of getPendingImageReferences(text)) {
-      const asset = uploadedAssets[reference.sourcePath];
-      if (asset) formData.append('uploadedAssetBinding', JSON.stringify({ assetId: asset.assetId, sourcePath: asset.sourcePath }));
-      // A draft's new diagram: the server stores it from the draft.
-      const from = asset ? undefined : draftDiagrams.find((item) => item.endsWith(`/${reference.sourcePath}`));
-      if (from) formData.append('draftDiagram', JSON.stringify({ proposalId: from.slice(0, from.indexOf('/')), sourcePath: reference.sourcePath }));
-    }
-    // The improvement's drafts, its feedback, and what it changed (for the main course).
-    if (entry) {
-      formData.set(
-        'lessonChange',
-        JSON.stringify([
-          {
-            taskId: entry.taskId,
-            proposalIds: entry.draftId ? [entry.draftId] : [],
-            noteIds: entry.noteIds,
-            applied: entry.applied,
-            skipped: entry.skipped,
-            before: entry.before,
-            after: entry.after,
-            ...(entry.toCourse === undefined ? {} : { toCourse: entry.toCourse }),
-          },
-        ])
-      );
-    }
+    const formData = lessonSaveForm(lesson, text, fromRevision, entry, uploadedAssets, draftDiagrams);
     const result = await updateLessonInlineAction(formData);
     if (!result.ok) {
       setNotice({ text: result.message });
@@ -884,7 +852,7 @@ export default function ImprovementsView({
    */
   const apply = (found: Review, taskId: string | null, noteIds: string[], target?: ViewImprovement) =>
     startTransition(async () => {
-      const keep = (change: ProposedChange) => actionable(found.states[change.id]) && decisionOf(found, change) === 'keep';
+      const keep = (change: ProposedChange) => actionable(found.states[change.id]) && keeps(found, change);
       const open = found.changes.filter((change) => actionable(found.states[change.id]));
       const result = applyOnto(found.base, current, found.changes, keep, (change) => found.states[change.id] === 'conflict');
       if (!result.applied) return;
@@ -1127,14 +1095,14 @@ export default function ImprovementsView({
   /** The foot's end while reviewing: Save (Publish, on a published lesson) the changes kept, with why it can't yet. */
   const reviewActions = (found: Review, onApply: () => void, target?: ViewImprovement) => {
     const open = found.changes.filter((change) => actionable(found.states[change.id]));
-    const kept = open.filter((change) => decisionOf(found, change) === 'keep').length;
+    const kept = open.filter((change) => keeps(found, change)).length;
     if (!open.length) return <p className={styles.footHint}>{t('nothingToApply')}</p>;
     // A group's copy: whether they go on to the main course (a suggestion, for whoever can't edit it).
     const courseLabel = target?.canEditCourse ? t('toCourse.label') : t('toCourse.suggest');
     // Kept changes that won't go into the main course by themselves: they wait there for a look.
     const waitThere =
       courseFits && target && goesToCourse(target)
-        ? changeSteps(open.filter((change) => decisionOf(found, change) === 'keep')).filter((step) => step.some((change) => courseFits[change.id] === 'check' || courseFits[change.id] === 'byHand')).length
+        ? changeSteps(open.filter((change) => keeps(found, change))).filter((step) => step.some((change) => courseFits[change.id] === 'check' || courseFits[change.id] === 'byHand')).length
         : 0;
     const courseChoice =
       target?.choosesScope && target.courseReachable && target.canWork ? (
@@ -1169,11 +1137,27 @@ export default function ImprovementsView({
       <h3 className={styles.groupTitle}>{tc('changesTitle')}</h3>
       {found.draft.summary ? <p className={styles.summary}>{found.draft.summary}</p> : null}
       {found.draft.diagrams.length ? <p className={styles.quiet}>{t('addsDiagrams', { count: found.draft.diagrams.length })}</p> : null}
+      {found.changes.some((change) => actionable(found.states[change.id]) && !keeps(found, change)) ? (
+        <div>
+          <button
+            type="button"
+            className={workspace.textButton}
+            onClick={() => {
+              const keys = found.changes.filter((change) => actionable(found.states[change.id])).map((change) => `${found.draft.id}:${change.id}`);
+              setDecisions((all) => ({ ...all, ...Object.fromEntries(keys.map((key) => [key, 'keep' as const])) }));
+              setLooked((all) => new Set(Array.from(all).concat(keys)));
+            }}
+            data-testid="keep-all"
+          >
+            {tc('keepAll')}
+          </button>
+        </div>
+      ) : null}
       <ul className={styles.changeList} data-testid="change-rows">
         {reviewSteps.map((step, index) => {
           const states = step.map((change) => found.states[change.id] ?? 'clean');
           const choosable = step.filter((_, k) => actionable(states[k]));
-          const keep = choosable.length ? choosable.every((change) => decisionOf(found, change) === 'keep') : null;
+          const keep = choosable.length ? choosable.every((change) => keeps(found, change)) : null;
           const mine = edited.has(`${found.draft.id}:${(step.find((change) => change.kind !== 'remove') ?? step[0]).id}`);
           const kind = mine ? t('yourVersion') : t(`kinds.${stepKind(step)}`);
           return (
@@ -1190,6 +1174,7 @@ export default function ImprovementsView({
                   .filter(Boolean)
                   .join(' · ') || null
               }
+              undecided={choosable.length > 0 && !choosable.some((change) => lookedAt(found, change))}
               keep={keep}
               current={reading === index}
               keepLabel={tc('keepChange')}

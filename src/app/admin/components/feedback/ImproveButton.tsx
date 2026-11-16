@@ -9,10 +9,11 @@ import AdminButton from '../ui/AdminButton';
 import AdminMenu from '../ui/AdminMenu';
 
 /**
- * "Sort with AI" on a Feedback list: AI sorts all new feedback of the version (or a group's copy),
- * and its page opens to edit and approve it. Several versions with new feedback: a menu picks one.
+ * "Improve" on a Feedback list, its one way into changing lessons: AI sorts all new feedback of the
+ * version (or a group's copy) and drafts each lesson's changes, and the round's page opens to decide
+ * on them and publish. Several versions with new feedback: a menu picks one.
  */
-export default function SortFeedbackButton({ courseId, versions }: { courseId: string; versions: Array<{ id: string; label: string }> }) {
+export default function ImproveButton({ courseId, versions }: { courseId: string; versions: Array<{ id: string; label: string }> }) {
   const t = useTranslations('courses.round');
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -25,13 +26,13 @@ export default function SortFeedbackButton({ courseId, versions }: { courseId: s
         setError(result.message);
         return;
       }
-      router.push(`/admin/courses/${courseId}/versions/${versionId}/sort`);
+      router.push(`/admin/courses/${courseId}/versions/${versionId}/improve`);
     });
   if (!versions.length) return null;
   return (
     <>
       {versions.length === 1 ? (
-        <AdminButton type="button" size="compact" disabled={pending} onClick={() => sort(versions[0].id)} data-testid="feedback-sort">
+        <AdminButton type="button" size="compact" disabled={pending} onClick={() => sort(versions[0].id)} data-testid="feedback-improve">
           <TbSparkles aria-hidden size={15} /> {t('sort')}
         </AdminButton>
       ) : (

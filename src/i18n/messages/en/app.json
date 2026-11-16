@@ -201,7 +201,8 @@
     "groupImprovements": "{count, plural, one {# improvement is yours} other {# improvements are yours}} in {group}",
     "courseImprovements": "{count, plural, one {# improvement is yours} other {# improvements are yours}} on {course}’s own lessons",
     "groupUnpublished": "{count, plural, one {# lesson has changes} other {# lessons have changes}} learners don’t see yet in {group}",
-    "courseUnpublished": "{count, plural, one {# lesson has changes} other {# lessons have changes}} learners don’t see yet on {course}’s own lessons"
+    "courseUnpublished": "{count, plural, one {# lesson has changes} other {# lessons have changes}} learners don’t see yet on {course}’s own lessons",
+    "round": "{count, plural, one {# lesson} other {# lessons}} to improve in {where}"
   },
   "home": {
     "title": "Home",

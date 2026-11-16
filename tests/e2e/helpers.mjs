@@ -73,6 +73,22 @@ export async function signUp(page, { email, password, organization, plan = 'solo
   }
 }
 
+/**
+ * Use on a Feedback list's note (it joins its lesson's improvement): the card's button, or, where AI
+ * works (lessons change through the list's Improve), "Use" in the note's menu, which opens once the
+ * page is interactive.
+ */
+export async function useFeedback(page, card) {
+  const button = card.locator('[data-testid=feedback-use]');
+  if (await button.count()) return button.click();
+  const item = page.getByRole('menuitem', { name: 'Use', exact: true });
+  for (let attempt = 0; attempt < 5 && !(await item.isVisible()); attempt += 1) {
+    await card.getByRole('button', { name: 'Feedback actions' }).click();
+    await item.waitFor({ timeout: 3000 }).catch(() => {});
+  }
+  return item.click();
+}
+
 /** Ends a suite that can't run against this server, saying why (the runner counts it as skipped). */
 export function skipSuite(reason) {
   console.log(`SKIPPED  ${reason}`);

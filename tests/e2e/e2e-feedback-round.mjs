@@ -1,9 +1,10 @@
-// End-to-end check of "Sort with AI" on the demo organisation (`yarn db:seed-demo` first; AI_MOCK=1
-// on the server): all new feedback of a group's copy is sorted on one page (what changes in each
-// lesson, what's left out, with AI's reply only suggested), a suggestion confirmed with Use is sent
-// and the note done while one left without a reply stays open, Approve drafts the lessons' changes
-// and opens the first, the review walks from lesson to lesson with Next, and the learner whose note
-// changed the lesson, or got a reply, sees it once on their next visit. Everything it changes in the
+// End-to-end check of "Improve" on the demo organisation (`yarn db:seed-demo` first; AI_MOCK=1 on
+// the server): all new feedback of a group's copy is sorted on one page (what changes in each
+// lesson, what's only answered, with AI's reply only suggested), the lessons' changes are drafted
+// there and wait undecided, Keep and Keep all count them into one Publish (kept across a reload),
+// which saves the lessons and sends the reply confirmed with Use while a note left without one
+// stays open, and the learner whose note changed the lesson, or got a reply, sees it once on their
+// next visit. Everything it changes in the
 // group's copy (and the main course behind it) is put back at the end.
 // node tests/e2e/e2e-feedback-round.mjs
 import { chromium } from 'playwright-core';
@@ -96,58 +97,49 @@ try {
   const repeat = (await team.json()).comment?.id;
   created.push(repeat);
 
-  // Sort with AI, from the group's Feedback: one page, lesson by lesson, then what's left out.
+  // Improve, from the group's Feedback: one page, lesson by lesson, then what's only answered.
   await page.goto(`${BASE}/admin/courses/groups/${groupId}?tab=feedback`);
-  await page.click('[data-testid=feedback-sort]');
-  await page.waitForURL(/\/sort$/);
-  check('Sort with AI opens its page and sorts while it’s watched', await page.locator('[data-testid=round-lesson]').first().waitFor({ timeout: 90000 }).then(() => true, () => false));
-  const card = page.locator('[data-testid=round-lesson]', { has: page.locator('[data-testid=round-note]', { hasText: 'E2E round: how do I run this on Windows?' }) });
+  check('with AI, a note has no Use of its own, and nothing is picked', (await page.locator('[data-testid=feedback-use]').count()) === 0 && (await page.locator('[data-testid=feedback-select-bar]').count()) === 0);
+  await page.click('[data-testid=feedback-improve]');
+  await page.waitForURL(/\/improve$/);
+  check('Improve opens its page and sorts while it’s watched', await page.locator('[data-testid=round-lesson]').first().waitFor({ timeout: 90000 }).then(() => true, () => false));
+  // (:visible: while a reloaded page streams in, its parts are in the document twice for a moment)
+  const card = page.locator('[data-testid=round-lesson]:visible', { has: page.locator('[data-testid=round-note]', { hasText: 'E2E round: how do I run this on Windows?' }) });
   check('the learner’s question changes its lesson', (await card.count()) === 1);
-  const leftPraise = page.locator('[data-testid=round-left]', { hasText: 'E2E round: thanks' });
-  const leftRepeat = page.locator('[data-testid=round-left]', { hasText: 'E2E round: how do I run this on Windows?' });
-  check('thanks are left out', (await leftPraise.count()) === 1);
-  check('the same question on another lesson is left out as a duplicate', (await leftRepeat.count()) === 1 && (await leftRepeat.innerText()).includes('Same as'));
+  const leftPraise = page.locator('[data-testid=round-left]:visible', { hasText: 'E2E round: thanks' });
+  const leftRepeat = page.locator('[data-testid=round-left]:visible', { hasText: 'E2E round: how do I run this on Windows?' });
+  check('thanks are only answered', (await leftPraise.count()) === 1);
+  check('the same question on another lesson is answered as a duplicate', (await leftRepeat.count()) === 1 && (await leftRepeat.innerText()).includes('Same as'));
   const praiseBox = leftPraise.locator('[data-testid=round-reply]');
   check('AI only suggests a reply: the box is empty, the suggestion its placeholder', (await praiseBox.inputValue()) === '' && Boolean(await praiseBox.getAttribute('placeholder')));
-  check('Approve says how many stay open without a reply', /left to answer/.test(await page.locator('[data-testid=round-approve]').innerText()));
+
+  // Sorted, the lessons' changes are drafted without asking, and wait on the same page, undecided.
+  check('the lesson’s changes are drafted on the page', await card.locator('[data-testid=round-change]').first().waitFor({ timeout: 120000 }).then(() => true, () => false));
+  check('the learner’s question is in its lesson’s improvement', Boolean(usedBy(changeIt)));
+  check('nothing is kept to start with: no Publish yet', (await page.locator('[data-testid=round-publish]').count()) === 0 && (await page.locator('[data-testid=round-keep][aria-pressed=true]').count()) === 0);
+  await card.locator('[data-testid=round-keep]').first().click();
+  check('Keep counts the change in Publish', /Publish/.test(await page.locator('[data-testid=round-publish]').innerText()));
+  await card.locator('[data-testid=round-view-whole]').click();
+  check('the whole lesson shows the changes in place', await card.locator('[data-testid=round-whole]').waitFor({ timeout: 15000 }).then(() => true, () => false));
+  await card.locator('[data-testid=round-view-changes]').click();
   await page.screenshot({ path: 'tests/e2e/.shots/round-sorted.png', fullPage: true });
 
-  // Use takes the suggestion for the thanks; the duplicate is left without a reply.
+  // Decisions are kept: a reload brings them back.
+  await page.waitForTimeout(1500);
+  await page.reload();
+  await card.locator('[data-testid=round-change]').first().waitFor({ timeout: 60000 });
+  check('a reload keeps what was decided', (await card.locator('[data-testid=round-keep][aria-pressed=true]').count()) >= 1);
+
+  // Use takes the suggestion for the thanks; the duplicate is left without a reply. Keep all, Publish.
   await leftPraise.locator('[data-testid=round-use]').click();
   check('Use puts the suggestion in the box', (await praiseBox.inputValue()).length > 0);
-  await page.waitForTimeout(1200);
-  await page.click('[data-testid=round-approve]');
-  await page.waitForURL(/\/improvements/, { timeout: 60000 });
+  if (await page.locator('[data-testid=round-keep-all]').count()) await page.click('[data-testid=round-keep-all]');
+  await page.click('[data-testid=round-publish]');
+  check('Publish says what it did, with Undo', await page.locator('[data-testid=round-undo]').waitFor({ timeout: 90000 }).then(() => true, () => false), await page.locator('[data-testid=round-notice]').innerText().catch(() => ''));
   check('the confirmed reply is sent, and the thanks done', await waitFor(page, () => status(praise) === 'RESOLVED' && reply(praise).length > 0, 30), reply(praise));
   check('a note left without a reply stays open, unanswered', status(repeat) === 'OPEN' && reply(repeat) === '');
-  check('the learner’s question is in its lesson’s improvement', Boolean(usedBy(changeIt)));
-  check('Approve opens the first lesson to review', /Lesson 1 of \d+/.test(await page.locator('[data-testid=queue-at]').innerText().catch(() => '')), await page.locator('[data-testid=queue-at]').innerText().catch(() => 'none'));
-  check(
-    'the lessons’ changes are drafted, side by side',
-    await waitFor(page, () => Number(sql(`select count(*) from public.ai_proposals where kind = 'LESSON_REVISION' and target_id in (${inList(lessonIds)}) and created_at >= ${quote(started)}`)) >= 1, 30)
-  );
-
-  // Review, Publish, Next: the next lesson whose changes wait.
-  await page.waitForSelector('[data-testid=apply-improvement]', { timeout: 90000 });
-  await page.click('[data-testid=apply-improvement]');
-  const next = page.locator('[data-testid=notice-next]');
-  const hasNext = await next.waitFor({ timeout: 30000 }).then(() => true, () => false);
-  if (hasNext) {
-    const here = page.url();
-    await Promise.all([page.waitForURL((url) => url.toString() !== here, { timeout: 30000 }), next.click()]);
-    await page.waitForSelector('[data-testid=queue-at]', { timeout: 30000 });
-    check('Next opens the next lesson, counted in the pass', /Lesson 2 of \d+/.test(await page.locator('[data-testid=queue-at]').innerText()), await page.locator('[data-testid=queue-at]').innerText());
-  } else check('Next after Publish (one lesson only: nothing next)', true);
-
-  // The learner's lesson, published: their question changed it.
-  const task1 = usedBy(changeIt).split(',')[0];
-  if (status(changeIt) !== 'RESOLVED') {
-    await page.goto(`${BASE}/admin/courses/${courseId}/lessons/${lesson1}/improvements?i=${task1}`);
-    await page.waitForSelector('[data-testid=apply-improvement]', { timeout: 90000 });
-    await page.click('[data-testid=apply-improvement]');
-    await page.locator('[data-testid=improvements-notice]').waitFor({ timeout: 30000 });
-  }
   check('published, the learner’s question is done', await waitFor(page, () => status(changeIt) === 'RESOLVED', 30));
+  check('with every lesson published, the round is over', await waitFor(page, () => sql(`select count(*) from public.ai_proposals where kind = 'FEEDBACK_ROUND' and status = 'OPEN' and target_id = ${quote(versionId)}`) === '0', 30));
 
   // The learner's next visit: what happened to their feedback, once.
   await learnerPage.goto(`${BASE}/l/course/${learnerToken}`);

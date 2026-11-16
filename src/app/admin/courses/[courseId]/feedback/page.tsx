@@ -6,7 +6,7 @@ import AdminButton from '../../../components/ui/AdminButton';
 import AdminSectionCard from '../../../components/ui/AdminSectionCard';
 import UrlFilterSelect from '../../../components/ui/UrlFilterSelect';
 import FeedbackList from '../../../components/feedback/FeedbackList';
-import SortFeedbackButton from '../../../components/feedback/SortFeedbackButton';
+import ImproveButton from '../../../components/feedback/ImproveButton';
 import { isAiConfigured } from '@/lib/ai';
 import { feedbackShow } from '../../../components/feedback/feedback-view';
 import ImprovementsList from '../../../components/improvements/ImprovementsList';
@@ -120,7 +120,7 @@ export default async function CourseFeedbackPage({ params, searchParams }: { par
           title={t('title')}
           action={
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-              {group && group !== OWN ? null : <SortFeedbackButton courseId={courseId} versions={sortable.map((version) => ({ id: version.id, label: version.label }))} />}
+              {group && group !== OWN ? null : <ImproveButton courseId={courseId} versions={sortable.map((version) => ({ id: version.id, label: version.label }))} />}
               <AdminButton
                 href={`/admin/api/feedback-export?course=${courseId}${group ? `&group=${group}` : ''}`}
                 download

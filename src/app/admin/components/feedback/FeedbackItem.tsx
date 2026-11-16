@@ -42,6 +42,7 @@ export default function FeedbackItem({
   item,
   canWork,
   canDelete,
+  improves = false,
   roster = null,
 }: {
   item: FeedbackItemView;
@@ -49,6 +50,8 @@ export default function FeedbackItem({
   canWork: boolean;
   /** Delete (Lessons "Can edit"). */
   canDelete: boolean;
+  /** AI works here: lessons change through the list's Improve, so Use (one note into its lesson's improvement) moves into the menu. */
+  improves?: boolean;
   /** The roster to link it to, when it isn't on its learner's current link (the group's Feedback tab). */
   roster?: FeedbackRoster | null;
 }) {
@@ -122,6 +125,8 @@ export default function FeedbackItem({
 
   const menu: AdminMenuItem[] = [
     ...(canWork ? [open ? { label: t('markDone'), onSelect: () => setDone(true) } : { label: t('reopen'), onSelect: () => setDone(false) }] : []),
+    // Where AI works, lessons change through the list's Improve; using one note on its own is the rare way.
+    ...(improves && canWork && open && !task ? [{ label: t('use'), onSelect: use }] : []),
     ...(roster ? [{ label: t('linkToLearner'), onSelect: () => setLinking(true) }] : []),
     ...(canDelete ? [{ label: t('delete'), danger: true, onSelect: () => setConfirmDelete(true) }] : []),
   ];
@@ -211,7 +216,7 @@ export default function FeedbackItem({
             <Link href={item.improvementsHref ? `${item.improvementsHref}?i=${task.id}` : `/admin/tasks/${task.id}`} className={styles.itemAction}>
               <TbListCheck size={15} aria-hidden /> {t('used', { status: t(`taskStatus.${task.status}`) })}
             </Link>
-          ) : open ? (
+          ) : open && !improves ? (
             <button type="button" className={`${styles.itemAction} ${styles.itemActionPrimary}`} onClick={use} disabled={pending} data-testid="feedback-use">
               <TbCheck size={15} aria-hidden /> {t('use')}
             </button>

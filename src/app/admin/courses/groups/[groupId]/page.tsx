@@ -28,7 +28,7 @@ import { TASK_ENTITY_TYPE, TASK_KIND, groupTaskLaneId, listTasksForGroup } from 
 import AdminButton from '../../../components/ui/AdminButton';
 import AdminNotice from '../../../components/ui/AdminNotice';
 import AdminSectionCard from '../../../components/ui/AdminSectionCard';
-import SortFeedbackButton from '../../../components/feedback/SortFeedbackButton';
+import ImproveButton from '../../../components/feedback/ImproveButton';
 import { isAiConfigured } from '@/lib/ai';
 import AdminTabs from '../../../components/ui/AdminTabs';
 import AdminTextareaField from '../../../components/ui/AdminTextareaField';
@@ -310,7 +310,7 @@ export default async function GroupDetailPage({ params, searchParams }: { params
             title=""
             action={
               <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                {copy && canEditCopy && canWork && aiEnabled ? <SortFeedbackButton courseId={group.course.id} versions={[{ id: copy.id, label: '' }]} /> : null}
+                {copy && canEditCopy && canWork && aiEnabled ? <ImproveButton courseId={group.course.id} versions={[{ id: copy.id, label: '' }]} /> : null}
                 <AdminButton href={`/admin/api/feedback-export?group=${group.id}`} download size="compact" tone="secondary" data-testid="feedback-export">
                   {t('feedback.export')}
                 </AdminButton>

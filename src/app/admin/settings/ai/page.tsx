@@ -93,7 +93,9 @@ export default async function AiSettingsPage() {
           ? { on: true, warning: false, text: usedUp ? t('plan.inUseTopUp') : t('plan.inUse') }
           : reason === 'cap'
             ? { on: false, warning: true, text: t(allowance?.forTrial ? 'plan.usedUpTrial' : 'plan.usedUp') }
-            : { on: false, warning: false, text: t('plan.off') };
+            : allowance?.once && usedUp
+              ? { on: false, warning: false, text: t('plan.usedUpOnce') }
+              : { on: false, warning: false, text: t('plan.off') };
 
   return (
     <SettingsFrame active="ai" title={t('title')}>
@@ -113,9 +115,11 @@ export default async function AiSettingsPage() {
               <UsageBar
                 label={t('plan.title')}
                 percent={percent}
-                money={t(allowance.forTrial ? 'plan.moneyTrial' : 'plan.money', { spent: usd(allowance.spentMicros, locale, t), cap: usd(capMicros, locale, t) })}
+                money={t(allowance.once ? 'plan.moneyOnce' : allowance.forTrial ? 'plan.moneyTrial' : 'plan.money', { spent: usd(allowance.spentMicros, locale, t), cap: usd(capMicros, locale, t) })}
                 detail={
-                  allowance.drafts && allowance.forTrial
+                  allowance.drafts && allowance.once
+                    ? t('plan.draftsOnce', { drafts: allowance.drafts })
+                    : allowance.drafts && allowance.forTrial
                     ? t('plan.draftsTrial', { drafts: allowance.drafts })
                     : allowance.drafts
                     ? t('plan.drafts', {

@@ -639,7 +639,8 @@ export type FeedbackOutcome = { id: string; lessonId: string; quote: string; out
 
 /**
  * Someone's feedback (`where`: a learner's, or an instructor's notes) that, since `since`, changed
- * its lesson (done, and the lesson published again after they wrote it) or got a reply. The newest
+ * its lesson (done, and the lesson published again after they wrote it; a note that was answered
+ * with a reply only when a change was made for it) or got a reply. The newest
  * first, at most 10; only on these lessons when given (what they can read).
  */
 export async function feedbackOutcomesSince(where: Prisma.CurriculumCommentWhereInput, since: Date, lessonIds?: string[]): Promise<FeedbackOutcome[]> {
@@ -667,10 +668,17 @@ export async function feedbackOutcomesSince(where: Prisma.CurriculumCommentWhere
       lesson: { select: { publishedRevision: true } },
     },
   });
+  // A note only answered with a reply, on a lesson that was published again for other feedback: it
+  // got a reply, it didn't change the lesson. Changed: a change to the lesson was made for it.
+  const answered = rows.filter((row) => row.adminResponse).map((row) => row.id);
+  const made = answered.length
+    ? await prisma.lessonChange.findMany({ where: { OR: [{ commentIds: { hasSome: answered } }, { resolvedCommentIds: { hasSome: answered } }] }, select: { commentIds: true, resolvedCommentIds: true } })
+    : [];
+  const changedFor = new Set(made.flatMap((change) => [...change.commentIds, ...change.resolvedCommentIds]));
   return rows.flatMap((row): FeedbackOutcome[] => {
     const view = toViewerComment(row);
     const quote = row.body.replace(/\s+/g, ' ').slice(0, 120);
-    if (view.lessonChanged) return [{ id: row.id, lessonId: row.lessonId, quote, outcome: 'changed' }];
+    if (view.lessonChanged && (!row.adminResponse || changedFor.has(row.id))) return [{ id: row.id, lessonId: row.lessonId, quote, outcome: 'changed' }];
     if (row.adminResponse && row.adminRespondedAt && row.adminRespondedAt > since) return [{ id: row.id, lessonId: row.lessonId, quote, outcome: 'replied' }];
     return [];
   });

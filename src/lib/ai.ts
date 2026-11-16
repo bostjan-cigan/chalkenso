@@ -287,7 +287,8 @@ async function sendRecorded(
     capSince: key.capSince ?? null,
   });
   if (!hold) {
-    throw unavailable('cap');
+    // A one-time allowance that just ran out isn't coming back next month: the plan's line, not the cap's.
+    throw unavailable(key.capOnce ? 'plan' : 'cap');
   }
   let message: Awaited<ReturnType<typeof send>>;
   try {

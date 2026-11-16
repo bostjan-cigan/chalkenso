@@ -65,7 +65,13 @@ try {
   check('inbox badges instructor notes', inbox.includes('>Note<'));
   const card = page.locator('[data-testid=open-comments] [id^=comment-]', { hasText: 'cheat sheet of status codes' }).first();
   // Use puts it in its lesson's improvement (one per lesson); the list stays, to go through the rest
-  await card.locator('[data-testid=feedback-use]').click();
+  // (with AI on, Use is in the note's menu: lessons change through the list's Improve)
+  const useItem = page.getByRole('menuitem', { name: 'Use', exact: true });
+  for (let attempt = 0; attempt < 5 && !(await useItem.isVisible()); attempt += 1) {
+    await card.getByRole('button', { name: 'Feedback actions' }).click();
+    await useItem.waitFor({ timeout: 3000 }).catch(() => {});
+  }
+  await useItem.click();
   const usedLink = card.locator('a', { hasText: 'In the lesson’s improvement' });
   await usedLink.waitFor({ timeout: 15000 });
   check('Use keeps the list and links the lesson’s improvement', !page.url().includes('/improvements'));

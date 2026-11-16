@@ -139,6 +139,8 @@ try {
   await a.click('[data-testid=keep-edited]');
   check('the edited suggestion is kept as yours', ((await a.locator('[data-testid=inline-change]').first().getAttribute('aria-label')) ?? '').includes('Your version'));
   // Saving is the review's last step.
+  // Nothing is kept until it's said: keep them all, then publish.
+  await (async (p) => { const all = p.locator('[data-testid=keep-all]'); if (await all.count()) await all.click(); })(a);
   await a.click('[data-testid=apply-improvement]');
   await a.waitForSelector('[data-testid=see-what-changed]', { timeout: 15000 });
   check('AI revision saved, as edited', sql(`select markdown_content from courses.lessons where id = '${lessonUrl.split('/').pop()}'`).includes('count the rows it returns'));

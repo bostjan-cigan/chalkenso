@@ -409,7 +409,8 @@
         "removed": "Odstranjeno: „{text}“",
         "rewritten": "Prepisano: „{text}“",
         "image": "Nova slika"
-      }
+      },
+      "keepAll": "Obdrži vse"
     },
     "notes": {
       "row": "Opombe za AI",

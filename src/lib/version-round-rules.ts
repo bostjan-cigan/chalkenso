@@ -88,6 +88,19 @@ export function cleanRound(raw: RawRound, notes: RoundNote[], lessons: RoundLess
   };
 }
 
+/** Keep or skip for each change decided on the round's page (`<draft>:<change>`). */
+export type RoundDecisions = Record<string, 'keep' | 'skip'>;
+
+/** The page's decisions made safe: short keys, keep or skip only, capped. */
+export function cleanDecisions(value: unknown): RoundDecisions {
+  const out: RoundDecisions = {};
+  if (!value || typeof value !== 'object') return out;
+  for (const [key, decision] of Object.entries(value as Record<string, unknown>).slice(0, 3000)) {
+    if (key.length <= 80 && (decision === 'keep' || decision === 'skip')) out[key] = decision;
+  }
+  return out;
+}
+
 /** Left-out notes without a reply the person confirmed or wrote: they stay open after Approve. */
 export function leftToAnswer(round: RoundPlan): number {
   return round.leaveOut.filter((item) => !item.reply.trim()).length;

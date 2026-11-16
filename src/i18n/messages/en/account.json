@@ -471,7 +471,10 @@
         "usedUpTrial": "Used up for your free group",
         "moneyTrial": "{spent} of {cap} for your free group",
         "draftsTrial": "About {drafts, plural, one {# draft} other {# drafts}} for your free group.",
-        "spentTrial": "Spent in your free group"
+        "spentTrial": "Spent in your free group",
+        "usedUpOnce": "First round used",
+        "moneyOnce": "{spent} of {cap} for your first round",
+        "draftsOnce": "About {drafts, plural, one {# draft} other {# drafts}}, once. Then AI works in your Claude."
       },
       "installation": {
         "title": "This installation’s key"

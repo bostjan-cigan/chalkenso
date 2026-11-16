@@ -36,8 +36,9 @@ function withParams(base: string, params: Record<string, string | null>) {
 
 /**
  * Feedback as one list, for a group, a course or a lesson: Open (anything not done yet), To change
- * (the changes being made, as tasks: `changes`), and Done. Each item is a closed card with Reply, Fix
- * the lesson, Make a task and Done (`FeedbackItem`).
+ * (the changes being made, as tasks: `changes`), and Done. Each item is a closed card with Reply
+ * (`FeedbackItem`). Where AI works, lessons change through the page's Improve; without it, a note
+ * is used one by one, or several picked at once.
  */
 export default async function FeedbackList({
   viewer,
@@ -110,6 +111,7 @@ export default async function FeedbackList({
         item={item}
         canWork={canWorkOnFeedback(viewer, ref)}
         canDelete={canWorkOnFeedback(viewer, ref, 'comments', [Permission.DELETE])}
+        improves={aiEnabled}
         roster={roster && item.needsLink && item.groupId === roster.groupId ? roster : null}
       />
     );
@@ -161,7 +163,8 @@ export default async function FeedbackList({
             </div>
           ) : (
             // Open feedback, lesson by lesson (in course order, a copy's after the course's), to pick many at once.
-            <FeedbackSelection selectable={items.filter((item) => item.stage === 'new' && canWorkOnFeedback(viewer, { courseId: item.courseId, groupIds: item.groupIds })).map((item) => item.id)} aiEnabled={aiEnabled}>
+            // With AI, lessons change through Improve (all new feedback at once): nothing to pick here.
+            <FeedbackSelection selectable={aiEnabled ? [] : items.filter((item) => item.stage === 'new' && canWorkOnFeedback(viewer, { courseId: item.courseId, groupIds: item.groupIds })).map((item) => item.id)} aiEnabled={aiEnabled}>
               <div className={styles.list} data-testid="open-comments">
                 {byLesson(items).map((lesson) => (
                   <section key={lesson.key} className={styles.lessonGroup} data-testid="feedback-lesson">

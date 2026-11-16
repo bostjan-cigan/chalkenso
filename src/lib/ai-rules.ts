@@ -14,9 +14,9 @@ export type AiKeySource = 'organization' | 'hosted' | 'installation';
 export type AiUnavailableReason = 'no-key' | 'cap' | 'key-invalid' | 'paused' | 'plan';
 /**
  * A key and who pays; on the platform's key, also its cap in US cents (null: no cap) and since when
- * it counts (`capSince`; null or absent: this calendar month).
+ * it counts (`capSince`; null or absent: this calendar month); `capOnce`: the cap never renews.
  */
-export type AiKeyChoice = { apiKey: string; source: AiKeySource; capCents?: number | null; capSince?: Date | null };
+export type AiKeyChoice = { apiKey: string; source: AiKeySource; capCents?: number | null; capSince?: Date | null; capOnce?: boolean };
 export type AiKeyFallback = { key: AiKeyChoice } | { key: null; reason: AiUnavailableReason };
 
 /**
@@ -35,7 +35,9 @@ export function chooseAiKey(
 
 /**
  * The platform's key as an edition's fallback: only where it is `enabled`, under this month's cap
- * (`spentMicros` is the spend within it), then on top-ups while any are left (`topUpMicros`).
+ * (`spentMicros` is the spend within it), then on top-ups while any are left (`topUpMicros`). A
+ * one-time allowance (`once`: the cap never renews) has no top-ups, and once spent AI in the app
+ * isn't part of the plan any more ('plan', not 'cap': nothing comes back next month).
  */
 export function hostedDecision(input: {
   enabled: boolean;
@@ -44,8 +46,10 @@ export function hostedDecision(input: {
   capCents: number | null;
   capSince?: Date | null;
   topUpMicros?: number;
+  once?: boolean;
 }): AiKeyFallback {
   if (!input.enabled || !input.platformKey) return { key: null, reason: 'no-key' };
+  if (input.once && capReached(input.spentMicros, input.capCents)) return { key: null, reason: 'plan' };
   if (capReached(input.spentMicros, input.capCents) && !((input.topUpMicros ?? 0) > 0)) return { key: null, reason: 'cap' };
-  return { key: { apiKey: input.platformKey, source: 'hosted', capCents: input.capCents, capSince: input.capSince ?? null } };
+  return { key: { apiKey: input.platformKey, source: 'hosted', capCents: input.capCents, capSince: input.capSince ?? null, ...(input.once ? { capOnce: true } : {}) } };
 }

@@ -471,7 +471,10 @@
         "usedUpTrial": "Porabljeno za brezplačno skupino",
         "moneyTrial": "{spent} od {cap} za brezplačno skupino",
         "draftsTrial": "Približno {drafts, plural, one {# osnutek} two {# osnutka} few {# osnutki} other {# osnutkov}} za brezplačno skupino.",
-        "spentTrial": "Porabljeno v brezplačni skupini"
+        "spentTrial": "Porabljeno v brezplačni skupini",
+        "usedUpOnce": "Prvi krog porabljen",
+        "moneyOnce": "{spent} od {cap} za prvi krog",
+        "draftsOnce": "Približno {drafts, plural, one {# osnutek} two {# osnutka} few {# osnutki} other {# osnutkov}}, enkrat. Potem AI deluje v vašem Claudu."
       },
       "installation": {
         "title": "Ključ te namestitve"
