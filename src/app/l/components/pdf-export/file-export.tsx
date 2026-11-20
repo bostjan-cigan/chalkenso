@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import type { Style } from '@react-pdf/types';
-import { exportName, lessonNumber, type ExportDocument } from './export-data';
+import { exportName, fetchLessonImage, lessonNumber, type ExportDocument } from './export-data';
+import type { LessonSource } from '../lesson-source';
 
 /**
  * The lessons as a PDF file, made in the browser with @react-pdf/renderer (loaded only when someone
@@ -38,17 +39,17 @@ function rgb(color: string, tint = 1) {
 }
 
 /** An image as PNG data the PDF can hold (it reads PNG and JPEG only), or null when it can't be read. */
-async function imageData(src: string): Promise<{ data: string; width: number; height: number } | null> {
+async function imageData(blob: Blob | null): Promise<{ data: string; width: number; height: number } | null> {
   let local = '';
   try {
-    // Fetched afresh: the copy the page already shows was loaded without CORS and can't be read.
-    const response = await fetch(src, { cache: 'no-store' });
-    if (!response.ok) return null;
-    local = URL.createObjectURL(await response.blob());
+    if (!blob) return null;
+    local = URL.createObjectURL(blob);
     const img = new Image();
     img.src = local;
     await img.decode();
-    const scale = Math.min(1, 1600 / (img.naturalWidth || 1));
+    // A drawing (SVG) is sharp at any size: drawn large. A photo is only ever made smaller.
+    const fit = 1600 / (img.naturalWidth || 1);
+    const scale = blob.type.includes('svg') ? fit : Math.min(1, fit);
     const canvas = document.createElement('canvas');
     canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
     canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
@@ -74,7 +75,7 @@ function hasBlockChild(node: Element) {
 /** Text as HTML shows it: runs of white space are one space. */
 const collapse = (text: string) => text.replace(/\s+/g, ' ');
 
-export async function downloadLessonsPdf(doc: ExportDocument) {
+export async function downloadLessonsPdf(doc: ExportDocument, source: LessonSource, step: (reached: number, next: number) => void = () => {}) {
   const pdf = await import('@react-pdf/renderer');
   const { Document, Page, Text, View, Image: PdfImage, Link, Font, StyleSheet } = pdf;
 
@@ -136,13 +137,19 @@ export async function downloadLessonsPdf(doc: ExportDocument) {
   const parser = new DOMParser();
   const trees = doc.lessons.map((lesson) => parser.parseFromString(lesson.html, 'text/html').body);
   const images = new Map<string, Awaited<ReturnType<typeof imageData>>>();
+  // Images take the export from 45% to 65%; laying the PDF out, the rest.
+  const imageCount = new Set(trees.flatMap((tree) => Array.from(tree.querySelectorAll('img'), (img) => img.getAttribute('src')).filter(Boolean))).size;
+  let imagesDone = 0;
   await Promise.all(
-    trees.flatMap((tree) =>
+    trees.flatMap((tree, index) =>
       Array.from(tree.querySelectorAll('img')).map(async (img) => {
         const src = img.getAttribute('src');
         if (src && !images.has(src)) {
           images.set(src, null);
-          images.set(src, await imageData(new URL(src, window.location.href).href));
+          // Fetched afresh: the copy the page already shows can't be read by a script.
+          images.set(src, await imageData(await fetchLessonImage(source, doc.lessons[index].id, new URL(src, window.location.href).href)));
+          imagesDone += 1;
+          step(45 + (20 * imagesDone) / imageCount, 45 + (20 * Math.min(imageCount, imagesDone + 1)) / imageCount);
         }
       })
     )
@@ -361,6 +368,7 @@ export async function downloadLessonsPdf(doc: ExportDocument) {
     </Document>
   );
 
+  step(65, 97);
   const blob = await pdf.pdf(tree).toBlob();
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');

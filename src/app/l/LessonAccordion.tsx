@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState, type MouseEvent } from 'react';
-import { FiChevronDown, FiDownload } from 'react-icons/fi';
+import { FiChevronDown } from 'react-icons/fi';
 import LoadingFillCircle from '@/components/LoadingFillCircle';
 import { lessonAnchorId } from '@/lib/lesson-wikilinks';
 import { cn } from '@/utils/cn';
@@ -11,7 +11,9 @@ import LessonCommentLayer, { type LessonCommentView } from './components/LessonC
 import { OPEN_NOTE_EVENT, type OpenNoteDetail } from './components/FeedbackOutcomes';
 import type { ArcGroup } from './components/CourseAccessView';
 import type { LessonSource } from './components/lesson-source';
-import { fetchLessonHtml, loadLessons, type ExportLesson } from './components/pdf-export/export-data';
+import { exportLessonsPdf, fetchLessonHtml, type ExportLesson } from './components/pdf-export/export-data';
+import PdfExportButton from './components/pdf-export/PdfExportButton';
+import { useExportProgress } from './components/pdf-export/use-export-progress';
 import { learnerUi } from '@/extensions/learner';
 import styles from './access.module.css';
 
@@ -179,6 +181,7 @@ export default function LessonAccordion({
   /** What is being made into a PDF: a lesson's id, or 'course'. */
   const [exporting, setExporting] = useState<string | null>(null);
   const [exportFailed, setExportFailed] = useState(false);
+  const exportProgress = useExportProgress();
 
   /** One lesson as a PDF, or (no lesson) the whole course in the outline's order, its sections named. */
   async function exportPdf(only: LessonAccordionItem | null) {
@@ -190,14 +193,13 @@ export default function LessonAccordion({
         ? [only]
         : [...lessons, ...visibleArcGroups.flatMap((arc) => arc.lessons.map((lesson, index) => ({ ...lesson, arcTitle: index === 0 ? arc.title : null })))];
       const known = Object.fromEntries(Object.entries(loadedLessonsById).map(([id, loaded]) => [id, loaded.html ?? undefined]));
-      const doc = { ...pdfExport, whole: !only, lessons: await loadLessons(source, picked, known) };
-      // The PDF library is only loaded for someone who exports.
-      await (await import('./components/pdf-export/file-export')).downloadLessonsPdf(doc);
+      await exportLessonsPdf(source, { ...pdfExport, whole: !only }, picked, known, exportProgress.step);
     } catch (error) {
       console.error(error);
       setExportFailed(true);
     } finally {
       setExporting(null);
+      exportProgress.stop();
     }
   }
 
@@ -239,15 +241,14 @@ export default function LessonAccordion({
           <div id={contentId} className={styles.lessonBody}>
             {pdfExport && ready ? (
               <div className={styles.lessonTools}>
-                <button
-                  type="button"
-                  className={styles.exportButton}
+                <PdfExportButton
+                  label={t('exportLesson')}
+                  working={t('exporting')}
+                  percent={exporting === lesson.id ? (exportProgress.percent ?? 0) : null}
                   disabled={exporting !== null}
                   onClick={() => void exportPdf(lesson)}
-                  data-testid="lesson-pdf"
-                >
-                  <FiDownload aria-hidden /> {exporting === lesson.id ? t('exporting') : t('exportLesson')}
-                </button>
+                  testId="lesson-pdf"
+                />
               </div>
             ) : null}
             {signals && ready && LessonStart ? <LessonStart lessonId={lesson.id} /> : null}
@@ -306,15 +307,14 @@ export default function LessonAccordion({
     <section className={styles.outline} onClick={handleLessonLinkClick}>
       {pdfExport ? (
         <div className={styles.exportBar}>
-          <button
-            type="button"
-            className={styles.exportButton}
+          <PdfExportButton
+            label={t('exportCourse')}
+            working={t('exporting')}
+            percent={exporting === 'course' ? (exportProgress.percent ?? 0) : null}
             disabled={exporting !== null}
             onClick={() => void exportPdf(null)}
-            data-testid="course-pdf"
-          >
-            <FiDownload aria-hidden /> {exporting === 'course' ? t('exporting') : t('exportCourse')}
-          </button>
+            testId="course-pdf"
+          />
           {exportFailed ? <p className={styles.lessonError}>{t('exportError')}</p> : null}
         </div>
       ) : null}

@@ -356,6 +356,18 @@
   opacity: 0.6;
 }
 
+/* While its PDF is made: it fills up from the left, as far as the export is. */
+.exportButton[aria-busy='true'] {
+  opacity: 1;
+  color: rgb(var(--foreground-rgb));
+  font-variant-numeric: tabular-nums;
+  background: linear-gradient(
+    to right,
+    rgba(var(--foreground-rgb), 0.1) var(--export-progress, 0%),
+    transparent var(--export-progress, 0%)
+  );
+}
+
 .lessonLoading,
 .lessonError {
   margin-top: 1rem;
