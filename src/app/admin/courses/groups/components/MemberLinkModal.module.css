@@ -138,6 +138,11 @@
   font-family: ui-monospace, monospace;
 }
 
+/* The same link at this installation's own address, under the organisation's. */
+.inlineAccessUrlAlso {
+  color: var(--text-muted);
+}
+
 /* A person's name in these rows (an instructor, an invite): the app's own type, not the links' monospace. */
 .inlineAccessName {
   margin: 0;

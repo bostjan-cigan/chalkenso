@@ -276,3 +276,20 @@ export async function deleteVersionAction(formData: FormData) {
   revalidateCourse(courseId);
   redirect(`${coursePath(courseId)}?status=version-deleted`);
 }
+
+/**
+ * Lets learners save this version's lessons as a PDF, or stops it. Groups reading the version follow
+ * it unless they have their own answer. The course's own versions only: a group's copy follows the
+ * version it was copied from.
+ */
+export async function setVersionPdfExportAction(courseId: string, versionId: string, enabled: boolean): Promise<{ ok: boolean }> {
+  await requireCourseAccess(courseId, [Permission.WRITE]);
+  const version = await loadVersion(courseId, versionId);
+  if (!version || version.ownerGroupId || typeof enabled !== 'boolean') {
+    return { ok: false };
+  }
+  await prisma.curriculumVersion.update({ where: { id: version.id }, data: { pdfExport: enabled } });
+  revalidateCourse(courseId, versionId);
+  revalidatePath('/admin/courses/groups', 'layout');
+  return { ok: true };
+}

@@ -1368,3 +1368,18 @@ export async function deleteGroupAction(formData: FormData) {
 
   redirect('/admin/courses/groups?status=group-deleted');
 }
+
+/**
+ * A group's own answer to PDF export for its learners: `inherit` follows its curriculum version
+ * again. A course setting, like the group's other settings: edit rights on its course.
+ */
+export async function setGroupPdfExportAction(groupId: string, value: 'inherit' | 'on' | 'off'): Promise<{ ok: boolean }> {
+  const group = groupId ? await prisma.courseGroup.findUnique({ where: { id: groupId }, select: { id: true, courseId: true } }) : null;
+  await requireCrmAccess((candidate) => Boolean(group) && canOnCourse(candidate, group!.courseId, [Permission.WRITE]));
+  if (!group || !['inherit', 'on', 'off'].includes(value)) {
+    return { ok: false };
+  }
+  await prisma.courseGroup.update({ where: { id: group.id }, data: { pdfExport: value === 'inherit' ? null : value === 'on' } });
+  revalidateGroupPaths(group.id);
+  return { ok: true };
+}

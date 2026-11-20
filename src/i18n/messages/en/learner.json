@@ -38,7 +38,11 @@
     "loading": "Loading lesson content",
     "loadError": "Could not load this lesson right now. Please try again.",
     "copyCode": "Copy code",
-    "copied": "Copied"
+    "copied": "Copied",
+    "exportCourse": "Download PDF",
+    "exportLesson": "PDF",
+    "exporting": "Preparing PDF…",
+    "exportError": "Could not prepare the PDF. Please try again."
   },
   "annotations": {
     "showFeedback": "Show feedback comments",

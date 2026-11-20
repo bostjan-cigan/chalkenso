@@ -38,7 +38,11 @@
     "loading": "Nalaganje vsebine lekcije",
     "loadError": "Lekcije trenutno ni mogoče naložiti. Poskusite znova.",
     "copyCode": "Kopiraj kodo",
-    "copied": "Kopirano"
+    "copied": "Kopirano",
+    "exportCourse": "Prenesi PDF",
+    "exportLesson": "PDF",
+    "exporting": "Pripravljam PDF …",
+    "exportError": "PDF-ja ni bilo mogoče pripraviti. Poskusite znova."
   },
   "annotations": {
     "showFeedback": "Prikaži povratne informacije",

@@ -11,6 +11,7 @@ import ActionNotice from '../../components/ui/ActionNotice';
 import { useActionNotice } from '../../components/ui/useActionNotice';
 import AccessExpiryPicker from '../groups/components/AccessExpiryPicker';
 import AccessLinkModalPortal from '../groups/components/AccessLinkModalPortal';
+import LearnerLinkAddress from '../groups/components/LearnerLinkAddress';
 import modalStyles from '../groups/components/MemberLinkModal.module.css';
 import {
   createPreviewLinkAction,
@@ -155,7 +156,8 @@ export default function VersionPreviewLinksPanel({
             ) : null}
           </p>
           {isLive ? (
-            <p className={modalStyles.inlineAccessUrl}>{previewUrl(link, learnerLinkTemplate, origin)}</p>
+            // One-time links always stay here (see `previewUrl`).
+            <LearnerLinkAddress token={link.token} template={link.oneTime ? null : learnerLinkTemplate} origin={origin} />
           ) : null}
           <p className={modalStyles.inlineAccessMeta}>{describeLink(link, status)}</p>
           {copiedId === link.id ? (

@@ -148,7 +148,12 @@
       "ownCopyOf": "Own copy of {version}",
       "ownCopyOfCourse": "Own copy of the course",
       "closed": "Closed",
-      "groupLessons": "The group’s lessons"
+      "groupLessons": "The group’s lessons",
+      "pdfExport": "PDF export",
+      "pdfInheritOn": "Same as lessons · On",
+      "pdfInheritOff": "Same as lessons · Off",
+      "pdfOn": "On for this group",
+      "pdfOff": "Off for this group"
     }
   },
   "links": {
@@ -188,6 +193,7 @@
     "unattached": "{count, plural, one {# piece} other {# pieces}} of feedback from learners no longer on the roster.",
     "moveFeedback": "Move feedback…",
     "copyAll": "Copy all links",
+    "linkAddress": "Link address",
     "makeAll": "Make links for all learners",
     "active": "Active · expires {date}",
     "lastOpened": "last opened {date}",

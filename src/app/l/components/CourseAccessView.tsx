@@ -80,6 +80,8 @@ interface CourseAccessViewProps {
   learnerSignals?: { token: string; state: unknown } | null;
   /** What happened to this person's feedback since they last looked (a personal link's). */
   outcomes?: { token: string; items: FeedbackOutcome[]; lessons: Array<{ id: string; position: number }> } | null;
+  /** Readers may save the lessons as a PDF (the group's or its curriculum's switch; the team's preview always). */
+  pdfExport?: boolean;
 }
 
 /** The client components' words: the lessons, and the comments, notes and Ask AI on them. */
@@ -219,6 +221,7 @@ export default async function CourseAccessView({
   preparedBy = null,
   learnerSignals = null,
   outcomes = null,
+  pdfExport = false,
 }: CourseAccessViewProps) {
   const t = await getTranslations({ locale, namespace: 'learner.course' });
   const hasLessons = lessons.length > 0 && Boolean(source) && !restrictedNotice;
@@ -309,6 +312,7 @@ export default async function CourseAccessView({
               source={source}
               commenting={commenting}
               signals={signals}
+              pdfExport={pdfExport ? { courseTitle, author: preparedBy } : null}
             />
           </CommentsVisibilityProvider>
         ) : (

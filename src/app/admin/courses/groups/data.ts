@@ -150,8 +150,9 @@ export async function getGroupDetail(groupId: string) {
       },
       curriculumVersionId: true,
       curriculumVersion: {
-        select: { id: true, label: true, status: true, ownerGroupId: true },
+        select: { id: true, label: true, status: true, ownerGroupId: true, pdfExport: true },
       },
+      pdfExport: true,
       feedbackDriven: true,
       groupCurriculum: {
         select: {
@@ -159,7 +160,7 @@ export async function getGroupDetail(groupId: string) {
           label: true,
           archivedAt: true,
           createdAt: true,
-          baseVersion: { select: { id: true, label: true } },
+          baseVersion: { select: { id: true, label: true, pdfExport: true } },
           _count: { select: { lessons: true } },
         },
       },

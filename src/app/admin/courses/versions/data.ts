@@ -335,6 +335,7 @@ export async function getVersionDetail(courseId: string, versionId: string) {
       status: true,
       publishedAt: true,
       archivedAt: true,
+      pdfExport: true,
       ownerGroup: { select: { id: true, name: true } },
       baseVersion: { select: { id: true, label: true } },
       _count: {

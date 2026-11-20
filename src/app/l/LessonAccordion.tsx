@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState, type MouseEvent } from 'react';
-import { FiChevronDown } from 'react-icons/fi';
+import { FiChevronDown, FiDownload } from 'react-icons/fi';
 import LoadingFillCircle from '@/components/LoadingFillCircle';
 import { lessonAnchorId } from '@/lib/lesson-wikilinks';
 import { cn } from '@/utils/cn';
@@ -10,7 +10,8 @@ import LessonContentHtml from './components/LessonContentHtml';
 import LessonCommentLayer, { type LessonCommentView } from './components/LessonCommentLayer';
 import { OPEN_NOTE_EVENT, type OpenNoteDetail } from './components/FeedbackOutcomes';
 import type { ArcGroup } from './components/CourseAccessView';
-import { buildLessonRequest, type LessonSource } from './components/lesson-source';
+import type { LessonSource } from './components/lesson-source';
+import { fetchLessonHtml, loadLessons, type ExportLesson } from './components/pdf-export/export-data';
 import { learnerUi } from '@/extensions/learner';
 import styles from './access.module.css';
 
@@ -54,6 +55,8 @@ interface LessonAccordionProps {
   commenting?: LessonCommenting | null;
   /** Show the edition's learner signals around each lesson (personal learner links only). */
   signals?: boolean;
+  /** Saving lessons as a PDF (one, or the whole course): when the group or its curriculum allows it. */
+  pdfExport?: { courseTitle: string; author: string | null } | null;
 }
 
 type LoadedLessonState = {
@@ -68,6 +71,7 @@ export default function LessonAccordion({
   source,
   commenting = null,
   signals = false,
+  pdfExport = null,
 }: LessonAccordionProps) {
   const t = useTranslations('learner.lessons');
   const [openLessonIds, setOpenLessonIds] = useState<string[]>([]);
@@ -95,35 +99,13 @@ export default function LessonAccordion({
     }));
 
     try {
-      const request = buildLessonRequest(source, lessonId);
-      const response = await fetch(request.url, {
-        cache: 'no-store',
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(request.body),
-      });
-
-      if (!response.ok) {
-        throw new Error('Unable to load lesson content.');
-      }
-
-      const payload = (await response.json()) as {
-        lesson?: {
-          html: string;
-        };
-      };
-
-      if (!payload.lesson?.html) {
-        throw new Error('Lesson content is unavailable.');
-      }
+      const html = await fetchLessonHtml(source, lessonId);
 
       setLoadedLessonsById((currentLessons) => ({
         ...currentLessons,
         [lessonId]: {
           error: null,
-          html: payload.lesson?.html ?? null,
+          html,
           status: 'ready',
         },
       }));
@@ -191,6 +173,34 @@ export default function LessonAccordion({
     });
   }
 
+  // Only show arc sections that actually have lessons assigned.
+  const visibleArcGroups = arcGroups.filter((arc) => arc.lessons.length > 0);
+
+  /** What is being made into a PDF: a lesson's id, or 'course'. */
+  const [exporting, setExporting] = useState<string | null>(null);
+  const [exportFailed, setExportFailed] = useState(false);
+
+  /** One lesson as a PDF, or (no lesson) the whole course in the outline's order, its sections named. */
+  async function exportPdf(only: LessonAccordionItem | null) {
+    if (!pdfExport || exporting) return;
+    setExporting(only ? only.id : 'course');
+    setExportFailed(false);
+    try {
+      const picked: ExportLesson[] = only
+        ? [only]
+        : [...lessons, ...visibleArcGroups.flatMap((arc) => arc.lessons.map((lesson, index) => ({ ...lesson, arcTitle: index === 0 ? arc.title : null })))];
+      const known = Object.fromEntries(Object.entries(loadedLessonsById).map(([id, loaded]) => [id, loaded.html ?? undefined]));
+      const doc = { ...pdfExport, whole: !only, lessons: await loadLessons(source, picked, known) };
+      // The PDF library is only loaded for someone who exports.
+      await (await import('./components/pdf-export/file-export')).downloadLessonsPdf(doc);
+    } catch (error) {
+      console.error(error);
+      setExportFailed(true);
+    } finally {
+      setExporting(null);
+    }
+  }
+
   const { LessonTag, LessonStart, LessonContent, LessonEnd } = learnerUi;
 
   function renderLesson(lesson: LessonAccordionItem) {
@@ -227,6 +237,19 @@ export default function LessonAccordion({
 
         {isOpen ? (
           <div id={contentId} className={styles.lessonBody}>
+            {pdfExport && ready ? (
+              <div className={styles.lessonTools}>
+                <button
+                  type="button"
+                  className={styles.exportButton}
+                  disabled={exporting !== null}
+                  onClick={() => void exportPdf(lesson)}
+                  data-testid="lesson-pdf"
+                >
+                  <FiDownload aria-hidden /> {exporting === lesson.id ? t('exporting') : t('exportLesson')}
+                </button>
+              </div>
+            ) : null}
             {signals && ready && LessonStart ? <LessonStart lessonId={lesson.id} /> : null}
             {loadedLesson?.status === 'ready' && loadedLesson.html ? (
               signals && LessonContent ? (
@@ -278,12 +301,23 @@ export default function LessonAccordion({
     );
   }
 
-  // Only show arc sections that actually have lessons assigned.
-  const visibleArcGroups = arcGroups.filter((arc) => arc.lessons.length > 0);
-
   // Same outline as the course page on /courses: numbered rows, arcs as plain headings.
   return (
     <section className={styles.outline} onClick={handleLessonLinkClick}>
+      {pdfExport ? (
+        <div className={styles.exportBar}>
+          <button
+            type="button"
+            className={styles.exportButton}
+            disabled={exporting !== null}
+            onClick={() => void exportPdf(null)}
+            data-testid="course-pdf"
+          >
+            <FiDownload aria-hidden /> {exporting === 'course' ? t('exporting') : t('exportCourse')}
+          </button>
+          {exportFailed ? <p className={styles.lessonError}>{t('exportError')}</p> : null}
+        </div>
+      ) : null}
       {lessons.length > 0 ? <ol className={styles.lessons}>{lessons.map(renderLesson)}</ol> : null}
 
       {visibleArcGroups.map((arc) => (

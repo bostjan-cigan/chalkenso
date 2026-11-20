@@ -14,6 +14,7 @@ import {
 import adminStyles from '@/app/admin/admin.module.css';
 import EditAccessLinkExpiryModal from './EditAccessLinkExpiryModal';
 import GroupAccessLinkModal from './GroupAccessLinkModal';
+import LearnerLinkAddress from './LearnerLinkAddress';
 import type { MemberLinkState } from './MemberLinkModal';
 import styles from './MemberLinkModal.module.css';
 import { useOrigin } from './use-origin';
@@ -94,7 +95,7 @@ export default function GroupAccessPanel({
       {activeLink ? (
         <div className={styles.inlineAccessRow}>
           <div className={styles.inlineAccessMain}>
-            <p className={styles.inlineAccessUrl}>{fullUrl}</p>
+            <LearnerLinkAddress token={activeLink.token} template={learnerLinkTemplate} origin={origin} />
             <p className={styles.inlineAccessMeta}>
               {t('groupLink.expires', { date: formatAccessDate(new Date(activeLink.expiresAt), locale) })}
               {' · '}

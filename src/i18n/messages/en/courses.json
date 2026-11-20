@@ -221,7 +221,8 @@
     "sections": "Sections",
     "versionName": "Version name",
     "improve": "Improve",
-    "improvementsOpen": "{count, plural, one {# improvement} other {# improvements}}"
+    "improvementsOpen": "{count, plural, one {# improvement} other {# improvements}}",
+    "pdfExport": "PDF export for learners"
   },
   "arcs": {
     "title": "Section title",

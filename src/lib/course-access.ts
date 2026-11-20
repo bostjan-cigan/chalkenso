@@ -112,6 +112,11 @@ export type AccessValidationResult =
        * learner (no answers, surveys or reading statistics).
        */
       instructor: { userId: string; name: string } | null;
+      /**
+       * Whether this link's readers may save the lessons as a PDF: the group's own answer, else its
+       * curriculum version's (off by default).
+       */
+      pdfExport: boolean;
       slackHandle: string | null;
       startsAt: Date | null;
     }
@@ -166,6 +171,7 @@ type AccessLinkRow = {
   startsAt: Date | null;
   endsAt: Date | null;
   slackHandle: string | null;
+  pdfExport: boolean;
   versionCourseId: string | null;
   organizationId: string | null;
   instructorId: string | null;
@@ -202,6 +208,9 @@ async function findAccessLink(token: string): Promise<AccessLinkRow | null> {
       g.starts_at AS "startsAt",
       g.ends_at AS "endsAt",
       g.slack_handle AS "slackHandle",
+      -- PDF export: the group's own answer, else the served version's (a group's own copy: the
+      -- version it was copied from).
+      COALESCE(g.pdf_export, CASE WHEN sv.owner_group_id IS NULL THEN sv.pdf_export ELSE bv.pdf_export END, false) AS "pdfExport",
       v.course_id AS "versionCourseId",
       c.organization_id AS "organizationId",
       u.id AS "instructorId",
@@ -214,6 +223,8 @@ async function findAccessLink(token: string): Promise<AccessLinkRow | null> {
     LEFT JOIN courses.course_group_members m ON m.id = l.member_id
     LEFT JOIN courses.course_groups g ON g.id = COALESCE(l.group_id, m.group_id)
     LEFT JOIN courses.curriculum_versions v ON v.id = l.curriculum_version_id
+    LEFT JOIN courses.curriculum_versions sv ON sv.id = COALESCE(l.curriculum_version_id, g.curriculum_version_id)
+    LEFT JOIN courses.curriculum_versions bv ON bv.id = sv.base_version_id
     LEFT JOIN courses.courses c ON c.id = CASE WHEN l.is_preview THEN v.course_id ELSE g.course_id END
     LEFT JOIN public.users u ON u.id = l.instructor_user_id
     WHERE l.token = ${token}
@@ -397,6 +408,7 @@ async function resolveLinkAccess(accessLink: AccessLinkRow, organizationId: stri
     memberId: accessLink.memberId,
     memberName: accessLink.memberName,
     instructor,
+    pdfExport: accessLink.pdfExport,
     slackHandle,
     startsAt,
     state: 'valid',
@@ -452,6 +464,7 @@ async function resolvePreviewAccess(accessLink: AccessLinkRow, organizationId: s
     memberId: null,
     memberName: null,
     instructor: null,
+    pdfExport: accessLink.pdfExport,
     slackHandle: null,
     startsAt: null,
     state: 'valid',

@@ -314,6 +314,48 @@
 
 /* Rendered markdown typography, code blocks and tables live in src/styles/markdown-content.module.css. */
 
+/* Saving as a PDF: quiet, at the right edge, above the outline and inside an open lesson. */
+.exportBar,
+.lessonTools {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.4rem;
+}
+
+.exportBar {
+  margin-bottom: -1.75rem;
+}
+
+.lessonTools {
+  padding-top: 0.75rem;
+}
+
+.exportButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.65rem;
+  border: 1px solid var(--line-subtle);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.exportButton:hover:not(:disabled) {
+  border-color: var(--line-strong);
+  color: rgb(var(--foreground-rgb));
+}
+
+.exportButton:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
 .lessonLoading,
 .lessonError {
   margin-top: 1rem;

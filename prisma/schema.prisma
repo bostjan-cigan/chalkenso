@@ -482,6 +482,12 @@ model CurriculumVersion {
    * Group curricula only: closed (group finished). Learners can still read it; sync stops.
    */
   archivedAt    DateTime?               @map("archived_at")
+  /**
+   * Learners may save the lessons as a PDF. Off by default. Groups reading this version follow it
+   * unless they have their own answer (`CourseGroup.pdfExport`); a group's own copy follows the
+   * version it was copied from.
+   */
+  pdfExport     Boolean                 @default(false) @map("pdf_export")
   lessons       Lesson[]
   arcs          LessonArc[]
   groups        CourseGroup[]           @relation("GroupAssignedVersion")
@@ -709,6 +715,10 @@ model CourseGroup {
    */
   classNote           String?                 @map("class_note") @db.Text
   classNoteAt         DateTime?               @map("class_note_at")
+  /**
+   * This group's own answer to PDF export (null = same as its curriculum version's).
+   */
+  pdfExport           Boolean?                @map("pdf_export")
   members             CourseGroupMember[]
   instructors         CourseGroupInstructor[]
   accessLinks         AccessLink[]

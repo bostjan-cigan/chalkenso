@@ -95,6 +95,8 @@ export default async function VersionPreviewPage({ params, searchParams }: { par
       mode={group ? t('modeGroup', { name: group.name }) : t('mode')}
       back={back}
       preparedBy={session?.user.organization?.name ?? null}
+      // The team may always take its own lessons away as a PDF.
+      pdfExport
       commenting={
         session
           ? {

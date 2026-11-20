@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { FiCopy, FiEdit2, FiLink } from 'react-icons/fi';
 import { formatAccessDate, learnerLinkUrl } from '@/lib/access-links';
 import AdminButton from '@/app/admin/components/ui/AdminButton';
+import AdminSearchableSelectField from '@/app/admin/components/ui/AdminSearchableSelectField';
 import { revokeAccessLinkInlineAction } from '../actions';
 import type { UnattachedFeedbackSource } from '@/lib/unattached-feedback';
 import BulkMemberLinksModal from './BulkMemberLinksModal';
@@ -90,8 +91,26 @@ export default function GroupMembersPanel({
     return { link, member };
   }, [editModalMemberId, members, linkByMemberId]);
 
+  // With an address of the organisation's own, links open at both: which one Copy takes.
+  const [copyHere, setCopyHere] = useState(false);
+  const copyTemplate = copyHere ? null : learnerLinkTemplate;
+  const addressOptions = useMemo(() => {
+    if (!learnerLinkTemplate || !origin) return [];
+    const host = (address: string) => {
+      try {
+        return new URL(address).host;
+      } catch {
+        return address;
+      }
+    };
+    return [
+      { value: 'own', label: host(learnerLinkUrl('token', { template: learnerLinkTemplate })) },
+      { value: 'here', label: host(origin) },
+    ];
+  }, [learnerLinkTemplate, origin]);
+
   const copyMemberUrl = useCallback(async (memberId: string, token: string) => {
-    const url = learnerLinkUrl(token, { template: learnerLinkTemplate, origin });
+    const url = learnerLinkUrl(token, { template: copyTemplate, origin });
     try {
       await navigator.clipboard.writeText(url);
       setCopyHintMemberId(memberId);
@@ -99,7 +118,7 @@ export default function GroupMembersPanel({
     } catch {
       /* clipboard denied */
     }
-  }, [learnerLinkTemplate, origin]);
+  }, [copyTemplate, origin]);
 
   // Every learner's link as "1. Name: link", one per line, to paste into an email or a chat.
   const withLinks = members.flatMap((member) => {
@@ -108,7 +127,7 @@ export default function GroupMembersPanel({
   });
   const copyAllUrls = async () => {
     const lines = withLinks.map(
-      ({ member, link }) => `${member.position}. ${member.fullName}: ${learnerLinkUrl(link.token, { template: learnerLinkTemplate, origin })}`
+      ({ member, link }) => `${member.position}. ${member.fullName}: ${learnerLinkUrl(link.token, { template: copyTemplate, origin })}`
     );
     const missing = members.length - withLinks.length;
     try {
@@ -157,6 +176,20 @@ export default function GroupMembersPanel({
         {copyAllHint ? (
           <span className={modalStyles.copyFeedback} data-testid="copy-all-links-hint">
             {copyAllHint}
+          </span>
+        ) : null}
+        {withLinks.length && addressOptions.length ? (
+          <span data-testid="copy-link-address">
+            <AdminSearchableSelectField
+              id="copy-link-address"
+              label={t('members.linkAddress')}
+              hideLabel
+              compact
+              searchable={false}
+              options={addressOptions}
+              value={copyHere ? 'here' : 'own'}
+              onValueChange={(value) => setCopyHere(value === 'here')}
+            />
           </span>
         ) : null}
         {withLinks.length ? (

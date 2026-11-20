@@ -148,7 +148,12 @@
       "ownCopyOf": "Lastna kopija različice {version}",
       "ownCopyOfCourse": "Lastna kopija tečaja",
       "closed": "Zaprta",
-      "groupLessons": "Lekcije skupine"
+      "groupLessons": "Lekcije skupine",
+      "pdfExport": "Izvoz PDF",
+      "pdfInheritOn": "Enako kot lekcije · Vklopljeno",
+      "pdfInheritOff": "Enako kot lekcije · Izklopljeno",
+      "pdfOn": "Vklopljeno za to skupino",
+      "pdfOff": "Izklopljeno za to skupino"
     }
   },
   "links": {
@@ -188,6 +193,7 @@
     "unattached": "{count, plural, one {# povratna informacija} two {# povratni informaciji} few {# povratne informacije} other {# povratnih informacij}} od udeležencev, ki niso več na seznamu.",
     "moveFeedback": "Prenesi povratne informacije …",
     "copyAll": "Kopiraj vse povezave",
+    "linkAddress": "Naslov povezave",
     "makeAll": "Ustvari povezave za vse udeležence",
     "active": "Aktivna · poteče {date}",
     "lastOpened": "nazadnje odprta {date}",

@@ -6,11 +6,12 @@ import AdminBadge from '../../components/ui/AdminBadge';
 import AdminButton from '../../components/ui/AdminButton';
 import AdminCard from '../../components/ui/AdminCard';
 import AdminSectionCard from '../../components/ui/AdminSectionCard';
-import { SheetRow, SheetRows } from '../../components/ui/Sheet';
+import { SheetControlRow, SheetRow, SheetRows } from '../../components/ui/Sheet';
 import ArcManagerPanel from './ArcManagerPanel';
 import CourseListInfo from './CourseListInfo';
 import { courseListMetaGroupStyle } from './courseListShared';
 import LessonDeleteButton from './LessonDeleteButton';
+import { VersionPdfExportSwitch } from './PdfExportControls';
 import VersionActions from './VersionActions';
 import VersionPreviewLinksPanel from './VersionPreviewLinksPanel';
 import VersionRenameForm from './VersionRenameForm';
@@ -208,6 +209,12 @@ export default async function VersionLessons({
         <SheetRow label={t('sections')} value={arcs.length} testId="version-sections">
           <ArcManagerPanel courseId={courseId} versionId={version.id} arcs={arcs} />
         </SheetRow>
+        {/* A group's copy follows the version it was copied from, or the group's own answer (its Settings). */}
+        {version.ownerGroup ? null : (
+          <SheetControlRow label={t('pdfExport')} testId="version-pdf-export-row">
+            <VersionPdfExportSwitch courseId={courseId} versionId={version.id} on={version.pdfExport} />
+          </SheetControlRow>
+        )}
         {version.ownerGroup ? null : (
           <SheetRow label={t('versionName')} value={version.label} testId="version-name">
             <VersionRenameForm courseId={courseId} versionId={version.id} label={version.label} />

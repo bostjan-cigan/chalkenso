@@ -221,7 +221,8 @@
     "sections": "Sklopi",
     "versionName": "Ime različice",
     "improve": "Izboljšaj",
-    "improvementsOpen": "{count, plural, one {# izboljšava} two {# izboljšavi} few {# izboljšave} other {# izboljšav}}"
+    "improvementsOpen": "{count, plural, one {# izboljšava} two {# izboljšavi} few {# izboljšave} other {# izboljšav}}",
+    "pdfExport": "Izvoz PDF za udeležence"
   },
   "arcs": {
     "title": "Naslov sklopa",

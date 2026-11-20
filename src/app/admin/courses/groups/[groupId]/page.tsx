@@ -33,7 +33,7 @@ import { isAiConfigured } from '@/lib/ai';
 import AdminTabs from '../../../components/ui/AdminTabs';
 import AdminTextareaField from '../../../components/ui/AdminTextareaField';
 import AdminField from '../../../components/ui/AdminField';
-import { SheetInfoRow, SheetRow, SheetRows } from '../../../components/ui/Sheet';
+import { SheetControlRow, SheetInfoRow, SheetRow, SheetRows } from '../../../components/ui/Sheet';
 import FeedbackList from '../../../components/feedback/FeedbackList';
 import { feedbackShow } from '../../../components/feedback/feedback-view';
 import ImprovementsList from '../../../components/improvements/ImprovementsList';
@@ -52,6 +52,7 @@ import GroupDeleteButton from '../components/GroupDeleteButton';
 import GroupSwitcher from '../components/GroupSwitcher';
 import GroupRosterForm from '../components/GroupRosterForm';
 import { GroupDateField, GroupLessonsFields, GroupNameFields, GroupRosterFields, GroupSettingsForm } from '../components/GroupSettingsSheets';
+import { GroupPdfExportSelect } from '../../components/PdfExportControls';
 import RememberGroup from '../components/RememberGroup';
 import { listAssignableInstructors, listGroupInstructors, listPendingGroupInvites } from '@/lib/group-instructors';
 import { findInstructorLink, listGroupInstructorLinks } from '@/lib/instructor-links';
@@ -538,6 +539,14 @@ export default async function GroupDetailPage({ params, searchParams }: { params
                       <GroupRosterFields initialRoster={group.sourceRosterText || group.members.map((member) => member.fullName).join('\n')} />
                     </GroupSettingsForm>
                   </SheetRow>
+                  {/* Its own answer, or its curriculum version's (its own copy: the version it was copied from). */}
+                  <SheetControlRow label={t('settings.pdfExport')} testId="group-pdf-export-row">
+                    <GroupPdfExportSelect
+                      groupId={group.id}
+                      value={group.pdfExport === null ? 'inherit' : group.pdfExport ? 'on' : 'off'}
+                      inherited={Boolean(copy ? copy.baseVersion?.pdfExport : group.curriculumVersion?.pdfExport)}
+                    />
+                  </SheetControlRow>
                 </SheetRows>
 
                 {/* What it reads, and what can happen to its own copy. A group with its own copy keeps its course and version. */}

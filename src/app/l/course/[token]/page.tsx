@@ -236,6 +236,7 @@ async function loadAccessPayload(access: Exclude<AccessValidationResult, { state
         group && group.partners.length > 0
           ? group.partners.map((entry) => entry.partner)
           : course.partners.map((entry) => entry.partner),
+      pdfExport: access.pdfExport,
       proposerName: access.memberName,
       slackHandle: access.slackHandle,
       startsAt: access.startsAt,
@@ -419,6 +420,7 @@ export default async function AccessPage({
       restrictedNotice={isValid ? null : await getRestrictedNotice(accessPayload.state, token, locale)}
       readOnlyNotice={paused ? t('access.paused') : null}
       learnerSignals={signalsState ? { token, state: signalsState } : null}
+      pdfExport={isValid && accessPayload.pdfExport}
       outcomes={isValid && accessPayload.outcomes.length ? { token, items: accessPayload.outcomes, lessons: lessons.map((lesson) => ({ id: lesson.id, position: lesson.position })) } : null}
     />
   );

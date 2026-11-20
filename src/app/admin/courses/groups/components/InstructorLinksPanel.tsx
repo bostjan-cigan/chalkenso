@@ -14,6 +14,7 @@ import {
 } from '../instructor-link-actions';
 import adminStyles from '@/app/admin/admin.module.css';
 import styles from './MemberLinkModal.module.css';
+import LearnerLinkAddress from './LearnerLinkAddress';
 import { useOrigin } from './use-origin';
 
 type OwnLink = { token: string; expiresAt: string };
@@ -80,9 +81,7 @@ export default function InstructorLinksPanel({
           {link ? (
             <div className={styles.inlineAccessRow}>
               <div className={styles.inlineAccessMain}>
-                <p className={styles.inlineAccessUrl} data-testid="instructor-link-url">
-                  {fullUrl}
-                </p>
+                <LearnerLinkAddress token={link.token} template={learnerLinkTemplate} origin={origin} testId="instructor-link-url" />
                 <p className={styles.inlineAccessMeta}>{t('yours', { date: formatAccessDate(new Date(link.expiresAt), locale) })}</p>
                 {copyHint ? <span className={styles.copyFeedback}>{copyHint}</span> : null}
               </div>
