@@ -5,19 +5,17 @@ export type ExportLesson = {
   id: string;
   position: number;
   title: string;
-  /** The section it opens (set on a section's first lesson when the whole course is exported). */
-  arcTitle?: string | null;
 };
 
-export type LoadedLesson = ExportLesson & { html: string };
-
-/** What a PDF holds: one lesson, or the whole course (a title page with its contents, then every lesson). */
+/**
+ * What a PDF holds: one lesson. Never a whole course: laying out many lessons at once is more than
+ * a browser can be asked for.
+ */
 export type ExportDocument = {
   courseTitle: string;
-  /** Who prepared the course (the organisation): on the title page, in every page's footer and in the file's details. */
+  /** Who prepared the course (the organisation): above the title, in every page's footer and in the file's details. */
   author: string | null;
-  whole: boolean;
-  lessons: LoadedLesson[];
+  lesson: ExportLesson & { html: string };
 };
 
 /** One lesson's rendered HTML, as the reader may see it (the same request that opens it on the page). */
@@ -61,57 +59,32 @@ export async function fetchLessonImage(source: LessonSource, lessonId: string, s
   }
 }
 
-/** The lessons with their text, a few at a time, in order; `known` are the ones already open on the page. */
-export async function loadLessons(
-  source: LessonSource,
-  lessons: ExportLesson[],
-  known: Record<string, string | undefined>,
-  /** Called as each lesson arrives, with how many have. */
-  onLoaded?: (done: number, total: number) => void
-): Promise<LoadedLesson[]> {
-  const loaded = new Array<LoadedLesson>(lessons.length);
-  let next = 0;
-  let done = 0;
-  const worker = async () => {
-    while (next < lessons.length) {
-      const index = next;
-      next += 1;
-      const lesson = lessons[index];
-      loaded[index] = { ...lesson, html: known[lesson.id] ?? (await fetchLessonHtml(source, lesson.id)) };
-      done += 1;
-      onLoaded?.(done, lessons.length);
-    }
-  };
-  await Promise.all(Array.from({ length: Math.min(4, lessons.length) }, worker));
-  return loaded;
-}
-
 /**
- * The whole export, from the outline's lessons to the downloaded file. `step(reached, next)` says how
- * far it is in percent, and how far it may creep until the next call: lessons to 40, the PDF library
+ * The whole export, from the lesson to the downloaded file. `step(reached, next)` says how far it is
+ * in percent, and how far it may creep until the next call: the lesson's text to 40, the PDF library
  * to 45, images to 65, and the rest for laying the PDF out, which reports nothing until it is done.
+ * `knownHtml` is the lesson's text when the page already has it.
  */
-export async function exportLessonsPdf(
+export async function exportLessonPdf(
   source: LessonSource,
-  doc: Omit<ExportDocument, 'lessons'>,
-  lessons: ExportLesson[],
-  known: Record<string, string | undefined>,
+  doc: Omit<ExportDocument, 'lesson'>,
+  lesson: ExportLesson,
+  knownHtml: string | undefined,
   step: (reached: number, next: number) => void
 ) {
-  step(0, 5);
-  const loaded = await loadLessons(source, lessons, known, (done, total) => step((40 * done) / total, (40 * Math.min(total, done + 1)) / total));
+  step(0, 35);
+  const html = knownHtml ?? (await fetchLessonHtml(source, lesson.id));
   step(40, 45);
   // The PDF library is only loaded for someone who exports.
-  const { downloadLessonsPdf } = await import('./file-export');
+  const { downloadLessonPdf } = await import('./file-export');
   step(45, 48);
-  await downloadLessonsPdf({ ...doc, lessons: loaded }, source, step);
+  await downloadLessonPdf({ ...doc, lesson: { ...lesson, html } }, source, step);
   step(100, 100);
 }
 
-/** "Course" or "Course – 03 Lesson": the PDF's name. */
+/** "Course – 03 Lesson": the PDF's name. */
 export function exportName(doc: ExportDocument) {
-  const only = doc.whole ? null : doc.lessons[0];
-  return only ? `${doc.courseTitle} – ${lessonNumber(only.position)} ${only.title}` : doc.courseTitle;
+  return `${doc.courseTitle} – ${lessonNumber(doc.lesson.position)} ${doc.lesson.title}`;
 }
 
 export function lessonNumber(position: number) {

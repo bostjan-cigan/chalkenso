@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useCallback, useEffect, useRef, useState, type MouseEvent } from 'react';
+import { useEffect, useRef, useState, type MouseEvent } from 'react';
 import { FiChevronDown } from 'react-icons/fi';
 import LoadingFillCircle from '@/components/LoadingFillCircle';
 import { lessonAnchorId } from '@/lib/lesson-wikilinks';
@@ -56,7 +56,7 @@ interface LessonAccordionProps {
   commenting?: LessonCommenting | null;
   /** Show the edition's learner signals around each lesson (personal learner links only). */
   signals?: boolean;
-  /** Saving lessons as a PDF (one, or the whole course): when the group or its curriculum allows it. */
+  /** Saving a lesson as a PDF: when the group or its curriculum allows it. */
   pdfExport?: { courseTitle: string; author: string | null } | null;
 }
 
@@ -177,12 +177,6 @@ export default function LessonAccordion({
   // Only show arc sections that actually have lessons assigned.
   const visibleArcGroups = arcGroups.filter((arc) => arc.lessons.length > 0);
 
-  /** Lessons' text the page already has, so an export doesn't load them again. */
-  const knownHtml = useCallback(
-    () => Object.fromEntries(Object.entries(loadedLessonsById).map(([id, loaded]) => [id, loaded.html ?? undefined])),
-    [loadedLessonsById]
-  );
-
   const { LessonTag, LessonStart, LessonContent, LessonEnd } = learnerUi;
 
   function renderLesson(lesson: LessonAccordionItem) {
@@ -225,10 +219,10 @@ export default function LessonAccordion({
                   source={source}
                   courseTitle={pdfExport.courseTitle}
                   author={pdfExport.author}
-                  lessons={[lesson]}
-                  whole={false}
-                  label={t('exportLesson')}
-                  known={knownHtml}
+                  lesson={lesson}
+                  label={t('savePdf')}
+                  // The page has the lesson's text already: it is open.
+                  knownHtml={() => loadedLessonsById[lesson.id]?.html ?? undefined}
                   testId="lesson-pdf"
                 />
               </div>

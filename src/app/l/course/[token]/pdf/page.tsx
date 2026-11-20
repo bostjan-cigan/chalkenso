@@ -11,10 +11,11 @@ import { learnerLocale } from '../../../learner-locale';
 import PdfDownload from './PdfDownload';
 
 /**
- * A learner link's PDF, on a page of its own: the whole course, or one lesson with `?lesson=<id>`.
- * A website that shows the course itself links here, so there is one exporter (the learner page's)
- * and nothing of it on that website. Only where PDF export is on for the link's lessons or group;
- * anything else reads as a link that doesn't exist.
+ * A lesson's PDF for a learner link, on a page of its own: `?lesson=<id>`. A website that shows the
+ * course itself links here, so there is one exporter (the learner page's) and nothing of it on that
+ * website. One lesson at a time, as on the learner page: a whole course at once is more than a
+ * browser can be asked for. Only where PDF export is on for the link's lessons or group; anything
+ * else reads as a link that doesn't exist.
  */
 
 export const metadata: Metadata = { robots: { index: false, follow: false } };
@@ -24,38 +25,25 @@ type Props = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
-/** The course's name, who prepared it and its lessons in the outline's order, each section named on its first lesson. */
-async function loadExport(courseId: string, versionId: string, isPreview: boolean) {
-  const [course, arcs] = await Promise.all([
-    prisma.course.findUnique({
-      where: { id: courseId },
-      select: {
-        title: true,
-        language: true,
-        organization: { select: { name: true } },
-        lessons: {
-          // As on the learner page: published lessons in their published wording; a draft preview sees all.
-          where: { curriculumVersionId: versionId, ...(isPreview ? {} : { publishedAt: { not: null } }) },
-          orderBy: { position: 'asc' },
-          select: { id: true, arcId: true, position: true, title: isPreview, publishedTitle: !isPreview },
-        },
+/** The course's name, who prepared it and the lesson, if it is one the link may read. */
+async function loadExport(courseId: string, versionId: string, lessonId: string, isPreview: boolean) {
+  const course = await prisma.course.findUnique({
+    where: { id: courseId },
+    select: {
+      title: true,
+      language: true,
+      organization: { select: { name: true } },
+      lessons: {
+        // As on the learner page: published lessons in their published wording; a draft preview sees all.
+        where: { id: lessonId, curriculumVersionId: versionId, ...(isPreview ? {} : { publishedAt: { not: null } }) },
+        select: { id: true, position: true, title: isPreview, publishedTitle: !isPreview },
       },
-    }),
-    prisma.lessonArc.findMany({ where: { curriculumVersionId: versionId }, orderBy: { position: 'asc' }, select: { id: true, title: true } }),
-  ]);
-  if (!course) return null;
-  const plain = (lesson: (typeof course.lessons)[number]): ExportLesson => ({
-    id: lesson.id,
-    position: lesson.position,
-    title: (isPreview ? lesson.title : lesson.publishedTitle) ?? '',
+    },
   });
-  const lessons: ExportLesson[] = [
-    ...course.lessons.filter((lesson) => !lesson.arcId).map(plain),
-    ...arcs.flatMap((arc) =>
-      course.lessons.filter((lesson) => lesson.arcId === arc.id).map((lesson, index) => ({ ...plain(lesson), arcTitle: index === 0 ? arc.title : null }))
-    ),
-  ];
-  return { title: course.title, language: course.language, author: course.organization.name, lessons };
+  const lesson = course?.lessons[0];
+  if (!course || !lesson) return null;
+  const found: ExportLesson = { id: lesson.id, position: lesson.position, title: (isPreview ? lesson.title : lesson.publishedTitle) ?? '' };
+  return { title: course.title, language: course.language, author: course.organization.name, lesson: found };
 }
 
 export default async function PdfPage({ params, searchParams }: Props) {
@@ -65,11 +53,12 @@ export default async function PdfPage({ params, searchParams }: Props) {
   const versionId = access.state === 'valid' && access.pdfExport ? access.curriculumVersionId : null;
   // Read in the link's organisation, whoever is signed in in this browser.
   const course =
-    access.state === 'valid' && versionId ? await withOrgScope(access.organizationId, () => loadExport(access.courseId, versionId, access.isPreview)) : null;
-  const only = typeof wanted === 'string' ? (course?.lessons.find((lesson) => lesson.id === wanted) ?? null) : null;
+    access.state === 'valid' && versionId && typeof wanted === 'string' && wanted
+      ? await withOrgScope(access.organizationId, () => loadExport(access.courseId, versionId, wanted, access.isPreview))
+      : null;
   const locale = await learnerLocale(course?.language);
 
-  if (!course || course.lessons.length === 0 || (wanted !== undefined && !only)) {
+  if (!course) {
     const t = await getTranslations({ locale, namespace: 'learner.access' });
     return (
       <IntlProvider locale={locale} namespaces={['common']}>
@@ -87,8 +76,8 @@ export default async function PdfPage({ params, searchParams }: Props) {
     <IntlProvider locale={locale} namespaces={['common', 'learner.lessons']}>
       <AccessShell locale={locale}>
         <article className={contentStyles.article}>
-          <h1>{only ? only.title : course.title}</h1>
-          <PdfDownload token={token} courseTitle={course.title} author={course.author} lessons={only ? [{ ...only, arcTitle: null }] : course.lessons} whole={!only} />
+          <h1>{course.lesson.title}</h1>
+          <PdfDownload token={token} courseTitle={course.title} author={course.author} lesson={course.lesson} />
         </article>
       </AccessShell>
     </IntlProvider>

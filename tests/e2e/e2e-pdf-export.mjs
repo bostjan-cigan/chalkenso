@@ -1,7 +1,7 @@
 // End-to-end check of PDF export for learners, on the demo organisation (`yarn db:seed-demo` first):
 // off by default (no button on a learner's page); switched on for a curriculum version, its groups'
-// learners get Save as PDF; a group's own answer wins over its version's; the whole course and one
-// lesson download as PDF files, named after them. What it switches is put back at the end.
+// learners get Save as PDF; a group's own answer wins over its version's; a lesson downloads as
+// a PDF file named after it, from its own button and from the link's PDF page. What it switches is put back at the end.
 // node tests/e2e/e2e-pdf-export.mjs
 // PDF_SAMPLES=<folder> also saves the PDFs of the team's preview (PDF_VERSION: of which version).
 import { chromium } from 'playwright-core';
@@ -35,10 +35,18 @@ sql(`update courses.curriculum_versions set pdf_export = false where id = ${quot
 sql(`update courses.course_groups set pdf_export = null where id = ${quote(groupId)}`);
 
 const learner = `${BASE}/l/course/${token}`;
+// Each lesson has its own Save as PDF, inside it once it is open (there is none for the whole course
+// on the page: many lessons at once are too much for a browser).
+const openLesson = async () => {
+  await page.locator('ol li button[aria-expanded]').first().click();
+  await page.locator('ol li [aria-busy=true], ol li article, ol li [data-testid=lesson-pdf]').first().waitFor().catch(() => {});
+  await page.waitForLoadState('networkidle').catch(() => {});
+};
 const hasButton = async () => {
   await page.goto(learner);
   await page.waitForSelector('ol li button[aria-expanded]');
-  return (await page.locator('[data-testid=course-pdf]').count()) > 0;
+  await openLesson();
+  return (await page.locator('[data-testid=lesson-pdf]').count()) > 0;
 };
 
 /** One of it on the page, and none still waiting in a hidden part. */
@@ -88,29 +96,30 @@ try {
   check('off: the PDF page of the link is not there', (await page.locator('[data-testid=pdf-unavailable]').count()) === 1);
   sql(`update courses.course_groups set pdf_export = null where id = ${quote(groupId)}`);
 
-  // A learner downloads the whole course, then one lesson.
+  // A learner saves a lesson; the page has no button for the whole course.
   await page.goto(learner);
+  await page.waitForSelector('ol li button[aria-expanded]');
   const courseTitle = sql(`select title from courses.courses where id = ${quote(courseId)}`);
-  const whole = await downloaded(page.locator('[data-testid=course-pdf]'));
-  check('the whole course downloads as a PDF named after it', whole.pdf && whole.name === `${courseTitle}.pdf`, whole.name);
-  await page.locator('ol li button[aria-expanded]').first().click();
+  check('the page has no button for the whole course', (await page.locator('[data-testid=course-pdf]').count()) === 0);
+  await openLesson();
+  check('the lesson’s button says Save as PDF', (await page.locator('[data-testid=lesson-pdf]').first().innerText()).trim() === 'Save as PDF');
   const one = await downloaded(page.locator('[data-testid=lesson-pdf]').first());
   check('one lesson downloads alone, named after it', one.pdf && one.name.startsWith(`${courseTitle} – 01 `), one.name);
 
   // The PDF page of the link (where a website that shows the course itself sends its learners): it
-  // downloads as it opens, the whole course or one lesson.
+  // downloads a lesson as it opens. One lesson at a time: there is no PDF of a whole course.
   const opened = async (address) => {
     const [download] = await Promise.all([page.waitForEvent('download'), page.goto(address)]);
     const bytes = readFileSync(await download.path());
     return { name: download.suggestedFilename(), pdf: bytes.subarray(0, 5).toString() === '%PDF-' && bytes.length > 10_000 };
   };
-  const linked = await opened(`${learner}/pdf`);
-  check('the link’s PDF page downloads the whole course', linked.pdf && linked.name === `${courseTitle}.pdf`, linked.name);
-  const again = await downloaded(page.locator('[data-testid=pdf-download]'));
-  check('its button downloads it again', again.pdf && again.name === `${courseTitle}.pdf`, again.name);
   const firstLesson = sql(`select id from courses.lessons where curriculum_version_id = ${quote(versionId)} and published_at is not null order by position limit 1`);
-  const linkedOne = await opened(`${learner}/pdf?lesson=${firstLesson}`);
-  check('with a lesson, it downloads that lesson alone', linkedOne.pdf && linkedOne.name.startsWith(`${courseTitle} – `), linkedOne.name);
+  const linked = await opened(`${learner}/pdf?lesson=${firstLesson}`);
+  check('the link’s PDF page downloads the lesson', linked.pdf && linked.name.startsWith(`${courseTitle} – `), linked.name);
+  const again = await downloaded(page.locator('[data-testid=pdf-download]'));
+  check('its button downloads it again', again.pdf && again.name === linked.name, again.name);
+  await page.goto(`${learner}/pdf`);
+  check('without a lesson: not there (no PDF of a whole course)', (await page.locator('[data-testid=pdf-unavailable]').count()) === 1);
   await page.goto(`${learner}/pdf?lesson=nope`);
   check('a lesson that is not the link’s: not there', (await page.locator('[data-testid=pdf-unavailable]').count()) === 1);
   await page.goto(`${BASE}/l/course/nope/pdf`);
@@ -121,8 +130,8 @@ try {
     const version = process.env.PDF_VERSION || versionId;
     const course = sql(`select course_id from courses.curriculum_versions where id = ${quote(version)}`);
     await page.goto(`${BASE}/admin/courses/${course}/versions/${version}/preview`);
-    await settled('[data-testid=course-pdf]');
-    await downloaded(page.locator('[data-testid=course-pdf]'), path.join(samples, 'course.pdf'));
+    await page.waitForSelector('ol li button[aria-expanded]');
+    await page.waitForLoadState('networkidle').catch(() => {});
     await page.locator('ol li button[aria-expanded]').first().click();
     await downloaded(page.locator('[data-testid=lesson-pdf]').first(), path.join(samples, 'lesson.pdf'));
     console.log(`Saved the samples in ${samples}`);

@@ -4,7 +4,7 @@ import { exportName, fetchLessonImage, lessonNumber, type ExportDocument } from 
 import type { LessonSource } from '../lesson-source';
 
 /**
- * The lessons as a PDF file, made in the browser with @react-pdf/renderer (loaded only when someone
+ * A lesson as a PDF file, made in the browser with @react-pdf/renderer (loaded only when someone
  * exports): the lesson's rendered HTML is walked and drawn again with the PDF's own boxes and text,
  * so whatever a lesson can hold has to be drawn here too. A straight download, each page with the
  * course, who prepared it and its number. The fonts are in ./fonts (the built-in PDF fonts can't
@@ -81,7 +81,7 @@ const CODE_FONT = { fontFamily: MONO, fontStyle: 'normal', fontWeight: 400 } as 
 
 const collapse = (text: string) => text.replace(/\s+/g, ' ');
 
-export async function downloadLessonsPdf(doc: ExportDocument, source: LessonSource, step: (reached: number, next: number) => void = () => {}) {
+export async function downloadLessonPdf(doc: ExportDocument, source: LessonSource, step: (reached: number, next: number) => void = () => {}) {
   const pdf = await import('@react-pdf/renderer');
   const { Document, Page, Text, View, Image: PdfImage, Link, Font, StyleSheet } = pdf;
 
@@ -105,12 +105,7 @@ export async function downloadLessonsPdf(doc: ExportDocument, source: LessonSour
     // The size is repeated because a line height is worked out from the size beside it.
     body: { fontSize: 10.5, lineHeight: 1.55 },
     footer: { position: 'absolute', bottom: 28, fontSize: 8, color: MUTED },
-    course: { fontSize: 30, fontWeight: 600, lineHeight: 1.15, marginTop: 80, marginBottom: 36 },
-    contentsRow: { flexDirection: 'row', paddingVertical: 4.5, borderBottomWidth: 0.5, borderBottomColor: LINE },
-    contentsArc: { fontWeight: 600, marginTop: 16, marginBottom: 4 },
-    number: { color: MUTED, width: 28 },
     heading: { marginBottom: 16, paddingBottom: 12, borderBottomWidth: 0.75, borderBottomColor: LINE },
-    arc: { fontSize: 8.5, color: MUTED, letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 8 },
     title: { fontSize: 22, fontWeight: 600, lineHeight: 1.2 },
     p: { marginBottom: 8 },
     h1: { fontSize: 18, fontWeight: 600, lineHeight: 1.25, marginTop: 16, marginBottom: 8 },
@@ -122,7 +117,6 @@ export async function downloadLessonsPdf(doc: ExportDocument, source: LessonSour
     quote: { borderLeftWidth: 2, borderLeftColor: LINE, paddingLeft: 10, marginBottom: 8, color: '#48484a' },
     callout: { borderLeftWidth: 2.5, paddingTop: 8, paddingBottom: 2, paddingHorizontal: 10, marginBottom: 10, borderRadius: 3 },
     calloutTitle: { fontWeight: 600, marginBottom: 4 },
-    author: { color: MUTED, fontSize: 12, marginTop: -24, marginBottom: 36 },
     lessonCourse: { fontSize: 8.5, color: MUTED, marginBottom: 8 },
     missing: { color: MUTED, fontSize: 9, marginBottom: 8 },
     columns: { flexDirection: 'row', gap: 12, marginBottom: 4 },
@@ -141,24 +135,18 @@ export async function downloadLessonsPdf(doc: ExportDocument, source: LessonSour
 
   // Images first: the walk below is not async.
   const parser = new DOMParser();
-  const trees = doc.lessons.map((lesson) => parser.parseFromString(lesson.html, 'text/html').body);
+  const lessonTree = parser.parseFromString(doc.lesson.html, 'text/html').body;
   const images = new Map<string, Awaited<ReturnType<typeof imageData>>>();
   // Images take the export from 45% to 65%; laying the PDF out, the rest.
-  const imageCount = new Set(trees.flatMap((tree) => Array.from(tree.querySelectorAll('img'), (img) => img.getAttribute('src')).filter(Boolean))).size;
+  const sources = Array.from(new Set(Array.from(lessonTree.querySelectorAll('img'), (img) => img.getAttribute('src') ?? '').filter(Boolean)));
   let imagesDone = 0;
   await Promise.all(
-    trees.flatMap((tree, index) =>
-      Array.from(tree.querySelectorAll('img')).map(async (img) => {
-        const src = img.getAttribute('src');
-        if (src && !images.has(src)) {
-          images.set(src, null);
-          // Fetched afresh: the copy the page already shows can't be read by a script.
-          images.set(src, await imageData(await fetchLessonImage(source, doc.lessons[index].id, new URL(src, window.location.href).href)));
-          imagesDone += 1;
-          step(45 + (20 * imagesDone) / imageCount, 45 + (20 * Math.min(imageCount, imagesDone + 1)) / imageCount);
-        }
-      })
-    )
+    sources.map(async (src) => {
+      // Fetched afresh: the copy the page already shows can't be read by a script.
+      images.set(src, await imageData(await fetchLessonImage(source, doc.lesson.id, new URL(src, window.location.href).href)));
+      imagesDone += 1;
+      step(45 + (20 * imagesDone) / sources.length, 45 + (20 * Math.min(sources.length, imagesDone + 1)) / sources.length);
+    })
   );
 
   let key = 0;
@@ -344,32 +332,14 @@ export async function downloadLessonsPdf(doc: ExportDocument, source: LessonSour
           {[doc.courseTitle, doc.author].filter(Boolean).join(' · ')}
         </Text>
         <Text style={[s.footer, { right: 52 }]} fixed render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} />
-        {doc.whole ? (
-          <View style={s.body}>
-            <Text style={s.course}>{doc.courseTitle}</Text>
-            {doc.author ? <Text style={s.author}>{doc.author}</Text> : null}
-            {doc.lessons.map((lesson) => (
-              <View key={lesson.id} wrap={false}>
-                {lesson.arcTitle ? <Text style={s.contentsArc}>{lesson.arcTitle}</Text> : null}
-                <View style={s.contentsRow}>
-                  <Text style={s.number}>{lessonNumber(lesson.position)}</Text>
-                  <Text style={{ flex: 1 }}>{lesson.title}</Text>
-                </View>
-              </View>
-            ))}
+        <View style={s.body}>
+          <View style={s.heading}>
+            <Text style={s.lessonCourse}>{[doc.courseTitle, doc.author].filter(Boolean).join(' · ')}</Text>
+            <Text style={{ color: MUTED }}>{lessonNumber(doc.lesson.position)}</Text>
+            <Text style={s.title}>{doc.lesson.title}</Text>
           </View>
-        ) : null}
-        {doc.lessons.map((lesson, index) => (
-          <View key={lesson.id} style={s.body} break={doc.whole || index > 0}>
-            <View style={s.heading}>
-              {lesson.arcTitle ? <Text style={s.arc}>{lesson.arcTitle}</Text> : null}
-              {doc.whole ? null : <Text style={s.lessonCourse}>{[doc.courseTitle, doc.author].filter(Boolean).join(' · ')}</Text>}
-              <Text style={{ color: MUTED }}>{lessonNumber(lesson.position)}</Text>
-              <Text style={s.title}>{lesson.title}</Text>
-            </View>
-            {blocks(trees[index])}
-          </View>
-        ))}
+          {blocks(lessonTree)}
+        </View>
       </Page>
     </Document>
   );
