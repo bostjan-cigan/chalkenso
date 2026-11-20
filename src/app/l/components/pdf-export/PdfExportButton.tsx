@@ -1,39 +1,87 @@
 'use client';
 
-import type { CSSProperties } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useTranslations } from 'next-intl';
 import { TbFileTypePdf } from 'react-icons/tb';
+import courseStyles from '@/components/courses/courses.module.css';
 import styles from '../../access.module.css';
+import type { LessonSource } from '../lesson-source';
+import { exportLessonsPdf, type ExportLesson } from './export-data';
+import { useExportProgress } from './use-export-progress';
 
-/** The export button: its label, or while the PDF is made, how far it is (filling up behind the words). */
+/**
+ * Saves lessons as a PDF: the page's own button (as the course's code link beside it), which while
+ * the PDF is made says "Exporting…" and fills up behind the words, as far as the export is.
+ */
 export default function PdfExportButton({
+  source,
+  courseTitle,
+  author,
+  lessons,
+  whole,
   label,
-  working,
-  percent,
-  disabled,
-  onClick,
+  known,
+  autoStart = false,
   testId,
 }: {
+  source: LessonSource;
+  courseTitle: string;
+  author: string | null;
+  /** In the outline's order; a section's first lesson names it (`arcTitle`). */
+  lessons: ExportLesson[];
+  /** The whole course (a title page with its contents), or just these lessons. */
+  whole: boolean;
   label: string;
-  /** What it says while this export runs, e.g. "Preparing PDF…". */
-  working: string;
-  /** How far this button's export is; null when it isn't running. */
-  percent: number | null;
-  disabled: boolean;
-  onClick: () => void;
+  /** Lessons' text the page already has, by lesson id. */
+  known?: () => Record<string, string | undefined>;
+  /** Start as the page opens (the PDF page of a link); the button then makes it again. */
+  autoStart?: boolean;
   testId: string;
 }) {
+  const t = useTranslations('learner.lessons');
+  const [working, setWorking] = useState(autoStart);
+  const [failed, setFailed] = useState(false);
+  const started = useRef(false);
+  const { percent, step, stop } = useExportProgress();
+
+  const save = useCallback(async () => {
+    setWorking(true);
+    setFailed(false);
+    try {
+      await exportLessonsPdf(source, { courseTitle, author, whole }, lessons, known?.() ?? {}, step);
+    } catch (error) {
+      console.error(error);
+      setFailed(true);
+    } finally {
+      setWorking(false);
+      stop();
+    }
+  }, [source, courseTitle, author, lessons, whole, known, step, stop]);
+
+  useEffect(() => {
+    // Once, also where React runs effects twice.
+    if (!autoStart || started.current) return;
+    started.current = true;
+    void save();
+  }, [autoStart, save]);
+
   return (
-    <button
-      type="button"
-      className={styles.exportButton}
-      style={percent === null ? undefined : ({ '--export-progress': `${percent}%` } as CSSProperties)}
-      disabled={disabled}
-      aria-busy={percent !== null}
-      onClick={onClick}
-      data-testid={testId}
-    >
-      <TbFileTypePdf aria-hidden size={17} />
-      {percent === null ? label : `${working} ${percent}%`}
-    </button>
+    <>
+      <button
+        type="button"
+        className={`${courseStyles.button} ${working ? styles.exportBusy : ''}`}
+        style={working ? ({ '--export-progress': `${percent ?? 0}%` } as CSSProperties) : undefined}
+        disabled={working}
+        aria-busy={working}
+        // How far it is shows as the fill only: said as a number for a screen reader.
+        aria-label={working ? `${t('exporting')} ${percent ?? 0}%` : undefined}
+        onClick={() => void save()}
+        data-testid={testId}
+      >
+        <TbFileTypePdf aria-hidden size={18} />
+        {working ? t('exporting') : label}
+      </button>
+      {failed ? <p className={styles.exportError}>{t('exportError')}</p> : null}
+    </>
   );
 }

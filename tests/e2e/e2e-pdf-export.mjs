@@ -1,6 +1,6 @@
 // End-to-end check of PDF export for learners, on the demo organisation (`yarn db:seed-demo` first):
 // off by default (no button on a learner's page); switched on for a curriculum version, its groups'
-// learners get Download PDF; a group's own answer wins over its version's; the whole course and one
+// learners get Save as PDF; a group's own answer wins over its version's; the whole course and one
 // lesson download as PDF files, named after them. What it switches is put back at the end.
 // node tests/e2e/e2e-pdf-export.mjs
 // PDF_SAMPLES=<folder> also saves the PDFs of the team's preview (PDF_VERSION: of which version).
@@ -55,7 +55,7 @@ async function downloaded(button, saveAs) {
 }
 
 try {
-  check('off by default: a learner has no Download PDF', !(await hasButton()));
+  check('off by default: a learner has no Save as PDF', !(await hasButton()));
 
   await page.goto(`${BASE}/admin/login`);
   await page.fill('#admin-identifier', env.DEMO_EMAIL);
@@ -72,7 +72,7 @@ try {
   await page.waitForFunction(() => document.querySelector('[data-testid=version-pdf-export]')?.getAttribute('aria-checked') === 'true');
   await page.waitForTimeout(800);
   check('switching it on is stored', sql(`select pdf_export from courses.curriculum_versions where id = ${quote(versionId)}`) === 't');
-  check('its group’s learners get Download PDF', await hasButton());
+  check('its group’s learners get Save as PDF', await hasButton());
 
   // The group's own answer.
   await page.goto(`${BASE}/admin/courses/groups/${groupId}?tab=settings`);

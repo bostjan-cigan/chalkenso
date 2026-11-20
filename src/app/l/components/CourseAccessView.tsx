@@ -10,6 +10,7 @@ import contentStyles from '@/components/content/content.module.css';
 import courseStyles from '@/components/courses/courses.module.css';
 import LessonAccordion, { type LessonCommenting } from '../LessonAccordion';
 import FeedbackOutcomes from './FeedbackOutcomes';
+import PdfExportButton from './pdf-export/PdfExportButton';
 import type { FeedbackOutcome } from '@/lib/curriculum-comments';
 import CommentsVisibilityProvider from './comments-visibility';
 import { learnerUi } from '@/extensions/learner';
@@ -224,6 +225,7 @@ export default async function CourseAccessView({
   pdfExport = false,
 }: CourseAccessViewProps) {
   const t = await getTranslations({ locale, namespace: 'learner.course' });
+  const tLessons = await getTranslations({ locale, namespace: 'learner.lessons' });
   const hasLessons = lessons.length > 0 && Boolean(source) && !restrictedNotice;
 
   // Lessons without an arc render as a flat list; arcs follow in order.
@@ -284,11 +286,28 @@ export default async function CourseAccessView({
           ) : null}
         </div>
         {courseSummary ? <p className={contentStyles.lead}>{courseSummary}</p> : null}
-        {githubUrl ? (
+        {githubUrl || (pdfExport && hasLessons && source) ? (
           <div className={courseStyles.actions}>
-            <a href={githubUrl} className={courseStyles.button} target="_blank" rel="noreferrer">
-              <FiGithub aria-hidden /> {t('courseCode')}
-            </a>
+            {githubUrl ? (
+              <a href={githubUrl} className={courseStyles.button} target="_blank" rel="noreferrer">
+                <FiGithub aria-hidden /> {t('courseCode')}
+              </a>
+            ) : null}
+            {pdfExport && hasLessons && source ? (
+              <PdfExportButton
+                source={source}
+                courseTitle={courseTitle}
+                author={preparedBy}
+                // The outline's order, each part named on its first lesson.
+                lessons={[
+                  ...ungroupedLessons,
+                  ...arcGroups.flatMap((arc) => arc.lessons.map((lesson, index) => ({ ...lesson, arcTitle: index === 0 ? arc.title : null }))),
+                ].map(({ id, position, title, arcTitle }: { id: string; position: number; title: string; arcTitle?: string | null }) => ({ id, position, title, arcTitle }))}
+                whole
+                label={tLessons('exportCourse')}
+                testId="course-pdf"
+              />
+            ) : null}
           </div>
         ) : null}
         <Credits partners={partners} preparedBy={preparedBy} locale={locale} />

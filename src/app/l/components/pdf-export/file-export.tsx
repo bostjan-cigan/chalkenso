@@ -73,6 +73,12 @@ function hasBlockChild(node: Element) {
 }
 
 /** Text as HTML shows it: runs of white space are one space. */
+/**
+ * Code's font, always upright and regular: the mono has one file, and inside emphasised or bold
+ * text (or a heading) the PDF library would look for an italic or bold mono and fail the export.
+ */
+const CODE_FONT = { fontFamily: MONO, fontStyle: 'normal', fontWeight: 400 } as const;
+
 const collapse = (text: string) => text.replace(/\s+/g, ' ');
 
 export async function downloadLessonsPdf(doc: ExportDocument, source: LessonSource, step: (reached: number, next: number) => void = () => {}) {
@@ -122,8 +128,8 @@ export async function downloadLessonsPdf(doc: ExportDocument, source: LessonSour
     columns: { flexDirection: 'row', gap: 12, marginBottom: 4 },
     code: { backgroundColor: CODE_BG, borderRadius: 5, padding: 10, marginBottom: 10 },
     codeLanguage: { fontSize: 7.5, color: MUTED, marginBottom: 5, textTransform: 'uppercase', letterSpacing: 0.4 },
-    codeText: { fontFamily: MONO, fontSize: 8.5, lineHeight: 1.5 },
-    inlineCode: { fontFamily: MONO, fontSize: 9.2, backgroundColor: CODE_BG },
+    codeText: { ...CODE_FONT, fontSize: 8.5, lineHeight: 1.5 },
+    inlineCode: { ...CODE_FONT, fontSize: 9.2, backgroundColor: CODE_BG },
     table: { marginBottom: 10, borderTopWidth: 0.5, borderTopColor: LINE, borderLeftWidth: 0.5, borderLeftColor: LINE },
     tr: { flexDirection: 'row' },
     td: { padding: 5, fontSize: 9.5, borderRightWidth: 0.5, borderRightColor: LINE, borderBottomWidth: 0.5, borderBottomColor: LINE },
@@ -223,7 +229,7 @@ export async function downloadLessonsPdf(doc: ExportDocument, source: LessonSour
             const task = item.querySelector(':scope > input[type="checkbox"]') as HTMLInputElement | null;
             return (
               <View key={k()} style={s.li}>
-                <Text style={task ? [s.marker, { fontFamily: MONO, fontSize: 8.5, width: 22 }] : s.marker}>
+                <Text style={task ? [s.marker, { ...CODE_FONT, fontSize: 8.5, width: 22 }] : s.marker}>
                   {task ? (task.hasAttribute('checked') ? '[x]' : '[ ]') : ordered ? `${start + index}.` : '•'}
                 </Text>
                 <View style={{ flex: 1 }}>{hasBlockChild(item) ? blocks(item) : <Text>{inline(item)}</Text>}</View>

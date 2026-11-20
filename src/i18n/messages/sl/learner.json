@@ -39,9 +39,9 @@
     "loadError": "Lekcije trenutno ni mogoče naložiti. Poskusite znova.",
     "copyCode": "Kopiraj kodo",
     "copied": "Kopirano",
-    "exportCourse": "Prenesi PDF",
+    "exportCourse": "Shrani kot PDF",
     "exportLesson": "PDF",
-    "exporting": "Pripravljam PDF …",
+    "exporting": "Izvažanje …",
     "exportError": "PDF-ja ni bilo mogoče pripraviti. Poskusite znova."
   },
   "annotations": {

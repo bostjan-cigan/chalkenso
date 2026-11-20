@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useEffect, useRef, useState, type MouseEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type MouseEvent } from 'react';
 import { FiChevronDown } from 'react-icons/fi';
 import LoadingFillCircle from '@/components/LoadingFillCircle';
 import { lessonAnchorId } from '@/lib/lesson-wikilinks';
@@ -11,9 +11,8 @@ import LessonCommentLayer, { type LessonCommentView } from './components/LessonC
 import { OPEN_NOTE_EVENT, type OpenNoteDetail } from './components/FeedbackOutcomes';
 import type { ArcGroup } from './components/CourseAccessView';
 import type { LessonSource } from './components/lesson-source';
-import { exportLessonsPdf, fetchLessonHtml, type ExportLesson } from './components/pdf-export/export-data';
+import { fetchLessonHtml } from './components/pdf-export/export-data';
 import PdfExportButton from './components/pdf-export/PdfExportButton';
-import { useExportProgress } from './components/pdf-export/use-export-progress';
 import { learnerUi } from '@/extensions/learner';
 import styles from './access.module.css';
 
@@ -178,30 +177,11 @@ export default function LessonAccordion({
   // Only show arc sections that actually have lessons assigned.
   const visibleArcGroups = arcGroups.filter((arc) => arc.lessons.length > 0);
 
-  /** What is being made into a PDF: a lesson's id, or 'course'. */
-  const [exporting, setExporting] = useState<string | null>(null);
-  const [exportFailed, setExportFailed] = useState(false);
-  const exportProgress = useExportProgress();
-
-  /** One lesson as a PDF, or (no lesson) the whole course in the outline's order, its sections named. */
-  async function exportPdf(only: LessonAccordionItem | null) {
-    if (!pdfExport || exporting) return;
-    setExporting(only ? only.id : 'course');
-    setExportFailed(false);
-    try {
-      const picked: ExportLesson[] = only
-        ? [only]
-        : [...lessons, ...visibleArcGroups.flatMap((arc) => arc.lessons.map((lesson, index) => ({ ...lesson, arcTitle: index === 0 ? arc.title : null })))];
-      const known = Object.fromEntries(Object.entries(loadedLessonsById).map(([id, loaded]) => [id, loaded.html ?? undefined]));
-      await exportLessonsPdf(source, { ...pdfExport, whole: !only }, picked, known, exportProgress.step);
-    } catch (error) {
-      console.error(error);
-      setExportFailed(true);
-    } finally {
-      setExporting(null);
-      exportProgress.stop();
-    }
-  }
+  /** Lessons' text the page already has, so an export doesn't load them again. */
+  const knownHtml = useCallback(
+    () => Object.fromEntries(Object.entries(loadedLessonsById).map(([id, loaded]) => [id, loaded.html ?? undefined])),
+    [loadedLessonsById]
+  );
 
   const { LessonTag, LessonStart, LessonContent, LessonEnd } = learnerUi;
 
@@ -241,12 +221,14 @@ export default function LessonAccordion({
           <div id={contentId} className={styles.lessonBody}>
             {pdfExport && ready ? (
               <div className={styles.lessonTools}>
-                <PdfExportButton
+<PdfExportButton
+                  source={source}
+                  courseTitle={pdfExport.courseTitle}
+                  author={pdfExport.author}
+                  lessons={[lesson]}
+                  whole={false}
                   label={t('exportLesson')}
-                  working={t('exporting')}
-                  percent={exporting === lesson.id ? (exportProgress.percent ?? 0) : null}
-                  disabled={exporting !== null}
-                  onClick={() => void exportPdf(lesson)}
+                  known={knownHtml}
                   testId="lesson-pdf"
                 />
               </div>
@@ -305,19 +287,6 @@ export default function LessonAccordion({
   // Same outline as the course page on /courses: numbered rows, arcs as plain headings.
   return (
     <section className={styles.outline} onClick={handleLessonLinkClick}>
-      {pdfExport ? (
-        <div className={styles.exportBar}>
-          <PdfExportButton
-            label={t('exportCourse')}
-            working={t('exporting')}
-            percent={exporting === 'course' ? (exportProgress.percent ?? 0) : null}
-            disabled={exporting !== null}
-            onClick={() => void exportPdf(null)}
-            testId="course-pdf"
-          />
-          {exportFailed ? <p className={styles.lessonError}>{t('exportError')}</p> : null}
-        </div>
-      ) : null}
       {lessons.length > 0 ? <ol className={styles.lessons}>{lessons.map(renderLesson)}</ol> : null}
 
       {visibleArcGroups.map((arc) => (
