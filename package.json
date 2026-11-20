@@ -48,7 +48,7 @@
     "disposable-email-domains-js": "1.26.0",
     "eslint": "8.57.0",
     "eslint-config-next": "14.1.0",
-    "next": "16.4.2",
+    "next": "16.4.6",
     "next-intl": "4.14.9",
     "nodemailer": "6.9.16",
     "otplib": "^13.4.0",
